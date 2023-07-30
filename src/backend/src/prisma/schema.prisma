@@ -1,0 +1,53 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Tournament {
+  id        Int       @id @default(autoincrement())
+  year      Int
+  parties   Party[] 
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Party {
+  id           Int       @id @default(autoincrement())
+  date         DateTime
+  tournamentId Int
+  tournament   Tournament @relation(fields: [tournamentId], references: [id])
+  playerStats  PlayerStats[]    
+  partyStarted DateTime?  // nullable, will be set when the party starts
+  partyEnded   DateTime?  // nullable, will be set when the party ends
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model Player {
+  id        Int       @id @default(autoincrement())
+  name      String
+  stats     PlayerStats[] 
+  phoneNumber String?  
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model PlayerStats {
+  id         Int       @id @default(autoincrement())
+  partyId    Int
+  party      Party     @relation(fields: [partyId], references: [id])
+  playerId   Int
+  player     Player    @relation(fields: [playerId], references: [id])
+  points     Int
+  buyin      Int
+  rebuys     Int
+  position   Int?
+  totalCost  Float     @default(0.0) 
+  outAt      DateTime? // nullable, will be set when the player is out
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+}
