@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Navbar, Button, Link, Text, useTheme } from "@nextui-org/react";
 import api from "./api";
-import { Layout } from "./components/layout";
+import { Layout } from "./components/Layout";
 import { useRoutes, Routes, Route } from "react-router-dom";
 import { PlayerRanking } from "./components/PLayerRanking";
 import PartyResults from "./components/PartyResults";
