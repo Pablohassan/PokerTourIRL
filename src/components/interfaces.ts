@@ -6,7 +6,9 @@ export interface Player {
   }
   
   export interface PlayerStats {
+    kills:number;
     id: number;
+    eliminatedById:number;
     createdAt: Date;
     points: number;
     rebuys: number;
@@ -20,7 +22,7 @@ export interface Player {
     outAt: Date | null;
   }
   
-  export interface Party {
+  export interface Parties {
     id: number;
     date: Date;
     tournamentId: number;
@@ -29,10 +31,14 @@ export interface Player {
   
   export interface PartyResultsProps {
     players: Player[];
-    parties: Party[];
+    parties: Parties[];
     playerStats?: PlayerStats[];
   }
-  
+  export interface Tournaments {
+    id: number,
+    year:number,
+    createdAt: Date
+  }
   export interface PlayerTableProps {
     config: {
       title: string;

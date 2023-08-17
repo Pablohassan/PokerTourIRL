@@ -43,6 +43,7 @@ model PlayerStats {
   playerId   Int
   player     Player    @relation(fields: [playerId], references: [id])
   points     Int
+  kills      Int @default(0)
   buyin      Int
   rebuys     Int
   position   Int?

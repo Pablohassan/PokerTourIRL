@@ -2,7 +2,7 @@ import { useMemo, useState, useEffect } from "react";
 import PlayerTable from "./PlayerTable";
 import{ PlayerStats, PlayerTableProps,PartyResultsProps, } from "./interfaces.js"
 import { SelectedPlayers } from "./SelectedPlayers";
-import { Grid } from "@nextui-org/react";
+
 
 
 function calculateGains(playerStats: PlayerStats[]): number {
@@ -93,17 +93,17 @@ const PartyResults: React.FC<PartyResultsProps> = ({
   // Define playerGames inside the map function, so 'player' is accessible
   
   return (
-    <Grid.Container   gap={1} justify="center">
+    <div style={{ margin: 0 }}  >
       {tableConfigs.map((config, i) => (
-        <Grid  xs={12} sm={4} md={3} lg={2} key={i}>
+        <div   key={i}>
           <PlayerTable
             config={config}
             players={players}
            
           />
-        </Grid>
+        </div>
       ))}
-    </Grid.Container>
+    </div>
   );
 };
 

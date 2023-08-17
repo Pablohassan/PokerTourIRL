@@ -1,26 +1,50 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { useState, useEffect } from "react";
-import { Navbar } from "@nextui-org/react";
+import { Navbar, Link, NavbarBrand, NavbarContent, NavbarItem } from "@nextui-org/react";
 import api from "./api";
-import { Layout } from "./components/layout";
+// import { Layout } from "./components/Layout";
 import { useRoutes, Routes, Route } from "react-router-dom";
 import { PlayerRanking } from "./components/PLayerRanking";
 import PartyResults from "./components/PartyResults";
 import StartGame from "./components/StartGame";
+import PartyPage from "./components/PartyPage";
 import { SelectedPlayers } from "./components/SelectedPlayers";
 import Ak from "./components/PokerLogo";
 import { ClerkProvider, SignedIn, SignedOut, SignOutButton, RedirectToSignIn, SignIn, SignUp, } from "@clerk/clerk-react";
 import AddPlayer from "./components/AddPlayer";
+import axios from "axios";
 console.log(import.meta.env.VITE_REACT_APP_CLERK_PUBLISHABLE_KEY);
 if (!import.meta.env.VITE_REACT_APP_CLERK_PUBLISHABLE_KEY) {
     throw new Error("Missing Publishable Key");
 }
 const clerkPubKey = import.meta.env.VITE_REACT_APP_CLERK_PUBLISHABLE_KEY;
-function App() {
+export default function App() {
     const [selectedPlayers, setSelectedPlayers] = useState([]);
     const [players, setPlayers] = useState([]);
     const [parties, setParties] = useState([]);
     const [stats, setStats] = useState([]);
+    const [championnat, setChampionnat] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    useEffect(() => {
+        const fetchChampionnat = async () => {
+            try {
+                const response = await axios.get("http://localhost:3000/tournaments");
+                // Si vous souhaitez stocker tous les tournois dans le tableau:
+                setChampionnat(response.data.map((t) => ({
+                    id: t.id,
+                    year: t.year,
+                    createdAt: new Date(t.createdAt)
+                })));
+            }
+            catch (error) {
+                console.error("Error fetching championnat: ", error);
+            }
+        };
+        fetchChampionnat();
+    }, []);
+    useEffect(() => {
+        console.log("champi", championnat);
+    }, [championnat]);
     useEffect(() => {
         fetchPlayersAndParties();
     }, []);
@@ -29,7 +53,7 @@ function App() {
         // and set the state with the received data
         try {
             const resPlayers = await api.get("/player");
-            const resParties = await api.get("/party");
+            const resParties = await api.get("/parties");
             const restStats = await api.get("/playerstats");
             setPlayers(resPlayers.data);
             setParties(resParties.data);
@@ -38,6 +62,7 @@ function App() {
         catch (error) {
             console.log("error fetching players or parties:", error);
         }
+        setIsLoading(false);
     };
     const handlePlayerSelect = (playerId) => {
         const player = players.find((player) => player.id === playerId);
@@ -56,6 +81,10 @@ function App() {
             element: (_jsx("h1", { className: "bg-blue-500 text-white p-4", children: "Welcome to the App" })),
         },
         {
+            path: "/partypage",
+            element: (_jsx(PartyPage, {}))
+        },
+        {
             path: "/ranking",
             element: (_jsx(PlayerRanking, { players: players, playerScores: stats, selectedPlayers: selectedPlayers, handlePlayerSelect: handlePlayerSelect })),
         },
@@ -69,10 +98,13 @@ function App() {
         },
         {
             path: "/startGame",
-            element: (_jsx(StartGame, { selectedPlayers: selectedPlayers, players: players, setParties: setParties, updateAfterGameEnd: fetchPlayersAndParties, handlePlayerSelect: handlePlayerSelect })),
+            element: (_jsx(StartGame, { selectedPlayers: selectedPlayers, players: players, setParties: setParties, updateAfterGameEnd: fetchPlayersAndParties, handlePlayerSelect: handlePlayerSelect, championnat: championnat, setSelectedPLayers: setSelectedPlayers })),
         },
     ]);
-    return (_jsxs("div", { style: { width: '100%' }, children: [_jsxs(ClerkProvider, { publishableKey: clerkPubKey, children: [_jsx(SignedIn, { children: _jsx(Layout, { children: _jsxs(Navbar, { shouldHideOnScroll: true, variant: "sticky", children: [_jsx(Navbar.Brand, { children: _jsx(Ak, {}) }), _jsxs(Navbar.Content, { variant: "underline", children: [_jsx(Navbar.Link, { hideIn: "xs", href: "/ranking", children: "Ranking" }), _jsx(Navbar.Link, { hideIn: "xs", href: "/startGame", children: "Start Partie" }), _jsx(Navbar.Link, { href: "/results", children: "Results" }), _jsx(Navbar.Link, { href: "/addplayer", children: "Add player" })] }), _jsx(SignOutButton, {})] }) }) }), _jsxs(SignedOut, { children: [_jsx(Layout, { children: _jsxs(Navbar, { shouldHideOnScroll: true, variant: "sticky", children: [_jsx(Navbar.Brand, { children: _jsx(Ak, {}) }), _jsxs(Navbar.Content, { hideIn: "xs", variant: "underline", children: [_jsx(Navbar.Link, { href: "/sign-up/*", children: "Sign Up" }), _jsx(Navbar.Link, { href: "/sign-in/*", children: "Sign in" })] }), _jsxs(Navbar.Content, { children: [_jsx(Navbar.Link, { href: "/ranking", children: "Ranking" }), _jsx(Navbar.Item, { children: _jsx(SignedOut, {}) })] }), _jsx(SignOutButton, {})] }) }), _jsxs(Routes, { children: [_jsx(Route, { path: "/sign-in/*", element: _jsx(SignIn, {}) }), _jsx(Route, { path: "/sign-up/*", element: _jsx(SignUp, {}) }), _jsx(Route, { path: "/*", element: _jsx(RedirectToSignIn, {}) })] }), ";"] })] }), _jsx(SelectedPlayers, { selectedPlayers: selectedPlayers }), element] }));
+    return (_jsxs("div", { children: [_jsxs(ClerkProvider, { publishableKey: clerkPubKey, children: [_jsx(SignedIn, { children: isLoading ? (_jsx("div", { children: "Loading..." })) : (
+                        // <Layout championnat={championnat}>
+                        _jsxs(Navbar, { shouldHideOnScroll: true, children: [_jsx(NavbarBrand, { children: _jsx(Ak, {}) }), _jsxs(NavbarContent, { children: [_jsx(Link, { href: "/ranking", children: "Ranking" }), _jsx(Link, { href: "/startGame", children: "Start Partie" }), _jsx(Link, { href: "/results", children: "Results" }), _jsx(Link, { href: "/addplayer", children: "Add player" }), _jsx(Link, { href: "/partypage", children: "All Parties" })] }), _jsx(SignOutButton, {})] })
+                        // </Layout>
+                        ) }), _jsxs(SignedOut, { children: [_jsxs(Navbar, { shouldHideOnScroll: true, children: [_jsx(NavbarBrand, { children: _jsx(Ak, {}) }), _jsxs(NavbarContent, { children: [_jsx(NavbarItem, { children: _jsx(Link, { href: "/sign-up/*", children: "Sign Up" }) }), _jsx(Link, { href: "/sign-in/*", children: "Sign in" })] }), _jsxs(NavbarContent, { children: [_jsx(Link, { href: "/ranking", children: "Ranking" }), _jsx(NavbarItem, { children: _jsx(SignedOut, {}) })] }), _jsx(SignOutButton, {})] }), _jsxs(Routes, { children: [_jsx(Route, { path: "/sign-in/*", element: _jsx(SignIn, {}) }), _jsx(Route, { path: "/sign-up/*", element: _jsx(SignUp, {}) }), _jsx(Route, { path: "/*", element: _jsx(RedirectToSignIn, {}) })] }), ";"] })] }), _jsx(SelectedPlayers, { selectedPlayers: selectedPlayers }), element] }));
 }
-export default App;
 //# sourceMappingURL=App.js.map

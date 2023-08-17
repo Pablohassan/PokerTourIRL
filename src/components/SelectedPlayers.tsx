@@ -12,9 +12,9 @@ interface Props {
 export const SelectedPlayers: React.FC<Props> = ({ selectedPlayers }) => {
   return (
     <ul>
-      {selectedPlayers.map((player) => (
-        <li key={player.name}>{player.name}</li>
-      ))}
+      
+     
+      
     </ul>
   );
 };

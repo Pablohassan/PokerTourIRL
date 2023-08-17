@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { Navbar, Button, Link, Text, useTheme } from "@nextui-org/react";
+import { Navbar, Link, NavbarBrand, NavbarContent, NavbarItem } from "@nextui-org/react";
 import api from "./api";
-import { Layout } from "./components/Layout";
+// import { Layout } from "./components/Layout";
 import { useRoutes, Routes, Route } from "react-router-dom";
 import { PlayerRanking } from "./components/PLayerRanking";
 import PartyResults from "./components/PartyResults";
 import StartGame from "./components/StartGame";
+import PartyPage from "./components/PartyPage";
 import { SelectedPlayers } from "./components/SelectedPlayers";
 import Ak from "./components/PokerLogo";
 import {
@@ -21,9 +22,10 @@ import {
 import {
   PlayerStats,
   Player,
-  Party
+  Parties,Tournaments
 } from "./components/interfaces";
 import AddPlayer from "./components/AddPlayer";
+import axios from "axios";
 
 console.log(import.meta.env.VITE_REACT_APP_CLERK_PUBLISHABLE_KEY);
 
@@ -32,11 +34,37 @@ if (!import.meta.env.VITE_REACT_APP_CLERK_PUBLISHABLE_KEY) {
 }
 const clerkPubKey = import.meta.env.VITE_REACT_APP_CLERK_PUBLISHABLE_KEY;
 
-function App() {
+export default function App() {
   const [selectedPlayers, setSelectedPlayers] = useState<Player[]>([]);
   const [players, setPlayers] = useState<Player[]>([]);
-  const [parties, setParties] = useState<Party[]>([]);
+  const [parties, setParties] = useState<Parties[]>([]);
   const [stats, setStats] = useState<PlayerStats[]>([]);
+  const [championnat, setChampionnat] = useState<Tournaments[]>([]);
+
+  const [isLoading, setIsLoading] = useState(true);
+
+   useEffect(() => {
+    const fetchChampionnat = async () => {
+  try {
+    const response = await axios.get("http://localhost:3000/tournaments");
+    // Si vous souhaitez stocker tous les tournois dans le tableau:
+    setChampionnat(response.data.map((t: { id: any; year: any; createdAt: string | number | Date; }) => ({
+      id: t.id,
+      year: t.year,
+      createdAt: new Date(t.createdAt)
+    })));
+  } catch (error) {
+    console.error("Error fetching championnat: ", error);
+  }
+};
+
+    fetchChampionnat();
+    
+  }, []);
+
+  useEffect(() => {
+    console.log("champi", championnat);
+  }, [championnat]);
 
   useEffect(() => {
     fetchPlayersAndParties();
@@ -47,14 +75,16 @@ function App() {
     // and set the state with the received data
     try {
       const resPlayers = await api.get("/player");
-      const resParties = await api.get("/party");
+      const resParties = await api.get("/parties");
       const restStats = await api.get("/playerstats");
       setPlayers(resPlayers.data);
       setParties(resParties.data);
       setStats(restStats.data);
+      
     } catch (error) {
       console.log("error fetching players or parties:", error);
     }
+    setIsLoading(false);
   };
 
   const handlePlayerSelect = (playerId: number) => {
@@ -82,6 +112,14 @@ function App() {
       ),
     },
     {
+path:"/partypage",
+element:( <PartyPage
+
+/>)
+
+
+    },
+    {
       path: "/ranking",
       element: (
         <PlayerRanking
@@ -105,34 +143,40 @@ function App() {
     {
       path: "/startGame",
       element: (
-        <StartGame
+        <StartGame 
           selectedPlayers={selectedPlayers}
           players={players}
           setParties={setParties}
           updateAfterGameEnd={fetchPlayersAndParties}
           handlePlayerSelect={handlePlayerSelect}
-        />
+          championnat={championnat} setSelectedPLayers={setSelectedPlayers}        />
       ),
     },
   ]);
 
   return (
-    <div style={{ width: '100%'} }>
+
+    
+    <div >
       <ClerkProvider publishableKey={clerkPubKey}>
         <SignedIn>
-          <Layout>
-            <Navbar shouldHideOnScroll variant="sticky">
-              <Navbar.Brand>
+        {isLoading ? (
+      <div>Loading...</div>
+    ) : (
+          // <Layout championnat={championnat}>
+            <Navbar shouldHideOnScroll >
+              <NavbarBrand>
                 <Ak />
-              </Navbar.Brand>
-              <Navbar.Content variant="underline">
-                <Navbar.Link  hideIn="xs" href="/ranking">Ranking</Navbar.Link>
-                <Navbar.Link  hideIn="xs" href="/startGame">Start Partie</Navbar.Link>
-                <Navbar.Link  href="/results">
+              </NavbarBrand>
+              <NavbarContent>
+                <Link  href="/ranking">Ranking</Link>
+                <Link    href="/startGame">Start Partie</Link>
+                <Link  href="/results">
                   Results
-                </Navbar.Link>
-                <Navbar.Link  href="/addplayer">Add player</Navbar.Link>
-              </Navbar.Content>
+                </Link>
+                <Link  href="/addplayer">Add player</Link>
+                <Link  href="/partypage">All Parties</Link>
+              </NavbarContent>
               
                
                 {/* <Navbar.Item>
@@ -142,28 +186,31 @@ function App() {
              
              
             </Navbar>
-          </Layout>
+          // </Layout>
+          )}
         </SignedIn>
 
         <SignedOut>
-          <Layout>
-            <Navbar shouldHideOnScroll variant="sticky">
-              <Navbar.Brand>
+          {/* <Layout championnat={championnat}> */}
+            <Navbar shouldHideOnScroll>
+              <NavbarBrand>
                 <Ak />
-              </Navbar.Brand>
-              <Navbar.Content hideIn="xs" variant="underline">
-                <Navbar.Link href="/sign-up/*">Sign Up</Navbar.Link>
-                <Navbar.Link href="/sign-in/*">Sign in</Navbar.Link>
-              </Navbar.Content>
-              <Navbar.Content>
-                <Navbar.Link href="/ranking">Ranking</Navbar.Link>
-                <Navbar.Item>
+              </NavbarBrand>
+              <NavbarContent >
+              <NavbarItem>
+                <Link href="/sign-up/*">Sign Up</Link>
+                </NavbarItem>
+                <Link href="/sign-in/*">Sign in</Link>
+              </NavbarContent>
+              <NavbarContent>
+                <Link href="/ranking">Ranking</Link>
+                <NavbarItem>
                   <SignedOut></SignedOut>
-                </Navbar.Item>
-              </Navbar.Content>
+                </NavbarItem>
+              </NavbarContent>
               <SignOutButton />
             </Navbar>
-          </Layout>
+          {/* </Layout> */}
           <Routes>
             <Route path="/sign-in/*" element={<SignIn />} />
             <Route path="/sign-up/*" element={<SignUp />} />
@@ -172,10 +219,10 @@ function App() {
           ;
         </SignedOut>
       </ClerkProvider>
-      <SelectedPlayers selectedPlayers={selectedPlayers} />
+      <SelectedPlayers selectedPlayers={selectedPlayers}  />
       {element}
     </div>
   );
 }
 
-export default App;
+

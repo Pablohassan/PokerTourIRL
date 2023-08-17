@@ -1,4 +1,4 @@
-import { Table } from "@nextui-org/react";
+import { Table, TableBody, TableCell, TableColumn, TableHeader, TableRow } from "@nextui-org/react";
 import { PlayerTableProps } from "./interfaces";
 
 const PlayerTable: React.FC<PlayerTableProps> = ({
@@ -9,29 +9,29 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
   console.log("players in PlayerTable:", players);
 
   return (
-    <div style={{ width: "100%", margin: "5px", fontWeight: "bold" }}>
-      <Table bordered style={{ width: "100%" }}>
-        <Table.Header>
-          <Table.Column
-            css={{ fontWeight: "bold", fontSize: "1rem", color: "$blue900" }}
+    <div style={{ width: "100%", minWidth:"300px", maxWidth:"340px", margin: "5px", fontWeight: "bold" }}>
+      <Table  style={{ width: "100%" }}>
+        <TableHeader>
+          <TableColumn 
+            style={{ fontWeight: "bold", fontSize: "0.9rem", color: "$blue900" }}
           >
-            Classement
-          </Table.Column>
-          <Table.Column
-            css={{ fontWeight: "bold", fontSize: "1rem", color: "$blue900" }}
+            Position
+          </TableColumn> 
+          <TableColumn
+            style={{ fontWeight: "bold", fontSize: "0.9rem", color: "$blue900" }}
           >
-            Nom du Joueur
-          </Table.Column>
-          <Table.Column
-            css={{ fontWeight: "bold", fontSize: "1rem", color: "$blue900" }}
+            Joueur
+          </TableColumn>
+          <TableColumn
+            style={{ fontWeight: "bold", fontSize: "0.9rem", color: "$blue900" }}
           >
             {config.title}
-          </Table.Column>
+          </TableColumn>
           {/* <Table.Column>Total Points</Table.Column>
         <Table.Column>Total Rebuys</Table.Column>
         <Table.Column>Gains</Table.Column> */}
-        </Table.Header>
-        <Table.Body>
+        </TableHeader>
+        <TableBody>
           {players
             .filter((player) => {
               const result =
@@ -52,22 +52,22 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
               return result;
             })
             .map((player, rank) => (
-              <Table.Row key={player.id}>
-                <Table.Cell>{rank + 1}</Table.Cell>
-                <Table.Cell>{player.name}</Table.Cell>
-                <Table.Cell>
+              <TableRow key={player.id}>
+                <TableCell>{rank + 1}</TableCell>
+                <TableCell>{player.name}</TableCell>
+                <TableCell>
                   {config.rankFunction &&
                   typeof config.rankFunction === "function" &&
                   player.stats
                     ? config.rankFunction(player.stats)
                     : "-"}
-                </Table.Cell>
+                </TableCell>
                 {/* <Table.Cell>{player.stats.reduce((acc, stat) => acc + stat.points, 0) || "N/A"}</Table.Cell>
                 <Table.Cell>{player.stats.reduce((acc, stat) => acc + stat.rebuys, 0) || "N/A"}</Table.Cell>
                 <Table.Cell>{player.stats.reduce((acc, stat) => acc + stat.gains, 0) || "N/A"}</Table.Cell> */}
-              </Table.Row>
+              </TableRow>
             ))}
-        </Table.Body>
+        </TableBody>
       </Table>
     </div>
   );

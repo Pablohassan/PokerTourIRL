@@ -1,6 +1,5 @@
 import { jsx as _jsx } from "react/jsx-runtime";
 import PlayerTable from "./PlayerTable";
-import { Grid } from "@nextui-org/react";
 function calculateGains(playerStats) {
     return playerStats.reduce((sum, game) => {
         let gain = 0;
@@ -71,7 +70,7 @@ const PartyResults = ({ players, playerStats }) => {
     //   filterFunction: (games: Game[]) => games.length > 1, // for example, only include players who played at least one game
     // },
     // Define playerGames inside the map function, so 'player' is accessible
-    return (_jsx(Grid.Container, { gap: 1, justify: "center", children: tableConfigs.map((config, i) => (_jsx(Grid, { xs: 12, sm: 4, md: 3, lg: 2, children: _jsx(PlayerTable, { config: config, players: players }) }, i))) }));
+    return (_jsx("div", { style: { margin: 0 }, children: tableConfigs.map((config, i) => (_jsx("div", { children: _jsx(PlayerTable, { config: config, players: players }) }, i))) }));
 };
 export default PartyResults;
 //# sourceMappingURL=PartyResults.js.map

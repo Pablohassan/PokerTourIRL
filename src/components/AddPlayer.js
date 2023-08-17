@@ -2,12 +2,16 @@ import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { useContext, useEffect, useState } from "react";
 import axios from "axios";
 import { UIContext } from '../components/UiProvider';
-import { Button, Card, Grid, Input, Table, Spacer, Text } from "@nextui-org/react";
+import { Button, Card, Table, Spacer, Input, TableHeader, TableColumn, TableBody, TableRow, TableCell } from "@nextui-org/react";
 function AddPlayer() {
     const [name, setName] = useState("");
     const [phoneNumber, setPhoneNumber] = useState(""); // Add this lin
     const [players, setPlayers] = useState([]);
-    const { notify } = useContext(UIContext);
+    const uiContext = useContext(UIContext);
+    if (!uiContext) {
+        throw new Error('UIContext is undefined, please ensure the component is wrapped with a <UIProvider>');
+    }
+    const { notify } = uiContext;
     // Add this useEffect hook to fetch the players when the component mounts
     useEffect(() => {
         const fetchPlayers = async () => {
@@ -43,7 +47,7 @@ function AddPlayer() {
                 return;
             }
             // If the player doesn't exist, proceed to create a new player
-            const postResponse = await axios.post("http://localhost:3000/player", { name, phoneNumber });
+            const postResponse = await axios.post("http://localhost:3000/players", { name, phoneNumber });
             // If the player is successfully created, show a success toast
             if (postResponse.data) {
                 notify('success', `Player ${name} has been added successfully`);
@@ -56,9 +60,7 @@ function AddPlayer() {
             notify('error', 'An error occurred while creating the player');
         }
     };
-    return (_jsxs(Grid.Container, { css: { w: "380px" }, direction: "column", children: [_jsxs("div", { style: { maxHeight: '500px', overflowY: 'auto' }, children: [_jsxs("form", { onSubmit: handleSubmit, children: [_jsxs(Card, { css: { w: "350px" }, children: [_jsx(Text, { h1: true, size: 20, css: {
-                                            textGradient: "45deg, $purple600 -20%, $pink600 100%",
-                                        }, weight: "bold", children: "  Enter the player name :" }), _jsx(Input, { width: "350px", height: 100, type: "text", value: name, onChange: (e) => setName(e.target.value), required: true, placeholder: "Your Name" }), _jsx(Input, { width: "350px", height: 100, type: "text", value: phoneNumber, onChange: (e) => setPhoneNumber(e.target.value), required: true, placeholder: "Your Phone" })] }), _jsx(Button, { type: "submit", color: "primary", auto: true, ghost: true, children: "Create New Player" })] }), _jsxs(Table, { striped: true, hoverable: true, children: [_jsxs(Table.Header, { children: [_jsx(Table.Column, { children: "Rank" }), _jsx(Table.Column, { children: "Joueurs dans le tournois " }), _jsx(Table.Column, { children: "Phone" })] }), _jsx(Table.Body, { children: players.map((player, index) => (_jsxs(Table.Row, { children: [_jsx(Table.Cell, { children: index + 1 }), _jsx(Table.Cell, { children: player.name }), _jsx(Table.Cell, { children: player.phoneNumber })] }, player.id))) })] })] }), _jsx(Spacer, { y: 1 })] }));
+    return (_jsxs("div", { style: { width: "380px", display: "flex", flexDirection: "column" }, children: [_jsxs("div", { style: { maxHeight: '500px', overflowY: 'auto' }, children: [_jsxs("form", { onSubmit: handleSubmit, children: [_jsxs(Card, { style: { width: "350px" }, children: [_jsx("div", { children: "  Enter the player name :" }), _jsx(Input, { width: "350px", height: 100, type: "text", value: name, onChange: (e) => setName(e.target.value), required: true, placeholder: "Your Name" }), _jsx(Input, { width: "350px", height: 100, type: "text", value: phoneNumber, onChange: (e) => setPhoneNumber(e.target.value), required: true, placeholder: "Your Phone" })] }), _jsx(Button, { type: "submit", children: "Create New Player" })] }), _jsxs(Table, { children: [_jsxs(TableHeader, { children: [_jsx(TableColumn, { children: "Rank" }), _jsx(TableColumn, { children: "Joueurs dans le tournois " }), _jsx(TableColumn, { children: "Phone" })] }), _jsx(TableBody, { children: players.map((player, index) => (_jsxs(TableRow, { children: [_jsx(TableCell, { children: index + 1 }), _jsx(TableCell, { children: player.name }), _jsx(TableCell, { children: player.phoneNumber })] }, player.id))) })] })] }), _jsx(Spacer, { y: 1 })] }));
 }
 export default AddPlayer;
 //# sourceMappingURL=AddPlayer.js.map

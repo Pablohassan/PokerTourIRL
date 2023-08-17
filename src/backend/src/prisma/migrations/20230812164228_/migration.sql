@@ -25,6 +25,7 @@ CREATE TABLE `Party` (
 CREATE TABLE `Player` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `name` VARCHAR(191) NOT NULL,
+    `phoneNumber` VARCHAR(191) NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 
@@ -37,6 +38,7 @@ CREATE TABLE `PlayerStats` (
     `partyId` INTEGER NOT NULL,
     `playerId` INTEGER NOT NULL,
     `points` INTEGER NOT NULL,
+    `kills` INTEGER NOT NULL DEFAULT 0,
     `buyin` INTEGER NOT NULL,
     `rebuys` INTEGER NOT NULL,
     `position` INTEGER NULL,

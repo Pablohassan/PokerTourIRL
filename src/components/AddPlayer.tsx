@@ -3,7 +3,7 @@ import axios, { AxiosError } from "axios";
 
 
 import {UIContext} from '../components/UiProvider'
-import { Button, Card, Grid, Input, Table, Spacer,Text} from "@nextui-org/react";
+import { Button, Card,  Table, Spacer, Input, TableHeader, TableColumn, TableBody, TableRow, TableCell} from "@nextui-org/react";
 
 interface Player {
   id: number;
@@ -20,7 +20,15 @@ function AddPlayer() {
   const [name, setName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");  // Add this lin
   const [players, setPlayers] = useState<Player[]>([]); 
-  const { notify } = useContext<UIContextProps>(UIContext);
+  const  uiContext = useContext(UIContext);
+
+  if (!uiContext) {
+    throw new Error('UIContext is undefined, please ensure the component is wrapped with a <UIProvider>');
+  }
+
+  const { notify } = uiContext;
+
+  
 
   // Add this useEffect hook to fetch the players when the component mounts
   useEffect(() => {
@@ -64,7 +72,7 @@ function AddPlayer() {
       }
   
       // If the player doesn't exist, proceed to create a new player
-      const postResponse = await axios.post("http://localhost:3000/player", { name, phoneNumber });
+      const postResponse = await axios.post("http://localhost:3000/players", { name, phoneNumber });
       
       // If the player is successfully created, show a success toast
       if (postResponse.data) {
@@ -82,17 +90,17 @@ function AddPlayer() {
   return (
 
 
-    <Grid.Container css={{ w:"380px"}} direction="column">
+    <div style={{ width:"380px", display:"flex", flexDirection:"column"}}>
     <div style={{ maxHeight: '500px', overflowY: 'auto' }}>
 
     <form  onSubmit={handleSubmit}>
-      <Card css={{ w:"350px"}}>
-        <Text h1
-        size={20}
-        css={{
-          textGradient: "45deg, $purple600 -20%, $pink600 100%",
-        }}
-        weight="bold">  Enter the player name :</Text>
+      <Card style={{ width:"350px"}}>
+        <div 
+        
+        // style={{
+        //   textGradient: "45deg, $purple600 -20%, $pink600 10e0%",
+        // }}
+       >  Enter the player name :</div>
       
         <Input
         width="350px"
@@ -113,30 +121,30 @@ function AddPlayer() {
           placeholder="Your Phone"
         />
       </Card>
-      <Button type="submit" color="primary" auto ghost>
+      <Button type="submit">
         Create New Player
       </Button>
     </form>
-      <Table striped hoverable>
-        <Table.Header>
-          <Table.Column>Rank</Table.Column>
-          <Table.Column>Joueurs dans le tournois </Table.Column>
-          <Table.Column>Phone</Table.Column>
-        </Table.Header>
-        <Table.Body>
+      <Table >
+        <TableHeader>
+          <TableColumn>Rank</TableColumn>
+          <TableColumn>Joueurs dans le tournois </TableColumn>
+          <TableColumn>Phone</TableColumn>
+        </TableHeader>
+        <TableBody>
           {players.map((player, index) => (
-            <Table.Row key={player.id}>
-              <Table.Cell>{index + 1}</Table.Cell>
-              <Table.Cell>{player.name}</Table.Cell>
-              <Table.Cell>{player.phoneNumber}</Table.Cell>
-            </Table.Row>
+            <TableRow key={player.id}>
+              <TableCell>{index + 1}</TableCell>
+              <TableCell>{player.name}</TableCell>
+              <TableCell>{player.phoneNumber}</TableCell>
+            </TableRow>
           ))}
-        </Table.Body>
+        </TableBody>
       </Table>
     </div>
     <Spacer y={1} />
    
-  </Grid.Container>
+  </div>
   );
 }
 

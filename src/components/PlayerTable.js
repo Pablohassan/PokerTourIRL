@@ -1,8 +1,8 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
-import { Table } from "@nextui-org/react";
+import { Table, TableBody, TableCell, TableColumn, TableHeader, TableRow } from "@nextui-org/react";
 const PlayerTable = ({ config, players, style, }) => {
     console.log("players in PlayerTable:", players);
-    return (_jsx("div", { style: { width: "100%", margin: "5px", fontWeight: "bold" }, children: _jsxs(Table, { bordered: true, style: { width: "100%" }, children: [_jsxs(Table.Header, { children: [_jsx(Table.Column, { css: { fontWeight: "bold", fontSize: "1rem", color: "$blue900" }, children: "Classement" }), _jsx(Table.Column, { css: { fontWeight: "bold", fontSize: "1rem", color: "$blue900" }, children: "Nom du Joueur" }), _jsx(Table.Column, { css: { fontWeight: "bold", fontSize: "1rem", color: "$blue900" }, children: config.title })] }), _jsx(Table.Body, { children: players
+    return (_jsx("div", { style: { width: "100%", minWidth: "300px", maxWidth: "340px", margin: "5px", fontWeight: "bold" }, children: _jsxs(Table, { style: { width: "100%" }, children: [_jsxs(TableHeader, { children: [_jsx(TableColumn, { style: { fontWeight: "bold", fontSize: "0.9rem", color: "$blue900" }, children: "Position" }), _jsx(TableColumn, { style: { fontWeight: "bold", fontSize: "0.9rem", color: "$blue900" }, children: "Joueur" }), _jsx(TableColumn, { style: { fontWeight: "bold", fontSize: "0.9rem", color: "$blue900" }, children: config.title })] }), _jsx(TableBody, { children: players
                         .filter((player) => {
                         const result = typeof config.filterFunction === "function"
                             ? player.stats && config.filterFunction(player.stats)
@@ -17,7 +17,7 @@ const PlayerTable = ({ config, players, style, }) => {
                             : 0;
                         return result;
                     })
-                        .map((player, rank) => (_jsxs(Table.Row, { children: [_jsx(Table.Cell, { children: rank + 1 }), _jsx(Table.Cell, { children: player.name }), _jsx(Table.Cell, { children: config.rankFunction &&
+                        .map((player, rank) => (_jsxs(TableRow, { children: [_jsx(TableCell, { children: rank + 1 }), _jsx(TableCell, { children: player.name }), _jsx(TableCell, { children: config.rankFunction &&
                                     typeof config.rankFunction === "function" &&
                                     player.stats
                                     ? config.rankFunction(player.stats)
