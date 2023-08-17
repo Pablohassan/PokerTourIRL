@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Modal, Checkbox, Button, ModalHeader, useDisclosure, ModalContent, ModalBody, ModalFooter } from '@nextui-org/react';
+import { Modal, Checkbox, Button, ModalHeader, useDisclosure, ModalContent, ModalBody, ModalFooter, Input, Switch, Table, TableHeader, TableBody, TableCell, TableColumn, TableRow } from '@nextui-org/react';
 import { Player,Tournaments } from './interfaces';
 import toast, {Toaster} from 'react-hot-toast';
 
@@ -72,15 +72,15 @@ const SelectPlayersGame: React.FC<SelectPlayersProps> = ({setSelectedTournamentI
     return (
       <Modal isOpen={true} isDismissable={true} closeButton={true}>
       <ModalContent>
-        <ModalHeader className="with-full height-full" >Select Tournois:</ModalHeader>
+        <ModalHeader className="with-full height-full" > Nouvelle Partie:</ModalHeader>
         <ModalBody>
           <div>
             {!noTournaments ? (
               <select value={selectedTournamentId ?? ""} onChange={(e) => handleTournamentChange(Number(e.target.value))}>
-                <option value="" disabled>Select a tournament</option>
+                <option value="" disabled>Selectionne un tournois</option>
                 {championnat.map((tournament) => (
                   <option key={tournament.id} value={tournament.id}>
-                    {tournament.year}
+                   Pitch Poker Tour {tournament.year}
                   </option>
                 ))}
               </select>
@@ -88,32 +88,33 @@ const SelectPlayersGame: React.FC<SelectPlayersProps> = ({setSelectedTournamentI
               <p>No tournaments available. A new tournament will be created automatically.</p>
             )}
           </div>
-          <ModalHeader>Select Players:</ModalHeader>
-    <table>
-        <thead>
-            <tr>
-                <th>Select</th>
-                <th>Name</th>
-            </tr>
-        </thead>
-        <tbody>
+          <ModalHeader>Selection des Joueurs</ModalHeader>
+    <Table>
+        <TableHeader>
+            <TableColumn>
+                
+                Nom
+            </TableColumn>
+            <TableColumn>Joueur</TableColumn>
+        </TableHeader>
+        <TableBody>
             {players.map((player) => (
-                <tr key={player.id}>
-                    <td>
-                        <input 
-                            type="checkbox" 
-                            checked={selectedPlayers.some(selectedPlayer => selectedPlayer.id === player.id)} 
+                <TableRow key={player.id}>
+                    <TableCell>
+                        <Switch size="sm"
+                           
+                           
                             onChange={() => handlePlayerChange(player.id)}
                         />
-                    </td>
-                    <td>{player.name}</td>
-                </tr>
+                    </TableCell>
+                    <TableCell> <div className='text-lg'>{player.name}</div> </TableCell>
+                </TableRow>
             ))}
-        </tbody>
-    </table>
+        </TableBody>
+    </Table>
           <div>
-            <Button variant='bordered' onClick={() => onOpenChange()}>Cancel</Button>
-            <Button onClick={handleStartGame}>Start Game</Button>
+            <Button className='p-4 m-4' variant='bordered' onClick={() => onOpenChange()}>Cancel</Button>
+            <Button color='success' className='p-4 m-4'  onClick={handleStartGame}>Start Game</Button>
           </div>
         </ModalBody>
         <ModalFooter></ModalFooter>

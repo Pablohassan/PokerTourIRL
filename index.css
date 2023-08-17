@@ -1,5 +1,24 @@
-
 @import 'tailwindcss/base';
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
 
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap');
+
+
+
+
+@font-face {
+    font-family:'digital-7';
+    src: url('./fonts/digital-7.ttf') ;
+    font-weight: normal;
+    font-style: normal;
+  }
+
+
+  @font-face {
+    font-family:'DS-DIGI';
+    src: url('./fonts/DS-DIGI.TTF') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+  }
+  

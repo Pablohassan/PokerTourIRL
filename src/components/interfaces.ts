@@ -14,6 +14,7 @@ export interface Player {
     rebuys: number;
     buyin: number;
     playerId: number;
+    playerName:string
     partyId: number;
     totalCost: number;
     totalRebuys: number;

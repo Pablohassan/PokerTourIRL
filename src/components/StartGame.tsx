@@ -1,4 +1,5 @@
 import React, { useState, useEffect, ChangeEvent } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../api";
 import { NewGameForm } from "./NewGameForm";
 import SelectPlayersGame from "./SelectPlayersGame";
@@ -41,9 +42,9 @@ const StartGame: React.FC<StartGameProps> = ({
   const [gameStarted, setGameStarted] = useState(false);
   const [games, setGames] = useState<PlayerStats[]>([]);
   const [timeLeft, setTimeLeft] = useState(20 * 60); // 20 minutes in seconds
-  const [blind, setBlind] = useState(1); // Replace with your initial blind value
+  const [blind, setBlind] = useState(10); // Replace with your initial blind value
   const [outPlayers, setOutPlayers] = useState<Player[]>([]);
-  const [isOpen, setIsOpen] = useState(true);
+  // const [isOpen, setIsOpen] = useState(true);
   const [isPaused, setIsPaused] = useState(false);
 
   const [selectedTournamentId, setSelectedTournamentId] = useState<
@@ -59,11 +60,14 @@ const StartGame: React.FC<StartGameProps> = ({
     rebuys: 0,
   });
 
+  const navigate = useNavigate();
+
   useEffect(() => {
     if (!gameStarted) {
       return;
     }
 
+   
     const timer = setInterval(() => {
       setTimeLeft((time) => {
         if (isPaused) {
@@ -144,7 +148,7 @@ const StartGame: React.FC<StartGameProps> = ({
 
   const handleRebuy = (playerId: number) => {
     if (window.confirm("Is this player payed the rebuy?")) {
-      openPlayerModal();
+      setKiller(true)
       setGames((prevGames) =>
         prevGames.map((game) =>
           game.playerId === playerId
@@ -167,6 +171,8 @@ console.log("Calculated Points:", points);
 
 
   const handlePlayerKillSelection = (killerPlayerId: number) => {
+    if(window.confirm("Do you want to select this player as the killer?")) {
+      setKiller(true)
     setGames((prevGames) =>
       prevGames.map((game) =>
         game.playerId === killerPlayerId
@@ -176,9 +182,9 @@ console.log("Calculated Points:", points);
     );
 
     // Fermer la modale après la sélection
-    closePlayerModal();
+    setKiller(false);
   };
-
+  }
   const handleOutOfGame = async (
     
     partyId: number,
@@ -187,7 +193,7 @@ console.log("Calculated Points:", points);
   ) => {
     console.log("Player ID clicked for Out of Game:", playerId);
 
-    if (window.confirm("Is this player out of the game?")) {
+    if (window.confirm(`Is ${playerId} out of the game?`)) {
       setKiller(true)
       const gameIndex = games.findIndex((game) => game.playerId === playerId);
       if (gameIndex !== -1) {
@@ -272,7 +278,8 @@ console.log("Calculated Points:", points);
       } catch (error) {
         console.error("Error:", error);
       }
-      setIsOpen(false);
+      setGameStarted(false);
+      navigate('/results');
     }
   };
   console.log(games);
@@ -281,8 +288,48 @@ console.log("Calculated Points:", points);
   const currentlyPlayingPlayers = games.filter(game => !game.outAt).map(game => {
     return players.find(player => player.id === game.playerId);
 });
+
+const formatTime = (seconds: number) => {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+};
+
   return (
     <div className="">
+ <Modal isOpen={killer} onClose={closePlayerModal} >
+                <ModalHeader>Select a Killer</ModalHeader>
+
+                <ModalBody>
+                  <div>
+                  <Button>
+                    {games &&
+                      games.map((game) => {
+                        const player = currentlyPlayingPlayers.find(
+                          (p) => p?.id === game.playerId
+                        );
+
+                        if (player && !game.outAt) {
+                          return (
+                            <li
+                              key={player.id}
+                              onClick={() =>
+                                handlePlayerKillSelection(player.id)
+                              }
+                            >
+                              {player.name}
+                            </li>
+                          );
+                        } else {
+                          return null; // Si le joueur n'est pas trouvé ou est "out", ne rien retourner
+                        }
+                      })}
+                  </Button>
+                  </div>
+                </ModalBody>
+
+              
+</Modal>
        <Modal  isOpen={!gameStarted} onClose={closePlayerModal}>
   <ModalHeader>Select Players and Game Details</ModalHeader>
   <ModalBody>
@@ -308,28 +355,31 @@ console.log("Calculated Points:", points);
           </div>
           </ModalBody>
         </Modal>
+
+       
          
-        <Modal isOpen={gameStarted} onClose={handleGameEnd}>
+       <div> <Modal isOpen={gameStarted} onClose={handleGameEnd}>
+        
+
          <ModalHeader>Game in Progress</ModalHeader>
           <ModalBody>
         <div style={{
       margin: "10 auto",
-      display: "flex",
-      justifyContent: "center",
-      alignItems: "center",
-      
+      // display: "flex",
+      // justifyContent: "center",
   
-            }}>
+            }}
+            >
               {gameStarted && (
                 <>
-                <div  className="p-5 flex flex-col items-center">
-                  <div >
+                <div  className="p-5 flex flex-col items-center border-black">
+                  <div className="text-lg" >
                    
-                    <Button  color="warning" variant="bordered" style={{ padding: "20", fontFamily:"font-ds-digi" }}>
-                      Time left: {timeLeft} seconds.
-                    </Button>
-                  </div>
-                  <div >
+                    
+                      Time left: {formatTime(timeLeft)} seconds.
+         
+                      </div>
+                  <div className="text-lg" >
                     Small blind: {blind} / Big Blind :{blind * 2}
                   </div>
                 </div>
@@ -396,39 +446,8 @@ console.log("Calculated Points:", points);
         )}
       </ModalFooter>
     </Modal>
-
-    <Modal isOpen={killer} onClose={closePlayerModal} style={{ zIndex: 2000 }}>
-                <ModalHeader>Select a Killer</ModalHeader>
-
-                <ModalBody>
-                  <ul>
-                    {games &&
-                      games.map((game) => {
-                        const player = currentlyPlayingPlayers.find(
-                          (p) => p?.id === game.playerId
-                        );
-
-                        if (player && !game.outAt) {
-                          return (
-                            <li
-                              key={player.id}
-                              onClick={() =>
-                                handlePlayerKillSelection(player.id)
-                              }
-                            >
-                              {player.name}
-                            </li>
-                          );
-                        } else {
-                          return null; // Si le joueur n'est pas trouvé ou est "out", ne rien retourner
-                        }
-                      })}
-                  </ul>
-                </ModalBody>
-
-              
-</Modal>
-
+    </div>
+    
 
     </div>
   );

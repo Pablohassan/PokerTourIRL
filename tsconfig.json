@@ -31,7 +31,10 @@
     "src/**/*.ts",
     "src/**/*.d.ts",
     "src/**/*.tsx",
-    "src/**/*.jsx"
+    "src/**/*.jsx",
+    "src/assets/**/*.ttf"
+    
+    
   ],
   "exclude": [
     "node_modules"
