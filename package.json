@@ -4,9 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "concurrently \"npm run watch-ts\" \"vite\"",
+    "dev": "concurrently \"npm run watch-ts\" \"vite\" ",
     "watch-ts": "tsc -w",
-    "build": "tsc && vite build",
+    "build": "tsc && vite build && tsc -p src/backend/tsconfig.backend.json",
     "preview": "vite preview",
     "build:backend": "tsc -p src/backend/tsconfig.backend.json"
   },

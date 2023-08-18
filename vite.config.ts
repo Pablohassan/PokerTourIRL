@@ -7,8 +7,12 @@ import postcssImport from 'postcss-import';
 import tailwindcss from 'tailwindcss';
 import autoprefixer from 'autoprefixer';
 
+
+
 // https://vitejs.dev/config/
 export default defineConfig({
+
+  
   assetsInclude: ['**/*.ttf'],
   plugins: [react()],
   // resolve: {
@@ -19,7 +23,7 @@ export default defineConfig({
   css: {
     postcss: {
        plugins: [
-       
+        // postcssImport,
         tailwindcss,
         autoprefixer,
       ],
