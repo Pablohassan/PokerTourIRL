@@ -8,7 +8,7 @@ import PartyResults from "./components/PartyResults";
 import StartGame from "./components/StartGame";
 import PartyPage from "./components/PartyPage";
 import { SelectedPlayers } from "./components/SelectedPlayers";
-import Ak from "./components/PokerLogo";
+// import Ak from "./components/PokerLogo";
 import {
   useUser,
   ClerkProvider,
@@ -40,7 +40,7 @@ export default function App() {
   const [parties, setParties] = useState<Parties[]>([]);
   const [stats, setStats] = useState<PlayerStats[]>([]);
   const [championnat, setChampionnat] = useState<Tournaments[]>([]);
-
+  const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
    useEffect(() => {
@@ -164,9 +164,9 @@ element:( <PartyPage
       <div>Loading...</div>
     ) : (
           // <Layout championnat={championnat}>
-            <Navbar position="static" className="color-black" >
+            <Navbar position="static" className="" >
               <NavbarBrand>
-                <Ak />
+                {/* <Ak /> */}
               </NavbarBrand>
               <NavbarContent className="sm:flex gap-4" justify="center">
               <NavbarItem>
@@ -198,7 +198,7 @@ element:( <PartyPage
           {/* <Layout championnat={championnat}> */}
             <Navbar shouldHideOnScroll>
               <NavbarBrand>
-                <Ak />
+                {/* <Ak /> */}
               </NavbarBrand>
               <NavbarContent >
               <NavbarItem>

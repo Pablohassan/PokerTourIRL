@@ -413,6 +413,7 @@ app.put("/gamesResults/:id", async (req, res) => {
         return res.status(500).json({ error: "An error occurred while updating the game result" });
     }
 });
+// sais pas comment ça fonctionne 
 app.put("/playerStats/eliminate", async (req, res) => {
     console.log("Request received at /playerStats/eliminate");
     const { playerId, eliminatedById, partyId } = req.body;

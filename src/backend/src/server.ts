@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import { PrismaClient } from "@prisma/client";
+import { Request, Response } from 'express';
 
 const prisma = new PrismaClient();
 const app = express();
@@ -49,7 +50,7 @@ async function fetchGamesForPlayer(playerId: number, tournamentId: number) {
   });
 }
 
-app.get("/season-points/:playerId/:tournamentId", async (req, res) => {
+app.get("/season-points/:playerId/:tournamentId", async (req:Request, res:Response) => {
   const playerId = parseInt(req.params.playerId);
   const tournamentId = parseInt(req.params.tournamentId);
 
@@ -63,7 +64,7 @@ app.get("/season-points/:playerId/:tournamentId", async (req, res) => {
   res.json({ totalPoints });
 });
 
-app.get("/player-total-cost/:playerId/:tournamentId", async (req, res) => {
+app.get("/player-total-cost/:playerId/:tournamentId", async (req:Request, res:Response) => {
   const playerId = parseInt(req.params.playerId);
   const tournamentId = parseInt(req.params.tournamentId);
 
@@ -78,7 +79,7 @@ app.get("/player-total-cost/:playerId/:tournamentId", async (req, res) => {
 });
 
 
-app.get("/player-gains/:playerId/:tournamentId", async (req, res) => {
+app.get("/player-gains/:playerId/:tournamentId", async (req:Request, res:Response) => {
   const playerId = parseInt(req.params.playerId);
   const tournamentId = parseInt(req.params.tournamentId);
 
@@ -105,7 +106,7 @@ app.get("/player-gains/:playerId/:tournamentId", async (req, res) => {
   res.json({ gains });
 });
 
-app.get("/player-total-rebuys/:playerId/:tournamentId", async (req, res) => {
+app.get("/player-total-rebuys/:playerId/:tournamentId", async (req:Request, res:Response) => {
   const playerId = parseInt(req.params.playerId);
   const tournamentId = parseInt(req.params.tournamentId);
 
@@ -159,7 +160,7 @@ app.get("/playerStats", async (req: express.Request, res: express.Response) => {
   }
 });
 
-app.get("/playerStats/:playerId", async (req, res) => {
+app.get("/playerStats/:playerId", async (req:Request, res:Response) => {
   const { playerId } = req.params;
   try {
     const playerStats = await prisma.playerStats.findMany({
@@ -176,7 +177,7 @@ app.get("/playerStats/:playerId", async (req, res) => {
   }
 });
 
-app.get("/playerStatsByParty/:partyId", async (req, res) => {
+app.get("/playerStatsByParty/:partyId", async (req:Request, res:Response) => {
   const partyId = Number(req.params.partyId);
 
   if (!partyId) {
@@ -210,7 +211,7 @@ app.get("/playerStatsByParty/:partyId", async (req, res) => {
   }
 });
 
-app.get("/tournaments", async (req, res) => {
+app.get("/tournaments", async (req:Request, res:Response) => {
   try {
   const tournaments = await prisma.tournament.findMany({
     orderBy: {
@@ -224,7 +225,7 @@ app.get("/tournaments", async (req, res) => {
 }
 });
 
-app.get("/tournament/:year", async (req, res) => {
+app.get("/tournament/:year", async (req:Request, res:Response) => {
   const year = parseInt(req.params.year);
 
   const tournament = await prisma.tournament.findFirst({
@@ -242,7 +243,7 @@ app.get("/tournament/:year", async (req, res) => {
   res.json(tournament);
 });
 
-app.get("/parties", async (req, res) => {
+app.get("/parties", async (req:Request, res:Response) => {
   const parties = await prisma.party.findMany({
     include: {
       playerStats: {
@@ -254,7 +255,7 @@ app.get("/parties", async (req, res) => {
   });
   res.json(parties);
 });
-app.get("/gameResults/:playerId", async (req, res) => {
+app.get("/gameResults/:playerId", async (req:Request, res:Response) => {
   const playerId = Number(req.params.playerId);
 
   if (!playerId) {
@@ -285,7 +286,7 @@ app.get("/gameResults/:playerId", async (req, res) => {
       .json({ error: "An error occurred while fetching the game results" });
   }
 });
-app.get("/parties/:id", async (req, res) => {
+app.get("/parties/:id", async (req:Request, res:Response) => {
   const { id } = req.params;
   try {
     const party = await prisma.party.findUnique({
@@ -301,7 +302,7 @@ app.get("/parties/:id", async (req, res) => {
   }
 });
 
-app.post("/tournaments", async (req, res) => {
+app.post("/tournaments", async (req:Request, res:Response) => {
   const { year } = req.body;
   const tournaments = await prisma.tournament.create({
     data: { year },
@@ -309,7 +310,7 @@ app.post("/tournaments", async (req, res) => {
   res.json(tournaments);
 });
 
-app.post("/parties", async (req, res) => {
+app.post("/parties", async (req:Request, res:Response) => {
   const { date, tournamentId } = req.body;
   const parties = await prisma.party.create({
     data: { date, tournamentId },
@@ -319,7 +320,7 @@ app.post("/parties", async (req, res) => {
 
 
 
-app.post("/players", async (req, res) => {
+app.post("/players", async (req:Request, res:Response) => {
   try {
     const { name } = req.body;
     const { phoneNumber } = req.body;
@@ -345,7 +346,7 @@ app.post("/players", async (req, res) => {
   }
 });
 
-app.post("/playerStats/start", async (req, res) => {
+app.post("/playerStats/start", async (req:Request, res:Response) => {
   const { players, tournamentId } = req.body;
 
   if (!players || !Array.isArray(players) || players.length < 4 ) {
@@ -405,7 +406,7 @@ app.post("/playerStats/start", async (req, res) => {
 
 // Assume each player provides playerId, points, and rebuys
 
-app.post("/playerStats", async (req, res) => {
+app.post("/playerStats", async (req:Request, res:Response) => {
   try {
     const { partyId, playerId, points, rebuys, buyin, position, outAt, kills } =
       req.body;
@@ -441,7 +442,7 @@ app.post("/playerStats", async (req, res) => {
   }
 });
 
-app.post("/gameResults", async (req, res) => {
+app.post("/gameResults", async (req:Request, res:Response) => {
   const games = req.body;
   const updatedGames = [];
 
@@ -465,7 +466,7 @@ app.post("/gameResults", async (req, res) => {
   }
 });
 
-app.put("/gamesResults/:id", async (req, res) => {
+app.put("/gamesResults/:id", async (req:Request, res:Response) => {
   try {
     const gameId = parseInt(req.params.id, 10);  // Convert the id to a number
 
@@ -487,8 +488,8 @@ app.put("/gamesResults/:id", async (req, res) => {
     return res.status(500).json({ error: "An error occurred while updating the game result" });
   }
 });
-
-app.put("/playerStats/eliminate", async (req, res) => {
+// sais pas comment ça fonctionne 
+app.put("/playerStats/eliminate", async (req:Request, res:Response) => {
   console.log("Request received at /playerStats/eliminate");
   const { playerId, eliminatedById, partyId } = req.body;
 
@@ -546,7 +547,7 @@ app.put("/playerStats/eliminate", async (req, res) => {
 });
 
 
-app.put("/playerStats/out/:playerId", async (req, res) => {
+app.put("/playerStats/out/:playerId", async (req:Request, res:Response) => {
   
   const { playerId } = req.params;
 
