@@ -7,7 +7,7 @@
   "scripts": {
     "start": "nodemon ./src/server.js",
     "dev": "nodemon --experimental-specifier-resolution=node src/server.ts",
-    "build": "nodemon ./src/server.js",
+    "build": "tsc --project tsconfig.backend.json",
     "start:prod": "node dist/app.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "seed": "node ./src/prisma/seed.js"
