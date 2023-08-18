@@ -1,7 +1,7 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "typeRoots" : ["./node_modules/@types", "./types"],
+    "typeRoots" : ["./node_modules/@types"],
     "target": "ES2018",
     "module": "ESNext",
     "outDir": "./dist",
@@ -9,7 +9,8 @@
     "strict": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "moduleResolution": "node"
+    "moduleResolution": "node",
+    "types": ["node"]
   },
   "include": ["./src/**/*.ts"],
   "exclude": ["node_modules"]
