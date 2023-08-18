@@ -9,11 +9,14 @@ import {
   ModalHeader,
   ModalBody,
   ModalFooter,
+  ModalContent,
+  ButtonGroup,
 } from "@nextui-org/react";
 import { Player, PlayerStats } from "./interfaces";
 import { CardPlayer } from "./CardPlayer";
 
 import DSdigital from "../assets/fonts/DS-DIGI.ttf";
+import toast from "react-hot-toast";
 
 interface Tournaments {
   id: number;
@@ -52,8 +55,8 @@ const StartGame: React.FC<StartGameProps> = ({
   >(null);
   const [isSelectPlayersModalOpen, setSelectPlayersModalOpen] = useState(true);
   const [killer, setKiller] = useState(false);
-  const [currentPlayerId, setCurrentPlayerId] = useState<number | null>(null);
- 
+  const [rebuyPlayerId, setRebuyPlayerId] = useState<number | null>(null);
+
   const [newGame, setNewGame] = useState({
     date: new Date(),
     points: 0,
@@ -67,7 +70,6 @@ const StartGame: React.FC<StartGameProps> = ({
       return;
     }
 
-   
     const timer = setInterval(() => {
       setTimeLeft((time) => {
         if (isPaused) {
@@ -85,27 +87,13 @@ const StartGame: React.FC<StartGameProps> = ({
     return () => clearInterval(timer);
   }, [gameStarted, isPaused]);
 
-  const openPlayerModal = () => {
-    setSelectPlayersModalOpen(true);
-  };
-
-  const closePlayerModal = () => {
-    setSelectPlayersModalOpen(false);
-  };
-
+  // const closePlayerModal = () => {
+  //   setSelectPlayersModalOpen(false);
+  // };
+  
   const noTournaments = championnat.length === 0;
-
   const onStartGame = async () => {
-    console.log("Attempting to start the game..."); // add this line
-    if (selectedPlayers.length < 4) {
-      alert("Please select at least 4 players before starting a new game");
-    } else {
-    
-      setSelectPlayersModalOpen(true);  // Close the "Select Players" modal
-    }
-
-    // vérifiez si aucun tournoi n'existe
-
+    // setSelectPlayersModalOpen(true); // Close the "Select Players" modal
     const actualTournamentId = noTournaments ? null : selectedTournamentId;
 
     try {
@@ -116,7 +104,7 @@ const StartGame: React.FC<StartGameProps> = ({
       });
 
       if (response.data && response.data.message) {
-        alert(response.data.message);
+        toast(response.data.message);
         setGameStarted(true);
         if (
           response.data.playerStats &&
@@ -128,15 +116,10 @@ const StartGame: React.FC<StartGameProps> = ({
     } catch (err: any) {
       console.error("Server response:", err.response?.data);
       console.error(err);
-      alert("Failed to start new game");
+      toast("Failed to start new game");
     }
-    setSelectPlayersModalOpen(false)
-    
+    // setSelectPlayersModalOpen(false);
   };
-
-
-
-
 
   const handleNewGameChange = (event: ChangeEvent<HTMLInputElement>) => {
     setNewGame({ ...newGame, [event.target.name]: event.target.value });
@@ -148,7 +131,8 @@ const StartGame: React.FC<StartGameProps> = ({
 
   const handleRebuy = (playerId: number) => {
     if (window.confirm("Is this player payed the rebuy?")) {
-      setKiller(true)
+      setRebuyPlayerId(playerId);
+      setKiller(true);
       setGames((prevGames) =>
         prevGames.map((game) =>
           game.playerId === playerId
@@ -164,29 +148,27 @@ const StartGame: React.FC<StartGameProps> = ({
   };
   const calculatePoints = (position: number) => {
     return position;
-};
+  };
 
-const points = calculatePoints(outPlayers.length);
-console.log("Calculated Points:", points);
-
+  const points = calculatePoints(outPlayers.length);
+  console.log("Calculated Points:", points);
 
   const handlePlayerKillSelection = (killerPlayerId: number) => {
-    if(window.confirm("Do you want to select this player as the killer?")) {
-      setKiller(true)
-    setGames((prevGames) =>
-      prevGames.map((game) =>
-        game.playerId === killerPlayerId
-          ? { ...game, kills: game.kills + 1 }
-          : game
-      )
-    );
+    if (window.confirm("Do you want to select this player as the killer?")) {
+      setKiller(true);
+      setGames((prevGames) =>
+        prevGames.map((game) =>
+          game.playerId === killerPlayerId
+            ? { ...game, kills: game.kills + 1 }
+            : game
+        )
+      );
 
-    // Fermer la modale après la sélection
-    setKiller(false);
+      // Fermer la modale après la sélection
+      setKiller(false);
+    }
   };
-  }
   const handleOutOfGame = async (
-    
     partyId: number,
     playerId: number,
     eliminatedById: number | null
@@ -194,47 +176,37 @@ console.log("Calculated Points:", points);
     console.log("Player ID clicked for Out of Game:", playerId);
 
     if (window.confirm(`Is ${playerId} out of the game?`)) {
-      setKiller(true)
+      setKiller(true);
       const gameIndex = games.findIndex((game) => game.playerId === playerId);
       if (gameIndex !== -1) {
         const game = games[gameIndex];
         const outAt = new Date();
         const updatedGameForApi = {
           ...game,
-          points: calculatePoints(
-            selectedPlayers.length,
-           
-           
-          ),
+          points: calculatePoints(selectedPlayers.length),
           outAt: outAt.toISOString(),
         };
         const updatedGameForState = {
           ...game,
-          points: calculatePoints(
-            
-            outPlayers.length + 1
-          ),
+          points: calculatePoints(outPlayers.length + 1),
           outAt: outAt,
         };
 
         try {
-         await api.put(`/gamesResults/${game.id}`, updatedGameForApi);
+          await api.put(`/gamesResults/${game.id}`, updatedGameForApi);
 
           await api.put("/playerStats/eliminate", {
             partyId: partyId, // Remplacez par l'ID de la partie en cours
             playerId: playerId,
             eliminatedById: eliminatedById,
-            points:points
-
+            points: points,
           });
-          
 
           setGames((prevGames) => {
             const newGames = [...prevGames];
             newGames[gameIndex] = updatedGameForState;
             return newGames;
           });
-         
 
           setOutPlayers((prevOutPlayers) => {
             const player = selectedPlayers.find(
@@ -256,14 +228,16 @@ console.log("Calculated Points:", points);
           console.error("An error occurred while updating player stats:");
           console.error("Error object:", error);
           if (error.response) {
-              console.error("Server responded with:", error.response.data);
+            console.error("Server responded with:", error.response.data);
           }
           if (error.request) {
-              console.error("The request was made but no response was received:", error.request);
+            console.error(
+              "The request was made but no response was received:",
+              error.request
+            );
           }
         }
       }
-    
     }
   };
 
@@ -279,62 +253,64 @@ console.log("Calculated Points:", points);
         console.error("Error:", error);
       }
       setGameStarted(false);
-      navigate('/results');
+      navigate("/results");
     }
   };
   console.log(games);
-  console.log("si game started" ,gameStarted)
+  console.log("si game started", gameStarted);
 
-  const currentlyPlayingPlayers = games.filter(game => !game.outAt).map(game => {
-    return players.find(player => player.id === game.playerId);
-});
+  const currentlyPlayingPlayers = games
+    .filter((game) => !game.outAt)
+    .map((game) => {
+      return players.find((player) => player.id === game.playerId);
+    });
 
-const formatTime = (seconds: number) => {
-  const mins = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-  return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
-};
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
+  };
 
   return (
     <div className="">
- <Modal isOpen={killer} onClose={closePlayerModal} >
-                <ModalHeader>Select a Killer</ModalHeader>
+      <Modal isOpen={killer} >
+        <ModalContent>
+          <ModalHeader className="with-full height-full">
+            Select a Killer
+          </ModalHeader>
 
-                <ModalBody>
-                  <div>
-                  <Button>
-                    {games &&
-                      games.map((game) => {
-                        const player = currentlyPlayingPlayers.find(
-                          (p) => p?.id === game.playerId
-                        );
+          <ModalBody>
+            <div color="danger">
+              {games &&
+                games.map((game) => {
+                  const player = currentlyPlayingPlayers.find(
+                    (p) => p?.id === game.playerId
+                  );
 
-                        if (player && !game.outAt) {
-                          return (
-                            <li
-                              key={player.id}
-                              onClick={() =>
-                                handlePlayerKillSelection(player.id)
-                              }
-                            >
-                              {player.name}
-                            </li>
-                          );
-                        } else {
-                          return null; // Si le joueur n'est pas trouvé ou est "out", ne rien retourner
-                        }
-                      })}
-                  </Button>
-                  </div>
-                </ModalBody>
-
-              
-</Modal>
-       <Modal  isOpen={!gameStarted} onClose={closePlayerModal}>
-  <ModalHeader>Select Players and Game Details</ModalHeader>
-  <ModalBody>
-       
-          
+                  if (player && !game.outAt && player.id !== rebuyPlayerId) {
+                    return (
+                      <ButtonGroup>
+                        <Button
+                          color="warning"
+                          className="text-lg p-2 m-1"
+                          key={player.id}
+                          onClick={() => handlePlayerKillSelection(player.id)}
+                        >
+                          {player.name}
+                        </Button>
+                      </ButtonGroup>
+                    );
+                  } else {
+                    return null; // Si le joueur n'est pas trouvé ou est "out", ne rien retourner
+                  }
+                })}
+            </div>
+          </ModalBody>
+        </ModalContent>
+      </Modal>
+      <Modal isOpen={!gameStarted}>
+        <ModalHeader>Select Players and Game Details</ModalHeader>
+        <ModalBody>
           <div>
             <SelectPlayersGame
               players={players}
@@ -353,49 +329,49 @@ const formatTime = (seconds: number) => {
               handleAddNewGame={onStartGame} // use onStartGame here
             />
           </div>
-          </ModalBody>
-        </Modal>
+        </ModalBody>
+      </Modal>
 
-       
-         
-       <div> <Modal isOpen={gameStarted} onClose={handleGameEnd}>
-        
-
-         <ModalHeader>Game in Progress</ModalHeader>
+      <div>
+        {" "}
+        <Modal isOpen={gameStarted} onClose={handleGameEnd}>
+          <ModalHeader>Game in Progress</ModalHeader>
           <ModalBody>
-        <div style={{
-      margin: "10 auto",
-      // display: "flex",
-      // justifyContent: "center",
-  
-            }}
+            <div
+              style={{
+                margin: "10 auto",
+                // display: "flex",
+                // justifyContent: "center",
+              }}
             >
               {gameStarted && (
                 <>
-                <div  className="p-5 flex flex-col items-center border-black">
-                  <div className="text-lg" >
-                   
-                    
+                  <div className="p-5 flex flex-col items-center border-black">
+                    <div className="text-lg">
                       Time left: {formatTime(timeLeft)} seconds.
-         
-                      </div>
-                  <div className="text-lg" >
-                    Small blind: {blind} / Big Blind :{blind * 2}
+                    </div>
+                    <div className="text-lg">
+                      Small blind: {blind} / Big Blind :{blind * 2}
+                    </div>
                   </div>
-                </div>
-             
-        
-           
-        <Button onClick={handleGameEnd}>
-          Stop Partie
-        </Button>
-        <Button className="rounded-full"  onClick={() => setIsPaused(!isPaused)}>
-          {isPaused ? "Resume" : "Pause"}
-        </Button>
-        </>
-    )}
 
-              <div style={{ display: "flex", flexDirection: "row", flexWrap: "wrap" }}>
+                  <Button onClick={handleGameEnd}>Stop Partie</Button>
+                  <Button
+                    className="rounded-full"
+                    onClick={() => setIsPaused(!isPaused)}
+                  >
+                    {isPaused ? "Resume" : "Pause"}
+                  </Button>
+                </>
+              )}
+
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "row",
+                  flexWrap: "wrap",
+                }}
+              >
                 {currentlyPlayingPlayers.map((player) => {
                   // Trouver le jeu correspondant au joueur actuel
                   const gameForPlayer = games.find(
@@ -408,47 +384,41 @@ const formatTime = (seconds: number) => {
                       key={player?.id}
                       style={{ display: "flex", flexDirection: "column" }}
                     >
-                     
-                        {gameForPlayer ? (
-                 <CardPlayer
-                 playername={player?.name?? " none"}
-                 recave={gameForPlayer.rebuys}
-                 kill={gameForPlayer.kills}
-                 rebuy={() => handleRebuy(gameForPlayer.playerId)}
-                 outOfGame={() => 
-                     handleOutOfGame(
-                         gameForPlayer.partyId,
-                         gameForPlayer.playerId,
-                         gameForPlayer.eliminatedById
-                     )
-                 }
-             />
-                        ) : (
-                          <div>Erreur: Pas de jeu pour {player?.name}</div>
-                        )}
-                  
+                      {gameForPlayer ? (
+                        <CardPlayer
+                          playername={player?.name ?? " none"}
+                          recave={gameForPlayer.rebuys}
+                          kill={gameForPlayer.kills}
+                          rebuy={() => handleRebuy(gameForPlayer.playerId)}
+                          outOfGame={() =>
+                            handleOutOfGame(
+                              gameForPlayer.partyId,
+                              gameForPlayer.playerId,
+                              gameForPlayer.eliminatedById
+                            )
+                          }
+                        />
+                      ) : (
+                        <div>Erreur: Pas de jeu pour {player?.name}</div>
+                      )}
                     </div>
                   );
                 })}
               </div>
             </div>
-            </ModalBody>
-      <ModalFooter >
-        {gameStarted && (
-          <>
-            <Button  onClick={handleGameEnd}>
-              Stop Partie
-            </Button>
-            <Button  onClick={() => setIsPaused(!isPaused)}>
-              {isPaused ? "Resume" : "Pause"}
-            </Button>
-          </>
-        )}
-      </ModalFooter>
-    </Modal>
-    </div>
-    
-
+          </ModalBody>
+          <ModalFooter>
+            {gameStarted && (
+              <>
+                <Button onClick={handleGameEnd}>Stop Partie</Button>
+                <Button onClick={() => setIsPaused(!isPaused)}>
+                  {isPaused ? "Resume" : "Pause"}
+                </Button>
+              </>
+            )}
+          </ModalFooter>
+        </Modal>
+      </div>
     </div>
   );
 };

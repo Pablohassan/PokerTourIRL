@@ -164,13 +164,17 @@ element:( <PartyPage
       <div>Loading...</div>
     ) : (
           // <Layout championnat={championnat}>
-            <Navbar shouldHideOnScroll >
+            <Navbar position="static" className="color-black" >
               <NavbarBrand>
                 <Ak />
               </NavbarBrand>
-              <NavbarContent>
-                <Link  href="/ranking">Ranking</Link>
-                <Link    href="/startGame">Start Partie</Link>
+              <NavbarContent className="sm:flex gap-4" justify="center">
+              <NavbarItem>
+                <Link color="foreground" href="/ranking">Ranking</Link>
+                </NavbarItem>
+                <NavbarItem>
+                <Link color="foreground"   href="/startGame">Start Partie</Link>
+                </NavbarItem>
                 <Link  href="/results">
                   Results
                 </Link>

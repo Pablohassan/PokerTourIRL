@@ -28,8 +28,8 @@ const SelectPlayersGame: React.FC<SelectPlayersProps> = ({setSelectedTournamentI
     const noTournaments = championnat.length === 0;  // vérifiez si aucun tournoi n'existe
 
     const handleStartGame = () => {
-      if (selectedPlayers.length <4) {
-        toast(" select a player and a party before adding a new game");
+      if (selectedPlayers.length <4 || !selectedTournamentId) {
+        toast("Choisis un Tournois et séllectionne plus de 4 joueurs");
         return;
       }
     onStartGame()}
@@ -56,7 +56,7 @@ const SelectPlayersGame: React.FC<SelectPlayersProps> = ({setSelectedTournamentI
     };
 
     const handlePlayerChange = (playerId:number) => {
-      console.log("Checkbox changed for player with ID:", playerId);
+    
       onSelectPlayer(playerId);
       handlePlayerSelect(playerId);
     };
@@ -65,10 +65,7 @@ const SelectPlayersGame: React.FC<SelectPlayersProps> = ({setSelectedTournamentI
       onSelectTournament(tournamentId);
       setSelectedTournamentId(tournamentId);
     };
-    console.log("All players:", players);
-    
-  console.log("players",selectedPlayers)
-  console.log("gme", currentGame)
+   
     return (
       <Modal isOpen={true} isDismissable={true} closeButton={true}>
       <ModalContent>

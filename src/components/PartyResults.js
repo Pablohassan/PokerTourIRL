@@ -46,13 +46,26 @@ const PartyResults = ({ players, playerStats }) => {
             filterFunction: (playerStat) => playerStat.some((stat) => stat.totalCost > 5),
             rankFunction: (playerStat) => playerStat.reduce((total, stat) => total + stat.totalCost, 0),
         },
+        {
+            title: "Killer",
+            filterFunction: (playerStat) => {
+                const result = playerStat.some((stat) => stat.kills > 2);
+                console.log("Killer Filter result for stats", playerStat, "is", result);
+                return result;
+            },
+            rankFunction: (playerStat) => playerStat.reduce((total, stat) => total + stat.kills, 0),
+        },
+        {
+            title: "Bule",
+            filterFunction: (playerStat) => {
+                const result = playerStat.some((stat) => stat.position == 4);
+                console.log("Bulman Filter result for stats", playerStat, "is", result);
+                return result;
+            },
+            rankFunction: (playerStat) => playerStat.reduce((total, stat) => total + stat.position, 0),
+        },
         // Add more configs as needed
     ];
-    // {
-    //   title: "championat",
-    //   dataKey: "PricePool",
-    //   filter: (game: GameWithPlayerName) => game.gains > 2
-    // },
     // {
     //   title: "adefinir",
     //   dataKey: "adef",
