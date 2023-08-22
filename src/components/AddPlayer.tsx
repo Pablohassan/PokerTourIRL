@@ -53,8 +53,12 @@ function AddPlayer() {
       notify('warning', 'Player name must be at least 3 characters long');
       return;
     } 
-    if (phoneNumber.length <9){ 
-      notify("Attention", "il manque un chiffre", "le format exigé pour le numero ","662123454")}
+    if (phoneNumber.length <9 || phoneNumber.length > 9) { 
+      notify("Attention", "il manque un chiffre", "le format exigé pour le numero ","662123454")
+      return
+    
+    }
+      
   
     try {
       // Fetch all players
@@ -127,7 +131,7 @@ function AddPlayer() {
     </form>
       <Table >
         <TableHeader>
-          <TableColumn>Rank</TableColumn>
+          <TableColumn>Id</TableColumn>
           <TableColumn>Joueurs dans le tournois </TableColumn>
           <TableColumn>Phone</TableColumn>
         </TableHeader>

@@ -141,8 +141,13 @@ app.get("/player", async (req, res) => {
 });
 
 app.get("/playerStats", async (req: express.Request, res: express.Response) => {
-  try {
-    const games = await prisma.playerStats.findMany({});
+  
+   try {
+    const games = await prisma.playerStats.findMany({
+      include: {
+        player: true,
+      },
+    })
     if (games.length === 0) {
       res.json({ message: "No games found" });
     } else {
@@ -161,16 +166,17 @@ app.get("/playerStats", async (req: express.Request, res: express.Response) => {
 });
 
 app.get("/playerStats/:playerId", async (req:Request, res:Response) => {
-  const { playerId } = req.params;
-  try {
-    const playerStats = await prisma.playerStats.findMany({
-      where: { playerId: Number(playerId) },
+ try{
+   const  playerId  =  Number(req.params.playerId);
+    const stats = await prisma.playerStats.findMany({
+      where: { playerId: playerId , },
       include: {
-        party: true,
         player: true,
       },
     });
-    res.json(playerStats);
+    const totalPoints = stats.reduce((acc, curr) => acc + curr.points, 0);
+  const totalKills = stats.reduce((acc, curr) => acc + curr.kills, 0);
+    res.json({totalPoints, totalKills, stats });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "An error occurred while fetching player statistics" });
@@ -300,6 +306,15 @@ app.get("/parties/:id", async (req:Request, res:Response) => {
     console.error(error);
     res.status(500).json({ error: "An error occurred while fetching the party" });
   }
+});
+
+app.get("/parties/:partyId/stats", async (req, res) => {
+  const partyId = Number(req.params.partyId);
+  const stats = await prisma.playerStats.findMany({
+    where: { partyId: partyId },
+    include: { player: true },
+  });
+  res.json(stats);
 });
 
 app.post("/tournaments", async (req:Request, res:Response) => {
@@ -480,7 +495,7 @@ app.put("/gamesResults/:id", async (req:Request, res:Response) => {
       where: { id: gameId },
       data: gameData,
     });
-
+    console.log("Updated game:", updatedGame);
     res.json(updatedGame);
 
   } catch (error) {

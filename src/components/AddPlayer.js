@@ -32,8 +32,9 @@ function AddPlayer() {
             notify('warning', 'Player name must be at least 3 characters long');
             return;
         }
-        if (phoneNumber.length < 9) {
+        if (phoneNumber.length < 9 || phoneNumber.length > 9) {
             notify("Attention", "il manque un chiffre", "le format exigé pour le numero ", "662123454");
+            return;
         }
         try {
             // Fetch all players
@@ -60,7 +61,7 @@ function AddPlayer() {
             notify('error', 'An error occurred while creating the player');
         }
     };
-    return (_jsxs("div", { style: { width: "380px", display: "flex", flexDirection: "column" }, children: [_jsxs("div", { style: { maxHeight: '500px', overflowY: 'auto' }, children: [_jsxs("form", { onSubmit: handleSubmit, children: [_jsxs(Card, { style: { width: "350px" }, children: [_jsx("div", { children: "  Enter the player name :" }), _jsx(Input, { width: "350px", height: 100, type: "text", value: name, onChange: (e) => setName(e.target.value), required: true, placeholder: "Your Name" }), _jsx(Input, { width: "350px", height: 100, type: "text", value: phoneNumber, onChange: (e) => setPhoneNumber(e.target.value), required: true, placeholder: "Your Phone" })] }), _jsx(Button, { type: "submit", children: "Create New Player" })] }), _jsxs(Table, { children: [_jsxs(TableHeader, { children: [_jsx(TableColumn, { children: "Rank" }), _jsx(TableColumn, { children: "Joueurs dans le tournois " }), _jsx(TableColumn, { children: "Phone" })] }), _jsx(TableBody, { children: players.map((player, index) => (_jsxs(TableRow, { children: [_jsx(TableCell, { children: index + 1 }), _jsx(TableCell, { children: player.name }), _jsx(TableCell, { children: player.phoneNumber })] }, player.id))) })] })] }), _jsx(Spacer, { y: 1 })] }));
+    return (_jsxs("div", { style: { width: "380px", display: "flex", flexDirection: "column" }, children: [_jsxs("div", { style: { maxHeight: '500px', overflowY: 'auto' }, children: [_jsxs("form", { onSubmit: handleSubmit, children: [_jsxs(Card, { style: { width: "350px" }, children: [_jsx("div", { children: "  Enter the player name :" }), _jsx(Input, { width: "350px", height: 100, type: "text", value: name, onChange: (e) => setName(e.target.value), required: true, placeholder: "Your Name" }), _jsx(Input, { width: "350px", height: 100, type: "text", value: phoneNumber, onChange: (e) => setPhoneNumber(e.target.value), required: true, placeholder: "Your Phone" })] }), _jsx(Button, { type: "submit", children: "Create New Player" })] }), _jsxs(Table, { children: [_jsxs(TableHeader, { children: [_jsx(TableColumn, { children: "Id" }), _jsx(TableColumn, { children: "Joueurs dans le tournois " }), _jsx(TableColumn, { children: "Phone" })] }), _jsx(TableBody, { children: players.map((player, index) => (_jsxs(TableRow, { children: [_jsx(TableCell, { children: index + 1 }), _jsx(TableCell, { children: player.name }), _jsx(TableCell, { children: player.phoneNumber })] }, player.id))) })] })] }), _jsx(Spacer, { y: 1 })] }));
 }
 export default AddPlayer;
 //# sourceMappingURL=AddPlayer.js.map

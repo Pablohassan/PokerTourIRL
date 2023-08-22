@@ -4,20 +4,24 @@ import { useNavigate } from "react-router-dom";
 import api from "../api";
 import { NewGameForm } from "./NewGameForm";
 import SelectPlayersGame from "./SelectPlayersGame";
+import ReviewSelectedPlayers from "../components/ReviewSelectedPlayers";
 import { Modal, Button, ModalHeader, ModalBody, ModalFooter, ModalContent, ButtonGroup, } from "@nextui-org/react";
 import { CardPlayer } from "./CardPlayer";
 import toast from "react-hot-toast";
 const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, handlePlayerSelect, players, updateAfterGameEnd, }) => {
     const [gameStarted, setGameStarted] = useState(false);
+    const [showReview, setShowReview] = useState(false);
     const [games, setGames] = useState([]);
     const [timeLeft, setTimeLeft] = useState(20 * 60); // 20 minutes in seconds
     const [blind, setBlind] = useState(10); // Replace with your initial blind value
     const [outPlayers, setOutPlayers] = useState([]);
+    const [initialPlayerCount, setInitialPlayerCount] = useState(0);
     // const [isOpen, setIsOpen] = useState(true);
     const [isPaused, setIsPaused] = useState(false);
     const [selectedTournamentId, setSelectedTournamentId] = useState(null);
-    const [isSelectPlayersModalOpen, setSelectPlayersModalOpen] = useState(true);
+    const [playerInGame, setPlayerInGame] = useState([]);
     const [killer, setKiller] = useState(false);
+    const [isSelectPlayersModalOpen, setIsSelectPlayersModalOpen] = useState(true);
     const [rebuyPlayerId, setRebuyPlayerId] = useState(null);
     const [newGame, setNewGame] = useState({
         date: new Date(),
@@ -48,6 +52,16 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, handlePla
     // const closePlayerModal = () => {
     //   setSelectPlayersModalOpen(false);
     // };
+    const onStartGameReview = () => {
+        setShowReview(true);
+    };
+    const confirmAndStartGame = async () => {
+        setShowReview(false); // Hide the review
+        await onStartGame(); // Now, start the game
+    };
+    const closeSelectPlayersModal = () => {
+        setIsSelectPlayersModalOpen(false);
+    };
     const noTournaments = championnat.length === 0;
     const onStartGame = async () => {
         // setSelectPlayersModalOpen(true); // Close the "Select Players" modal
@@ -72,6 +86,7 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, handlePla
             console.error(err);
             toast("Failed to start new game");
         }
+        setInitialPlayerCount(selectedPlayers.length);
         // setSelectPlayersModalOpen(false);
     };
     const handleNewGameChange = (event) => {
@@ -81,8 +96,8 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, handlePla
         setNewGame({ ...newGame, date: date });
     };
     const handleRebuy = (playerId) => {
+        setRebuyPlayerId(playerId);
         if (window.confirm("Is this player payed the rebuy?")) {
-            setRebuyPlayerId(playerId);
             setKiller(true);
             setGames((prevGames) => prevGames.map((game) => game.playerId === playerId
                 ? {
@@ -93,8 +108,11 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, handlePla
                 : game));
         }
     };
-    const calculatePoints = (position) => {
-        return position;
+    const calculatePoints = (position, isWinner = false) => {
+        if (isWinner) {
+            return initialPlayerCount; // Maximum points for the winner
+        }
+        return initialPlayerCount - position + 1;
     };
     const points = calculatePoints(outPlayers.length);
     console.log("Calculated Points:", points);
@@ -112,19 +130,23 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, handlePla
         console.log("Player ID clicked for Out of Game:", playerId);
         if (window.confirm(`Is ${playerId} out of the game?`)) {
             setKiller(true);
+            const position = initialPlayerCount - outPlayers.length; // Calculate the position
             const gameIndex = games.findIndex((game) => game.playerId === playerId);
             if (gameIndex !== -1) {
                 const game = games[gameIndex];
                 const outAt = new Date();
+                const points = calculatePoints(position);
                 const updatedGameForApi = {
                     ...game,
-                    points: calculatePoints(selectedPlayers.length),
+                    points: points,
                     outAt: outAt.toISOString(),
+                    position: position
                 };
                 const updatedGameForState = {
                     ...game,
-                    points: calculatePoints(outPlayers.length + 1),
+                    points: points,
                     outAt: outAt,
+                    position: position,
                 };
                 try {
                     await api.put(`/gamesResults/${game.id}`, updatedGameForApi);
@@ -133,6 +155,7 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, handlePla
                         playerId: playerId,
                         eliminatedById: eliminatedById,
                         points: points,
+                        position: position
                     });
                     setGames((prevGames) => {
                         const newGames = [...prevGames];
@@ -166,13 +189,28 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, handlePla
         }
     };
     const handleGameEnd = async () => {
+        if (currentlyPlayingPlayers.length > 1) {
+            alert("There should be at most one player left to end the game.");
+            return;
+        }
         if (window.confirm("Are you sure you want to stop the game?")) {
+            let updatedGames = [...games];
+            if (currentlyPlayingPlayers.length === 1) {
+                const position = initialPlayerCount - outPlayers.length;
+                const points = calculatePoints(position);
+                const winningPlayerId = currentlyPlayingPlayers[0]?.id;
+                const outAt = new Date();
+                updatedGames = updatedGames.map((game) => game.playerId === winningPlayerId
+                    ? { ...game, points: points, outAt: outAt, position: position }
+                    : game);
+                setGames(updatedGames);
+            }
             // Here, no need to map over selectedPlayers, just use the games state
             try {
                 // Make API call to save results to the database
-                const res = await api.post("/gameResults", games);
+                const res = await api.post("/gameResults", updatedGames);
                 // After the results are saved successfully, update the parent component
-                updateAfterGameEnd(games);
+                updateAfterGameEnd(updatedGames);
             }
             catch (error) {
                 console.error("Error:", error);
@@ -202,7 +240,7 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, handlePla
                                         else {
                                             return null; // Si le joueur n'est pas trouvé ou est "out", ne rien retourner
                                         }
-                                    }) }) })] }) }), _jsxs(Modal, { isOpen: !gameStarted, children: [_jsx(ModalHeader, { children: "Select Players and Game Details" }), _jsx(ModalBody, { children: _jsxs("div", { children: [_jsx(SelectPlayersGame, { players: players, selectedPlayers: selectedPlayers, handlePlayerSelect: handlePlayerSelect, onStartGame: onStartGame, championnat: championnat, selectedTournamentId: selectedTournamentId, setSelectedTournamentId: setSelectedTournamentId }), _jsx("h2", { children: "Game in Progress" }), _jsx(NewGameForm, { newGame: newGame, handleNewGameChange: handleNewGameChange, handleDateChange: handleDateChange, handleAddNewGame: onStartGame })] }) })] }), _jsxs("div", { children: [" ", _jsxs(Modal, { isOpen: gameStarted, onClose: handleGameEnd, children: [_jsx(ModalHeader, { children: "Game in Progress" }), _jsx(ModalBody, { children: _jsxs("div", { style: {
+                                    }) }) })] }) }), _jsxs(Modal, { isOpen: !gameStarted, children: [_jsx(ModalHeader, { children: "Select Players and Game Details" }), _jsx(ModalBody, { children: _jsxs(Modal, { isOpen: isSelectPlayersModalOpen, children: [_jsx(SelectPlayersGame, { players: players, selectedPlayers: selectedPlayers, handlePlayerSelect: handlePlayerSelect, onStartGame: onStartGameReview, championnat: championnat, selectedTournamentId: selectedTournamentId, setSelectedTournamentId: setSelectedTournamentId }), _jsx("h2", { children: "Game in Progress" }), _jsx(NewGameForm, { newGame: newGame, handleNewGameChange: handleNewGameChange, handleDateChange: handleDateChange, handleAddNewGame: onStartGame })] }) })] }), showReview ? (_jsx(ReviewSelectedPlayers, { selectedPlayers: selectedPlayers, onConfirm: confirmAndStartGame })) : (_jsxs("div", { children: [" ", _jsxs(Modal, { isOpen: gameStarted, onClose: handleGameEnd, children: [_jsx(ModalHeader, { className: "text-2xl bg-color-red", children: "Game in Progress" }), _jsx(ModalBody, { children: _jsxs("div", { style: {
                                         margin: "10 auto",
                                         // display: "flex",
                                         // justifyContent: "center",
@@ -215,7 +253,7 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, handlePla
                                                 const gameForPlayer = games.find((game) => game.playerId === player?.id);
                                                 // Si le jeu existe pour ce joueur, affichez les détails, sinon affichez une erreur
                                                 return (_jsx("div", { style: { display: "flex", flexDirection: "column" }, children: gameForPlayer ? (_jsx(CardPlayer, { playername: player?.name ?? " none", recave: gameForPlayer.rebuys, kill: gameForPlayer.kills, rebuy: () => handleRebuy(gameForPlayer.playerId), outOfGame: () => handleOutOfGame(gameForPlayer.partyId, gameForPlayer.playerId, gameForPlayer.eliminatedById) })) : (_jsxs("div", { children: ["Erreur: Pas de jeu pour ", player?.name] })) }, player?.id));
-                                            }) })] }) }), _jsx(ModalFooter, { children: gameStarted && (_jsxs(_Fragment, { children: [_jsx(Button, { onClick: handleGameEnd, children: "Stop Partie" }), _jsx(Button, { onClick: () => setIsPaused(!isPaused), children: isPaused ? "Resume" : "Pause" })] })) })] })] })] }));
+                                            }) })] }) }), _jsx(ModalFooter, { children: gameStarted && (_jsxs(_Fragment, { children: [_jsx(Button, { onClick: handleGameEnd, children: "Stop Partie" }), _jsx(Button, { onClick: () => setIsPaused(!isPaused), children: isPaused ? "Resume" : "Pause" })] })) })] })] }))] }));
 };
 export default StartGame;
 //# sourceMappingURL=StartGame.js.map

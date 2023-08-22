@@ -13,6 +13,7 @@ export interface Player {
     points: number;
     rebuys: number;
     buyin: number;
+    player: Player; 
     playerId: number;
     playerName:string
     partyId: number;

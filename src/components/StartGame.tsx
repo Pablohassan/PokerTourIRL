@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import api from "../api";
 import { NewGameForm } from "./NewGameForm";
 import SelectPlayersGame from "./SelectPlayersGame";
+import ReviewSelectedPlayers from "../components/ReviewSelectedPlayers"
 import {
   Modal,
   Button,
@@ -43,18 +44,21 @@ const StartGame: React.FC<StartGameProps> = ({
   updateAfterGameEnd,
 }) => {
   const [gameStarted, setGameStarted] = useState(false);
+  const [showReview, setShowReview] = useState(false);
   const [games, setGames] = useState<PlayerStats[]>([]);
   const [timeLeft, setTimeLeft] = useState(20 * 60); // 20 minutes in seconds
   const [blind, setBlind] = useState(10); // Replace with your initial blind value
   const [outPlayers, setOutPlayers] = useState<Player[]>([]);
+  const [initialPlayerCount, setInitialPlayerCount] = useState<number>(0);
   // const [isOpen, setIsOpen] = useState(true);
   const [isPaused, setIsPaused] = useState(false);
 
   const [selectedTournamentId, setSelectedTournamentId] = useState<
     number | null
   >(null);
-  const [isSelectPlayersModalOpen, setSelectPlayersModalOpen] = useState(true);
+  const [playerInGame, setPlayerInGame]=useState<Player[]>([]);
   const [killer, setKiller] = useState(false);
+  const [isSelectPlayersModalOpen, setIsSelectPlayersModalOpen] = useState(true);
   const [rebuyPlayerId, setRebuyPlayerId] = useState<number | null>(null);
 
   const [newGame, setNewGame] = useState({
@@ -90,6 +94,19 @@ const StartGame: React.FC<StartGameProps> = ({
   // const closePlayerModal = () => {
   //   setSelectPlayersModalOpen(false);
   // };
+  const onStartGameReview = () => {
+    setShowReview(true);
+  };
+
+  const confirmAndStartGame = async () => {
+    setShowReview(false); // Hide the review
+    await onStartGame();  // Now, start the game
+    
+  };
+
+  const closeSelectPlayersModal = () => {
+    setIsSelectPlayersModalOpen(false);
+  };
   
   const noTournaments = championnat.length === 0;
   const onStartGame = async () => {
@@ -118,6 +135,7 @@ const StartGame: React.FC<StartGameProps> = ({
       console.error(err);
       toast("Failed to start new game");
     }
+    setInitialPlayerCount(selectedPlayers.length);
     // setSelectPlayersModalOpen(false);
   };
 
@@ -130,8 +148,9 @@ const StartGame: React.FC<StartGameProps> = ({
   };
 
   const handleRebuy = (playerId: number) => {
+    setRebuyPlayerId(playerId);
     if (window.confirm("Is this player payed the rebuy?")) {
-      setRebuyPlayerId(playerId);
+      
       setKiller(true);
       setGames((prevGames) =>
         prevGames.map((game) =>
@@ -143,11 +162,15 @@ const StartGame: React.FC<StartGameProps> = ({
               }
             : game
         )
-      );
+      );  
     }
+
   };
-  const calculatePoints = (position: number) => {
-    return position;
+  const calculatePoints = (position: number, isWinner: boolean = false) => {
+    if (isWinner) {
+      return initialPlayerCount;  // Maximum points for the winner
+    }
+    return initialPlayerCount - position +1 ;
   };
 
   const points = calculatePoints(outPlayers.length);
@@ -177,19 +200,23 @@ const StartGame: React.FC<StartGameProps> = ({
 
     if (window.confirm(`Is ${playerId} out of the game?`)) {
       setKiller(true);
+      const position = initialPlayerCount - outPlayers.length; // Calculate the position
       const gameIndex = games.findIndex((game) => game.playerId === playerId);
       if (gameIndex !== -1) {
         const game = games[gameIndex];
         const outAt = new Date();
+        const points = calculatePoints(position);
         const updatedGameForApi = {
           ...game,
-          points: calculatePoints(selectedPlayers.length),
+          points: points,
           outAt: outAt.toISOString(),
+          position: position
         };
         const updatedGameForState = {
           ...game,
-          points: calculatePoints(outPlayers.length + 1),
+          points: points,
           outAt: outAt,
+          position: position,
         };
 
         try {
@@ -200,6 +227,7 @@ const StartGame: React.FC<StartGameProps> = ({
             playerId: playerId,
             eliminatedById: eliminatedById,
             points: points,
+            position:position
           });
 
           setGames((prevGames) => {
@@ -242,13 +270,34 @@ const StartGame: React.FC<StartGameProps> = ({
   };
 
   const handleGameEnd = async () => {
+    if (currentlyPlayingPlayers.length > 1) {
+      alert("There should be at most one player left to end the game.");
+      return;
+    }
     if (window.confirm("Are you sure you want to stop the game?")) {
+      let updatedGames = [...games];
+      if (currentlyPlayingPlayers.length === 1) {
+        
+        const position = initialPlayerCount - outPlayers.length;
+        const points = calculatePoints(position);
+        const winningPlayerId = currentlyPlayingPlayers[0]?.id;
+        const outAt = new Date();
+        
+        updatedGames = updatedGames.map((game) => 
+    game.playerId === winningPlayerId
+      ? { ...game, points: points , outAt:outAt, position:position}
+      : game
+  );
+  setGames(updatedGames);
+      }
+   
       // Here, no need to map over selectedPlayers, just use the games state
       try {
         // Make API call to save results to the database
-        const res = await api.post("/gameResults", games);
+        const res = await api.post("/gameResults", updatedGames);
         // After the results are saved successfully, update the parent component
-        updateAfterGameEnd(games);
+        updateAfterGameEnd(updatedGames);
+        
       } catch (error) {
         console.error("Error:", error);
       }
@@ -311,15 +360,16 @@ const StartGame: React.FC<StartGameProps> = ({
       <Modal isOpen={!gameStarted}>
         <ModalHeader>Select Players and Game Details</ModalHeader>
         <ModalBody>
-          <div>
+          <Modal isOpen={isSelectPlayersModalOpen} >
             <SelectPlayersGame
               players={players}
               selectedPlayers={selectedPlayers}
               handlePlayerSelect={handlePlayerSelect}
-              onStartGame={onStartGame}
+              onStartGame={onStartGameReview}
               championnat={championnat}
               selectedTournamentId={selectedTournamentId}
               setSelectedTournamentId={setSelectedTournamentId}
+              
             />
             <h2>Game in Progress</h2>
             <NewGameForm
@@ -328,14 +378,18 @@ const StartGame: React.FC<StartGameProps> = ({
               handleDateChange={handleDateChange}
               handleAddNewGame={onStartGame} // use onStartGame here
             />
-          </div>
+          </Modal>
         </ModalBody>
       </Modal>
+      {
+  showReview ? (
+    <ReviewSelectedPlayers selectedPlayers={selectedPlayers} onConfirm={confirmAndStartGame} />
+  ) : (
 
       <div>
         {" "}
         <Modal isOpen={gameStarted} onClose={handleGameEnd}>
-          <ModalHeader>Game in Progress</ModalHeader>
+          <ModalHeader className="text-2xl bg-color-red">Game in Progress</ModalHeader>
           <ModalBody>
             <div
               style={{
@@ -419,8 +473,9 @@ const StartGame: React.FC<StartGameProps> = ({
           </ModalFooter>
         </Modal>
       </div>
+  )}
     </div>
-  );
+          );
 };
 
 export default StartGame;

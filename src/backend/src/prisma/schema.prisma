@@ -1,13 +1,16 @@
-generator client {
-  provider = "prisma-client-js"
-}
+
 
 datasource db {
   provider = "mysql"
   url      = env("DATABASE_URL")
   relationMode = "prisma"
+  
 }
+generator client {
+  provider = "prisma-client-js"
 
+  
+}
 model Tournament {
   id        Int       @id @default(autoincrement())
   year      Int

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Modal, Checkbox, Button, ModalHeader, useDisclosure, ModalContent, ModalBody, ModalFooter, Input, Switch, Table, TableHeader, TableBody, TableCell, TableColumn, TableRow } from '@nextui-org/react';
 import { Player,Tournaments } from './interfaces';
 import toast, {Toaster} from 'react-hot-toast';
@@ -26,14 +26,18 @@ const SelectPlayersGame: React.FC<SelectPlayersProps> = ({setSelectedTournamentI
     });
 
     const noTournaments = championnat.length === 0;  // vérifiez si aucun tournoi n'existe
+    useEffect(() => {
+      onOpenChange();
+    }, []);
 
     const handleStartGame = () => {
-      if (selectedPlayers.length <4 || !selectedTournamentId) {
+      if (selectedPlayers.length < 4) {
         toast("Choisis un Tournois et séllectionne plus de 4 joueurs");
         return;
       }
-    onStartGame()}
-
+      onStartGame();
+      onClose();  // <-- Close the modal here
+    };
 
     const onSelectPlayer = (playerId: number) => {
       setCurrentGame((prevGame) => {
@@ -67,10 +71,10 @@ const SelectPlayersGame: React.FC<SelectPlayersProps> = ({setSelectedTournamentI
     };
    
     return (
-      <Modal isOpen={true} isDismissable={true} closeButton={true}>
-      <ModalContent>
-        <ModalHeader className="with-full height-full" > Nouvelle Partie:</ModalHeader>
-        <ModalBody>
+      <Modal style={{height:"750px"}} isOpen={isOpen} isDismissable={true} closeButton={true}>
+      <ModalContent  >
+        <ModalHeader > Nouvelle Partie:</ModalHeader>
+        <ModalBody >
           <div>
             {!noTournaments ? (
               <select value={selectedTournamentId ?? ""} onChange={(e) => handleTournamentChange(Number(e.target.value))}>
@@ -86,7 +90,7 @@ const SelectPlayersGame: React.FC<SelectPlayersProps> = ({setSelectedTournamentI
             )}
           </div>
           <ModalHeader>Selection des Joueurs</ModalHeader>
-    <Table>
+    <Table style={{height:"400px"}}>
         <TableHeader>
             <TableColumn>
                 
@@ -110,7 +114,7 @@ const SelectPlayersGame: React.FC<SelectPlayersProps> = ({setSelectedTournamentI
         </TableBody>
     </Table>
           <div>
-            <Button className='p-4 m-4' variant='bordered' onClick={() => onOpenChange()}>Cancel</Button>
+            <Button className='p-4 m-4' variant='bordered' onClick={() => onClose()}>Cancel</Button>
             <Button color='success' className='p-4 m-4'  onClick={handleStartGame}>Start Game</Button>
           </div>
         </ModalBody>
