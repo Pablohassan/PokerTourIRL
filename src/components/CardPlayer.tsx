@@ -23,13 +23,13 @@ export const CardPlayer: React.FC<CardPlayerProps> = ({
   outOfGame,
 }) => {
   return (
-    <Card style={{ width: "220px", height: "200px" }}>
+    <Card style={{ width: "150px", height: "200px" }}>
       <CardHeader style={{ position: "absolute", zIndex: 1, top: 5 }}>
-        <div>
-          <div>{playername}</div>
-        </div>
+      
+          <div className="text-lg" >{playername}</div>
+      
       </CardHeader>
-      <CardBody style={{ padding: 0 }}>
+     
         <Image
           src="https://nextui.org/images/card-example-6.jpeg"
           width="100%"
@@ -37,7 +37,8 @@ export const CardPlayer: React.FC<CardPlayerProps> = ({
           className="z-0 w-full h-full object-cover"
           alt="Card example background"
         />
-      </CardBody>
+   
+   
       <CardFooter
         style={{
           backgroundColor: "#ffffff",
@@ -51,8 +52,8 @@ export const CardPlayer: React.FC<CardPlayerProps> = ({
       >
         <div>
           <div>
-            <div color="#000">Recaves:{recave}</div>
-            <div color="#000">Kills:{kill}</div>
+            <div className="text-lg" color="#000">Recaves:{recave}</div>
+            <div className="text-lg" color="#000">Kills:{kill}</div>
           </div>
           <div>
             <div>

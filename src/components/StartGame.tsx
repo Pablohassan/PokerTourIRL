@@ -18,6 +18,7 @@ import { CardPlayer } from "./CardPlayer";
 
 import DSdigital from "../assets/fonts/DS-DIGI.ttf";
 import toast from "react-hot-toast";
+import Spacer from '../../../bourlyleague/frontend/src/component/Spacer';
 
 interface Tournaments {
   id: number;
@@ -389,7 +390,7 @@ const StartGame: React.FC<StartGameProps> = ({
       <div>
         {" "}
         <Modal isOpen={gameStarted} onClose={handleGameEnd}>
-          <ModalHeader className="text-2xl bg-color-red">Game in Progress</ModalHeader>
+          <ModalHeader className="text-xl bg-color-red">Game in Progress</ModalHeader>
           <ModalBody>
             <div
               style={{
@@ -401,10 +402,10 @@ const StartGame: React.FC<StartGameProps> = ({
               {gameStarted && (
                 <>
                   <div className="p-5 flex flex-col items-center border-black">
-                    <div className="text-lg">
+                    <div className="text-xl font-digital-7">
                       Time left: {formatTime(timeLeft)} seconds.
                     </div>
-                    <div className="text-lg">
+                    <div className="text-xl bg-slate-900">
                       Small blind: {blind} / Big Blind :{blind * 2}
                     </div>
                   </div>
@@ -434,11 +435,14 @@ const StartGame: React.FC<StartGameProps> = ({
 
                   // Si le jeu existe pour ce joueur, affichez les détails, sinon affichez une erreur
                   return (
-                    <div
+             
+                    <div 
                       key={player?.id}
-                      style={{ display: "flex", flexDirection: "column" }}
+                      style={{ display: "flex", flexDirection: "column",  }}
                     >
+                
                       {gameForPlayer ? (
+                               <div className="p-1" >
                         <CardPlayer
                           playername={player?.name ?? " none"}
                           recave={gameForPlayer.rebuys}
@@ -452,9 +456,11 @@ const StartGame: React.FC<StartGameProps> = ({
                             )
                           }
                         />
+                            </div>
                       ) : (
                         <div>Erreur: Pas de jeu pour {player?.name}</div>
                       )}
+                  
                     </div>
                   );
                 })}
