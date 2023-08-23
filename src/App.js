@@ -2,13 +2,11 @@ import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import React, { useState, useEffect } from "react";
 import { Navbar, Link, NavbarBrand, NavbarContent, NavbarItem } from "@nextui-org/react";
 import api from "./api";
-// import { Layout } from "./components/Layout";
 import { useRoutes, Routes, Route } from "react-router-dom";
 import { PlayerRanking } from "./components/PLayerRanking";
 import PartyResults from "./components/PartyResults";
 import StartGame from "./components/StartGame";
 import PartyPage from "./components/PartyPage";
-import { SelectedPlayers } from "./components/SelectedPlayers";
 // import Ak from "./components/PokerLogo";
 import { ClerkProvider, SignedIn, SignedOut, SignOutButton, RedirectToSignIn, SignIn, SignUp, } from "@clerk/clerk-react";
 import AddPlayer from "./components/AddPlayer";
@@ -106,6 +104,6 @@ export default function App() {
                         // <Layout championnat={championnat}>
                         _jsxs(Navbar, { position: "static", className: "", children: [_jsx(NavbarBrand, {}), _jsxs(NavbarContent, { className: "sm:flex gap-4", justify: "center", children: [_jsx(NavbarItem, { children: _jsx(Link, { color: "foreground", href: "/ranking", children: "Ranking" }) }), _jsx(NavbarItem, { children: _jsx(Link, { color: "foreground", href: "/startGame", children: "Start Partie" }) }), _jsx(Link, { href: "/results", children: "Results" }), _jsx(Link, { href: "/addplayer", children: "Add player" }), _jsx(Link, { href: "/partypage", children: "All Parties" })] }), _jsx(SignOutButton, {})] })
                         // </Layout>
-                        ) }), _jsxs(SignedOut, { children: [_jsxs(Navbar, { shouldHideOnScroll: true, children: [_jsx(NavbarBrand, {}), _jsxs(NavbarContent, { children: [_jsx(NavbarItem, { children: _jsx(Link, { href: "/sign-up/*", children: "Sign Up" }) }), _jsx(Link, { href: "/sign-in/*", children: "Sign in" })] }), _jsxs(NavbarContent, { children: [_jsx(Link, { href: "/ranking", children: "Ranking" }), _jsx(NavbarItem, { children: _jsx(SignedOut, {}) })] }), _jsx(SignOutButton, {})] }), _jsxs(Routes, { children: [_jsx(Route, { path: "/sign-in/*", element: _jsx(SignIn, {}) }), _jsx(Route, { path: "/sign-up/*", element: _jsx(SignUp, {}) }), _jsx(Route, { path: "/*", element: _jsx(RedirectToSignIn, {}) })] }), ";"] })] }), _jsx(SelectedPlayers, { selectedPlayers: selectedPlayers }), element] }));
+                        ) }), _jsxs(SignedOut, { children: [_jsxs(Navbar, { shouldHideOnScroll: true, children: [_jsx(NavbarBrand, {}), _jsxs(NavbarContent, { children: [_jsx(NavbarItem, { children: _jsx(Link, { href: "/sign-up/*", children: "Sign Up" }) }), _jsx(Link, { href: "/sign-in/*", children: "Sign in" })] }), _jsxs(NavbarContent, { children: [_jsx(Link, { href: "/ranking", children: "Ranking" }), _jsx(NavbarItem, { children: _jsx(SignedOut, {}) })] }), _jsx(SignOutButton, {})] }), _jsxs(Routes, { children: [_jsx(Route, { path: "/sign-in/*", element: _jsx(SignIn, {}) }), _jsx(Route, { path: "/sign-up/*", element: _jsx(SignUp, {}) }), _jsx(Route, { path: "/*", element: _jsx(RedirectToSignIn, {}) })] }), ";"] })] }), element] }));
 }
 //# sourceMappingURL=App.js.map

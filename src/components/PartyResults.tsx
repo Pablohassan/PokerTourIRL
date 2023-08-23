@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect } from "react";
 import PlayerTable from "./PlayerTable";
 import{ PlayerStats, PlayerTableProps,PartyResultsProps, } from "./interfaces.js"
-import { SelectedPlayers } from "./SelectedPlayers";
+
 
 
 
@@ -14,15 +14,14 @@ function calculateGains(playerStats: PlayerStats[]): number {
     return sum + Math.round(gain);
   }, 0);
 }
+
+
 const PartyResults: React.FC<PartyResultsProps> = ({
   players,
   playerStats
 }) => {
 ;
 
-
-
-  
   
   const tableConfigs: PlayerTableProps["config"][] = [
     {

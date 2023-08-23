@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Navbar, Link, NavbarBrand, NavbarContent, NavbarItem } from "@nextui-org/react";
 import api from "./api";
-// import { Layout } from "./components/Layout";
 import { useRoutes, Routes, Route } from "react-router-dom";
 import { PlayerRanking } from "./components/PLayerRanking";
 import PartyResults from "./components/PartyResults";
 import StartGame from "./components/StartGame";
 import PartyPage from "./components/PartyPage";
-import { SelectedPlayers } from "./components/SelectedPlayers";
+
 // import Ak from "./components/PokerLogo";
 import {
   useUser,
@@ -223,7 +222,7 @@ element:( <PartyPage
           ;
         </SignedOut>
       </ClerkProvider>
-      <SelectedPlayers selectedPlayers={selectedPlayers}  />
+      {/* <SelectedPlayers selectedPlayers={selectedPlayers}  /> */}
       {element}
     </div>
   );
