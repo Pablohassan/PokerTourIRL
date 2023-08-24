@@ -23,7 +23,7 @@ export const CardPlayer: React.FC<CardPlayerProps> = ({
   outOfGame,
 }) => {
   return (
-    <Card style={{ width: "150px", height: "200px" }}>
+    <Card style={{ width: "130px", height: "180px" }}>
       <CardHeader style={{ position: "absolute", zIndex: 1, top: 5 }}>
       
           <div className="text-lg" >{playername}</div>
@@ -63,7 +63,8 @@ export const CardPlayer: React.FC<CardPlayerProps> = ({
                 color="secondary"
                 onPress={rebuy}
               >
-                <div
+                <div 
+                className="p-1"
                   style={{
                     color: "inherit",
                     fontSize: 12,
@@ -75,7 +76,7 @@ export const CardPlayer: React.FC<CardPlayerProps> = ({
                 </div>
               </Button>
             </div>
-            <div>
+            <div className="p1">
               <Button
                 size="sm"
                 variant="bordered"

@@ -16,7 +16,7 @@ const ReviewSelectedPlayers: React.FC<ReviewSelectedPlayersProps> = ({ selectedP
   return (
     <div>
    <div className="bg-cover bg-center h-screen w-full flex flex-col justify-center items-center border-x-4 border-white" style={{ backgroundImage: `url(${bgReview})`}}>  
-      <h3 className='text-xl text-white'>Valider la sellection la partie </h3>
+      <h3 className='text-xl text-white'>Validez la sellection </h3>
       <div className='gap-x-10'>
       <ul>
         {selectedPlayers.map(player => (

@@ -1,7 +1,6 @@
 import React, { useState, useEffect, ChangeEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api";
-import { NewGameForm } from "./NewGameForm";
 import SelectPlayersGame from "./SelectPlayersGame";
 import ReviewSelectedPlayers from "../components/ReviewSelectedPlayers"
 import {
@@ -372,13 +371,7 @@ const StartGame: React.FC<StartGameProps> = ({
               setSelectedTournamentId={setSelectedTournamentId}
               
             />
-            <h2>Game in Progress</h2>
-            <NewGameForm
-              newGame={newGame}
-              handleNewGameChange={handleNewGameChange}
-              handleDateChange={handleDateChange}
-              handleAddNewGame={onStartGame} // use onStartGame here
-            />
+           
           </Modal>
         </ModalBody>
       </Modal>
@@ -389,7 +382,7 @@ const StartGame: React.FC<StartGameProps> = ({
 
       <div>
         {" "}
-        <Modal isOpen={gameStarted} onClose={handleGameEnd}>
+        <Modal  isOpen={gameStarted} onClose={handleGameEnd}>
           <ModalHeader className="text-xl bg-color-red">Game in Progress</ModalHeader>
           <ModalBody>
             <div
@@ -400,8 +393,9 @@ const StartGame: React.FC<StartGameProps> = ({
               }}
             >
               {gameStarted && (
-                <>
-                  <div className="p-5 flex flex-col items-center border-black">
+                <div className="max-w-sm flex flex-col border-3 border-black rounded-md">
+                  <div className="w-4/5 p-5 flex sm:flex-col md:flex-row justify-between items-center border-dotted border-x-2 border-black">
+           
                     <div className="text-xl font-digital-7">
                       Time left: {formatTime(timeLeft)} seconds.
                     </div>
@@ -409,15 +403,20 @@ const StartGame: React.FC<StartGameProps> = ({
                       Small blind: {blind} / Big Blind :{blind * 2}
                     </div>
                   </div>
-
-                  <Button onClick={handleGameEnd}>Stop Partie</Button>
-                  <Button
-                    className="rounded-full"
+                  <div className="flex flex-row justify-center space-x-4 items-center">
+                    <div className="p-4">
+                  <Button color="danger" className="text-white" onClick={handleGameEnd}>Stop Partie</Button>
+                  </div>
+                  <div>
+                  <Button className="p-4"
+                    color="warning"
                     onClick={() => setIsPaused(!isPaused)}
                   >
                     {isPaused ? "Resume" : "Pause"}
                   </Button>
-                </>
+                  </div>
+                  </div>
+                </div>
               )}
 
               <div
@@ -467,16 +466,7 @@ const StartGame: React.FC<StartGameProps> = ({
               </div>
             </div>
           </ModalBody>
-          <ModalFooter>
-            {gameStarted && (
-              <>
-                <Button onClick={handleGameEnd}>Stop Partie</Button>
-                <Button onClick={() => setIsPaused(!isPaused)}>
-                  {isPaused ? "Resume" : "Pause"}
-                </Button>
-              </>
-            )}
-          </ModalFooter>
+         
         </Modal>
       </div>
   )}
