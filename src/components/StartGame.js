@@ -1,56 +1,93 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api";
 import SelectPlayersGame from "./SelectPlayersGame";
+import { Content } from './Content';
 import ReviewSelectedPlayers from "../components/ReviewSelectedPlayers";
 import { Modal, Button, ModalHeader, ModalBody, ModalContent, ButtonGroup, } from "@nextui-org/react";
 import { CardPlayer } from "./CardPlayer";
+import BlindTimer from "./BlindTimer";
 import toast from "react-hot-toast";
 const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, handlePlayerSelect, players, updateAfterGameEnd, }) => {
     const [gameStarted, setGameStarted] = useState(false);
     const [showReview, setShowReview] = useState(false);
     const [games, setGames] = useState([]);
     const [timeLeft, setTimeLeft] = useState(20 * 60); // 20 minutes in seconds
-    const [blind, setBlind] = useState(10); // Replace with your initial blind value
+    const [smallBlind, setSmallBlind] = useState(10);
+    const [bigBlind, setBigBlind] = useState(20);
     const [outPlayers, setOutPlayers] = useState([]);
     const [initialPlayerCount, setInitialPlayerCount] = useState(0);
-    // const [isOpen, setIsOpen] = useState(true);
     const [isPaused, setIsPaused] = useState(false);
     const [selectedTournamentId, setSelectedTournamentId] = useState(null);
-    const [playerInGame, setPlayerInGame] = useState([]);
+    const [playerOutGame, setPlayerOutGame] = useState(null);
     const [killer, setKiller] = useState(false);
     const [isSelectPlayersModalOpen, setIsSelectPlayersModalOpen] = useState(true);
     const [rebuyPlayerId, setRebuyPlayerId] = useState(null);
-    const [newGame, setNewGame] = useState({
-        date: new Date(),
-        points: 0,
-        rebuys: 0,
-    });
-    const navigate = useNavigate();
+    const [partyStarted, setPartyStarted] = useState(null);
+    const [currentParty, setCurrentParty] = useState(null);
+    const [partyId, setPartyId] = useState(false);
+    const [partyEnded, setPartyEnded] = useState(null);
     useEffect(() => {
-        if (!gameStarted) {
-            return;
+        const restoreState = async () => {
+            // If the game is not started, try to restore the state
+            if (!gameStarted) {
+                // Fetch data from your API or localStorage
+                const savedState = localStorage.getItem('gameState');
+                if (savedState) {
+                    const { timeLeft, smallBlind, bigBlind, killer, rebuyPlayerId, games, outPlayers, initialPlayerCount, selectedTournamentId, partyStarted, showReview } = JSON.parse(savedState);
+                    setTimeLeft(timeLeft);
+                    setSmallBlind(smallBlind);
+                    setBigBlind(bigBlind);
+                    setGames(games);
+                    setKiller(killer);
+                    setRebuyPlayerId(rebuyPlayerId);
+                    setOutPlayers(outPlayers);
+                    setInitialPlayerCount(initialPlayerCount);
+                    setSelectedTournamentId(selectedTournamentId);
+                    setPartyStarted(partyStarted);
+                    // ...set other state variables
+                    setGameStarted(true); // Now, the game is restored
+                    setShowReview(showReview);
+                }
+            }
+        };
+        restoreState();
+    }, []);
+    useEffect(() => {
+        if (partyId !== false) {
+            // Replace `partyId` with the actual party ID you want to check
+            const fetchPartyState = async () => {
+                try {
+                    const response = await api.get(`/parties/state/${partyId}`);
+                    const { partyStarted, partyEnded } = response.data;
+                    setPartyStarted(partyStarted);
+                    setPartyEnded(partyEnded);
+                }
+                catch (error) {
+                    console.error('Failed to fetch party state:', error);
+                }
+            };
+            fetchPartyState();
         }
-        const timer = setInterval(() => {
-            setTimeLeft((time) => {
-                if (isPaused) {
-                    return time; // If the game is paused, don't decrement timeLeft
+    }, [partyId]);
+    useEffect(() => {
+        const fetchCurrentParty = async () => {
+            try {
+                const response = await api.get("/api/currentParty"); // <-- Replace with your actual API endpoint
+                const data = await response.data;
+                if (data && data.id) {
+                    setCurrentParty(data);
+                    setGameStarted(true);
                 }
-                if (time === 0) {
-                    setBlind((blind) => blind * 2);
-                    return 20 * 60; // reset time
-                }
-                else {
-                    return time - 1;
-                }
-            });
-        }, 1000);
-        return () => clearInterval(timer);
-    }, [gameStarted, isPaused]);
-    // const closePlayerModal = () => {
-    //   setSelectPlayersModalOpen(false);
-    // };
+            }
+            catch (err) {
+                console.error("Error fetching current party:", err);
+            }
+        };
+        fetchCurrentParty();
+    }, []);
+    const navigate = useNavigate();
     const onStartGameReview = () => {
         setShowReview(true);
     };
@@ -58,12 +95,13 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, handlePla
         setShowReview(false); // Hide the review
         await onStartGame(); // Now, start the game
     };
-    const closeSelectPlayersModal = () => {
-        setIsSelectPlayersModalOpen(false);
-    };
     const noTournaments = championnat.length === 0;
     const onStartGame = async () => {
-        // setSelectPlayersModalOpen(true); // Close the "Select Players" modal
+        if (gameStarted) {
+            // If a game is already started, don't start a new game.
+            alert('A game is already in progress.');
+            return;
+        }
         const actualTournamentId = noTournaments ? null : selectedTournamentId;
         try {
             const response = await api.post("/playerStats/start", {
@@ -86,17 +124,25 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, handlePla
             toast("Failed to start new game");
         }
         setInitialPlayerCount(selectedPlayers.length);
+        const gameState = {
+            timeLeft,
+            smallBlind,
+            bigBlind,
+            killer,
+            rebuyPlayerId,
+            games,
+            outPlayers,
+            initialPlayerCount,
+            selectedTournamentId,
+            partyStarted,
+            showReview
+        };
+        localStorage.setItem('gameState', JSON.stringify(gameState));
         // setSelectPlayersModalOpen(false);
     };
-    const handleNewGameChange = (event) => {
-        setNewGame({ ...newGame, [event.target.name]: event.target.value });
-    };
-    const handleDateChange = (date) => {
-        setNewGame({ ...newGame, date: date });
-    };
     const handleRebuy = (playerId) => {
-        setRebuyPlayerId(playerId);
         if (window.confirm("Is this player payed the rebuy?")) {
+            setRebuyPlayerId(playerId);
             setKiller(true);
             setGames((prevGames) => prevGames.map((game) => game.playerId === playerId
                 ? {
@@ -115,20 +161,23 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, handlePla
     };
     const points = calculatePoints(outPlayers.length);
     console.log("Calculated Points:", points);
-    const handlePlayerKillSelection = (killerPlayerId) => {
+    const updateKiller = async (killerPlayerId, partyId) => {
+        setGames((prevGames) => prevGames.map((game) => game.playerId === killerPlayerId
+            ? { ...game, kills: game.kills + 1 }
+            : game));
+        setKiller(false); // Close the modal for selecting the killer
+        // Any other logic that you need to add for the killer
+    };
+    const handlePlayerKillSelection = async (killerPlayerId, partyId) => {
         if (window.confirm("Do you want to select this player as the killer?")) {
-            setKiller(true);
-            setGames((prevGames) => prevGames.map((game) => game.playerId === killerPlayerId
-                ? { ...game, kills: game.kills + 1 }
-                : game));
-            // Fermer la modale après la sélection
-            setKiller(false);
+            await updateKiller(killerPlayerId, partyId);
         }
     };
     const handleOutOfGame = async (partyId, playerId, eliminatedById) => {
         console.log("Player ID clicked for Out of Game:", playerId);
-        if (window.confirm(`Is ${playerId} out of the game?`)) {
+        if (eliminatedById !== null || window.confirm(`Is ${playerId} out of the game?`)) {
             setKiller(true);
+            setPlayerOutGame(playerId);
             const position = initialPlayerCount - outPlayers.length; // Calculate the position
             const gameIndex = games.findIndex((game) => game.playerId === playerId);
             if (gameIndex !== -1) {
@@ -141,12 +190,6 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, handlePla
                     outAt: outAt.toISOString(),
                     position: position
                 };
-                const updatedGameForState = {
-                    ...game,
-                    points: points,
-                    outAt: outAt,
-                    position: position,
-                };
                 try {
                     await api.put(`/gamesResults/${game.id}`, updatedGameForApi);
                     await api.put("/playerStats/eliminate", {
@@ -158,7 +201,12 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, handlePla
                     });
                     setGames((prevGames) => {
                         const newGames = [...prevGames];
-                        newGames[gameIndex] = updatedGameForState;
+                        newGames[gameIndex] = {
+                            ...game,
+                            points: points,
+                            outAt: outAt,
+                            position: position,
+                        };
                         return newGames;
                     });
                     setOutPlayers((prevOutPlayers) => {
@@ -204,22 +252,19 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, handlePla
                     : game);
                 setGames(updatedGames);
             }
-            // Here, no need to map over selectedPlayers, just use the games state
             try {
-                // Make API call to save results to the database
                 const res = await api.post("/gameResults", updatedGames);
-                // After the results are saved successfully, update the parent component
                 updateAfterGameEnd(updatedGames);
             }
             catch (error) {
                 console.error("Error:", error);
             }
             setGameStarted(false);
+            setPartyId(false);
+            localStorage.removeItem('gameState');
             navigate("/results");
         }
     };
-    console.log(games);
-    console.log("si game started", gameStarted);
     const currentlyPlayingPlayers = games
         .filter((game) => !game.outAt)
         .map((game) => {
@@ -230,20 +275,28 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, handlePla
         const secs = seconds % 60;
         return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
     };
-    return (_jsxs("div", { className: "", children: [_jsx(Modal, { isOpen: killer, children: _jsxs(ModalContent, { children: [_jsx(ModalHeader, { className: "with-full height-full", children: "Select a Killer" }), _jsx(ModalBody, { children: _jsx("div", { color: "danger", children: games &&
+    return (_jsxs("div", { className: "", children: [_jsx(BlindTimer, { gameStarted: gameStarted, isPaused: isPaused, 
+                // Handle the blind change here
+                onBlindChange: (small, big) => {
+                    setSmallBlind(small);
+                    setBigBlind(big);
+                }, onTimeChange: (time) => {
+                    // Handle time change here
+                    setTimeLeft(time);
+                } }), _jsx(Modal, { isOpen: killer, children: _jsxs(ModalContent, { children: [_jsx(ModalHeader, { className: "with-full height-full", children: "Select a Killer" }), _jsx(ModalBody, { children: _jsx("div", { color: "danger", children: games &&
                                     games.map((game) => {
                                         const player = currentlyPlayingPlayers.find((p) => p?.id === game.playerId);
-                                        if (player && !game.outAt && player.id !== rebuyPlayerId) {
-                                            return (_jsx(ButtonGroup, { children: _jsx(Button, { color: "warning", className: "text-lg p-2 m-1", onClick: () => handlePlayerKillSelection(player.id), children: player.name }, player.id) }));
+                                        if (player && !game.outAt && player.id !== rebuyPlayerId && player.id !== playerOutGame) {
+                                            return (_jsx(ButtonGroup, { style: { padding: "2px" }, children: _jsx(Button, { variant: "bordered", color: "warning", className: "text-lg p-2 m-1", onClick: () => handlePlayerKillSelection(player.id, game.partyId), children: player.name }, player.id) }));
                                         }
                                         else {
                                             return null; // Si le joueur n'est pas trouvé ou est "out", ne rien retourner
                                         }
-                                    }) }) })] }) }), _jsxs(Modal, { isOpen: !gameStarted, children: [_jsx(ModalHeader, { children: "Select Players and Game Details" }), _jsx(ModalBody, { children: _jsx(Modal, { isOpen: isSelectPlayersModalOpen, children: _jsx(SelectPlayersGame, { players: players, selectedPlayers: selectedPlayers, handlePlayerSelect: handlePlayerSelect, onStartGame: onStartGameReview, championnat: championnat, selectedTournamentId: selectedTournamentId, setSelectedTournamentId: setSelectedTournamentId }) }) })] }), showReview ? (_jsx(ReviewSelectedPlayers, { selectedPlayers: selectedPlayers, onConfirm: confirmAndStartGame })) : (_jsxs("div", { children: [" ", _jsxs(Modal, { isOpen: gameStarted, onClose: handleGameEnd, children: [_jsx(ModalHeader, { className: "text-xl bg-color-red", children: "Game in Progress" }), _jsx(ModalBody, { children: _jsxs("div", { style: {
+                                    }) }) })] }) }), _jsxs(Modal, { isOpen: !gameStarted && !currentParty, children: [_jsx(ModalHeader, { children: "Select Players and Game Details" }), _jsx(ModalBody, { children: _jsx(Modal, { isOpen: isSelectPlayersModalOpen, children: _jsx(SelectPlayersGame, { players: players, selectedPlayers: selectedPlayers, handlePlayerSelect: handlePlayerSelect, onStartGame: onStartGameReview, championnat: championnat, selectedTournamentId: selectedTournamentId, setSelectedTournamentId: setSelectedTournamentId }) }) })] }), showReview && !partyId ? (_jsx(ReviewSelectedPlayers, { selectedPlayers: selectedPlayers, onConfirm: confirmAndStartGame })) : (_jsxs("div", { children: [" ", _jsxs(Modal, { isOpen: gameStarted, onClose: handleGameEnd, children: [_jsx(ModalHeader, { className: "text-xl bg-color-red", children: "Game in Progress" }), _jsx(Content, { championnat: championnat }), _jsx(ModalBody, { children: _jsxs("div", { style: {
                                         margin: "10 auto",
                                         // display: "flex",
                                         // justifyContent: "center",
-                                    }, children: [gameStarted && (_jsxs("div", { className: "max-w-sm flex flex-col border-3 border-black rounded-md", children: [_jsxs("div", { className: "w-4/5 p-5 flex sm:flex-col md:flex-row justify-between items-center border-dotted border-x-2 border-black", children: [_jsxs("div", { className: "text-xl font-digital-7", children: ["Time left: ", formatTime(timeLeft), " seconds."] }), _jsxs("div", { className: "text-xl bg-slate-900", children: ["Small blind: ", blind, " / Big Blind :", blind * 2] })] }), _jsxs("div", { className: "flex flex-row justify-center space-x-4 items-center", children: [_jsx("div", { className: "p-4", children: _jsx(Button, { color: "danger", className: "text-white", onClick: handleGameEnd, children: "Stop Partie" }) }), _jsx("div", { children: _jsx(Button, { className: "p-4", color: "warning", onClick: () => setIsPaused(!isPaused), children: isPaused ? "Resume" : "Pause" }) })] })] })), _jsx("div", { style: {
+                                    }, children: [gameStarted && (_jsxs("div", { className: "max-w-sm flex flex-col border-3 border-black rounded-md", children: [_jsxs("div", { className: "w-4/5 p-5 flex sm:flex-col md:flex-row justify-between items-center border-dotted border-x-2 border-black", children: [_jsxs("div", { className: "text-xl font-digital-7", children: ["Time left: ", formatTime(timeLeft)] }), _jsxs("div", { className: "text-xl bg-slate-900", children: ["Small: ", smallBlind, " / Big :", bigBlind] })] }), _jsxs("div", { className: "flex flex-row justify-center space-x-4 items-center", children: [_jsx("div", { className: "p-4", children: _jsx(Button, { color: "danger", className: "text-white", onClick: handleGameEnd, children: "Stop Partie" }) }), _jsx("div", { children: _jsx(Button, { className: "p-4", color: "warning", onClick: () => setIsPaused(!isPaused), children: isPaused ? "Resume" : "Pause" }) })] })] })), _jsx("div", { style: {
                                                 display: "flex",
                                                 flexDirection: "row",
                                                 flexWrap: "wrap",

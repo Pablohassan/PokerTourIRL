@@ -1,93 +1,61 @@
 import express from "express";
+import _ from "lodash";
 import cors from "cors";
 import { PrismaClient } from "@prisma/client";
+import { fetchGamesForPlayer } from "./services/fetsh-game-for-player.js";
 const prisma = new PrismaClient();
 const app = express();
 app.options("*", cors());
 app.use(cors({ origin: "http://localhost:5173" }));
 app.use(express.json());
 app.use((req, res, next) => {
-    console.log(`${new Date().toISOString()} - ${req.method} request for ${req.url}`);
-    next();
-});
-app.use((req, res, next) => {
-    console.log("Received request:", req.method, req.url);
-    console.log("Response headers:", res.getHeaders());
-    next();
-});
-app.use(function (req, res, next) {
     res.header("Access-Control-Allow-Origin", "http://localhost:5173");
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
     next();
 });
+app.use(express.json());
 app.use((req, res, next) => {
     console.log("Received request:", req.method, req.url);
-    console.log("Response headers:", res.getHeaders());
     next();
 });
-async function fetchGamesForPlayer(playerId, tournamentId) {
-    return await prisma.playerStats.findMany({
-        where: {
-            playerId: playerId,
-            party: {
-                tournamentId: tournamentId,
-            },
-        },
-    });
-}
-app.get("/season-points/:playerId/:tournamentId", async (req, res) => {
-    const playerId = parseInt(req.params.playerId);
-    const tournamentId = parseInt(req.params.tournamentId);
-    const games = await fetchGamesForPlayer(playerId, tournamentId);
-    const totalPoints = games.reduce((sum, game) => sum + game.points, 0);
-    res.json({ totalPoints });
+app.get("/season-points/:playerId/:tournamentId", async (req, res, next) => {
+    try {
+        const playerId = parseInt(req.params.playerId);
+        const tournamentId = parseInt(req.params.tournamentId);
+        const games = await fetchGamesForPlayer(playerId, tournamentId);
+        const totalPoints = _.sumBy(games, "points");
+        res.json({ totalPoints });
+    }
+    catch (err) {
+        next(err);
+    }
 });
-app.get("/player-total-cost/:playerId/:tournamentId", async (req, res) => {
-    const playerId = parseInt(req.params.playerId);
-    const tournamentId = parseInt(req.params.tournamentId);
-    const games = await fetchGamesForPlayer(playerId, tournamentId);
-    const totalCost = games.reduce((sum, game) => sum + game.buyin + game.rebuys, 0);
-    res.json({ totalCost });
-});
-app.get("/player-gains/:playerId/:tournamentId", async (req, res) => {
-    const playerId = parseInt(req.params.playerId);
-    const tournamentId = parseInt(req.params.tournamentId);
-    const games = await prisma.playerStats.findMany({
-        where: {
-            playerId: playerId,
-            party: {
-                tournamentId: tournamentId,
-            },
-        },
-    });
-    console.log("games:", games);
-    const gains = games.reduce((sum, game) => {
-        console.log("game.position:", game.position);
-        console.log("game.totalCost:", game.totalCost);
-        let gain = 0;
-        if (game.position === 1)
-            gain = game.totalCost * 0.6;
-        else if (game.position === 2)
-            gain = game.totalCost * 0.3;
-        else if (game.position === 3)
-            gain = game.totalCost * 0.1;
-        return sum + gain;
-    }, 0);
-    res.json({ gains });
-});
-app.get("/player-total-rebuys/:playerId/:tournamentId", async (req, res) => {
-    const playerId = parseInt(req.params.playerId);
-    const tournamentId = parseInt(req.params.tournamentId);
-    const games = await prisma.playerStats.findMany({
-        where: {
-            playerId: playerId,
-            party: {
-                tournamentId: tournamentId,
-            },
-        },
-    });
-    const totalRebuys = games.reduce((sum, game) => sum + game.rebuys, 0);
-    res.json({ totalRebuys });
+app.get("/player-stats/:playerId/:tournamentId", async (req, res, next) => {
+    try {
+        const playerId = parseInt(req.params.playerId);
+        const tournamentId = parseInt(req.params.tournamentId);
+        const games = await fetchGamesForPlayer(playerId, tournamentId);
+        // Calculate totalCost
+        const totalCost = _.sumBy(games, (game) => game.buyin + game.rebuys);
+        // Calculate gains
+        const gains = _.sumBy(games, (game) => {
+            let gain = 0;
+            if (game.position === 1)
+                gain = game.totalCost * 0.6;
+            else if (game.position === 2)
+                gain = game.totalCost * 0.3;
+            else if (game.position === 3)
+                gain = game.totalCost * 0.1;
+            return gain;
+        });
+        // Calculate totalRebuys
+        const totalRebuys = _.sumBy(games, "rebuys");
+        // Return the calculated metrics in a single response
+        res.json({ totalCost, gains, totalRebuys });
+    }
+    catch (err) {
+        next(err);
+    }
 });
 app.get("/player", async (req, res) => {
     const players = await prisma.player.findMany({
@@ -101,7 +69,7 @@ app.get("/player", async (req, res) => {
     });
     res.json(players);
 });
-app.get("/playerStats", async (req, res) => {
+app.get("/playerStats", async (req, res, next) => {
     try {
         const games = await prisma.playerStats.findMany({
             include: {
@@ -115,37 +83,28 @@ app.get("/playerStats", async (req, res) => {
             res.json(games);
         }
     }
-    catch (error) {
-        console.error("Error occurred in /game route: ", error);
-        if (error instanceof Error) {
-            res.status(500).json({ error: error.message });
-        }
-        else {
-            res
-                .status(500)
-                .json({ error: "An error occurred while fetching the games" });
-        }
+    catch (err) {
+        next(err);
     }
 });
-app.get("/playerStats/:playerId", async (req, res) => {
+app.get("/playerStats/:playerId", async (req, res, next) => {
     try {
         const playerId = Number(req.params.playerId);
         const stats = await prisma.playerStats.findMany({
-            where: { playerId: playerId, },
+            where: { playerId: playerId },
             include: {
                 player: true,
             },
         });
-        const totalPoints = stats.reduce((acc, curr) => acc + curr.points, 0);
-        const totalKills = stats.reduce((acc, curr) => acc + curr.kills, 0);
+        const totalPoints = _.sumBy(stats, "points");
+        const totalKills = _.sumBy(stats, "kills");
         res.json({ totalPoints, totalKills, stats });
     }
-    catch (error) {
-        console.error(error);
-        res.status(500).json({ error: "An error occurred while fetching player statistics" });
+    catch (err) {
+        next(err);
     }
 });
-app.get("/playerStatsByParty/:partyId", async (req, res) => {
+app.get("/playerStatsByParty/:partyId", async (req, res, next) => {
     const partyId = Number(req.params.partyId);
     if (!partyId) {
         return res.status(400).json({ error: "A valid party ID is required" });
@@ -168,14 +127,11 @@ app.get("/playerStatsByParty/:partyId", async (req, res) => {
         }
         return res.json(partyDetails);
     }
-    catch (error) {
-        console.error(error);
-        return res
-            .status(500)
-            .json({ error: "An error occurred while fetching the party details" });
+    catch (err) {
+        next(err);
     }
 });
-app.get("/tournaments", async (req, res) => {
+app.get("/tournaments", async (req, res, next) => {
     try {
         const tournaments = await prisma.tournament.findMany({
             orderBy: {
@@ -184,38 +140,63 @@ app.get("/tournaments", async (req, res) => {
         });
         res.json(tournaments);
     }
-    catch (error) {
-        console.error(error);
-        res.status(500).json({ error: "An error occurred while fetching tournaments" });
+    catch (err) {
+        next(err);
     }
 });
-app.get("/tournament/:year", async (req, res) => {
+app.get("/tournament/:year", async (req, res, next) => {
     const year = parseInt(req.params.year);
-    const tournament = await prisma.tournament.findFirst({
-        where: {
-            year: year || 2023,
-        },
-    });
-    if (!tournament) {
-        return res
-            .status(404)
-            .json({ error: "No tournament found for the given year." });
+    try {
+        const tournament = await prisma.tournament.findFirst({
+            where: {
+                year: year || 2023,
+            },
+        });
+        if (!tournament) {
+            return res
+                .status(404)
+                .json({ error: "No tournament found for the given year." });
+        }
+        res.json(tournament);
     }
-    res.json(tournament);
+    catch (err) {
+        next(err);
+    }
 });
-app.get("/parties", async (req, res) => {
-    const parties = await prisma.party.findMany({
-        include: {
-            playerStats: {
-                include: {
-                    player: true,
+app.get("/parties", async (req, res, next) => {
+    try {
+        const parties = await prisma.party.findMany({
+            include: {
+                playerStats: {
+                    include: {
+                        player: true,
+                    },
                 },
             },
-        },
-    });
-    res.json(parties);
+        });
+        res.json(parties);
+    }
+    catch (err) {
+        next(err);
+    }
 });
-app.get("/gameResults/:playerId", async (req, res) => {
+app.get("/parties/state/:id", async (req, res, next) => {
+    const { id } = req.params;
+    try {
+        const party = await prisma.party.findUnique({
+            where: { id: Number(id) },
+            select: { partyStarted: true, partyEnded: true },
+        });
+        res.json({
+            partyStarted: party?.partyStarted,
+            partyEnded: party?.partyEnded,
+        });
+    }
+    catch (err) {
+        next(err);
+    }
+});
+app.get("/gameResults/:playerId", async (req, res, next) => {
     const playerId = Number(req.params.playerId);
     if (!playerId) {
         return res.status(400).json({ error: "A valid player ID is required" });
@@ -236,14 +217,11 @@ app.get("/gameResults/:playerId", async (req, res) => {
         }
         return res.json({ playerGames });
     }
-    catch (error) {
-        console.error(error);
-        return res
-            .status(500)
-            .json({ error: "An error occurred while fetching the game results" });
+    catch (err) {
+        next(err);
     }
 });
-app.get("/parties/:id", async (req, res) => {
+app.get("/parties/:id", async (req, res, next) => {
     const { id } = req.params;
     try {
         const party = await prisma.party.findUnique({
@@ -254,9 +232,8 @@ app.get("/parties/:id", async (req, res) => {
         }
         res.json(party);
     }
-    catch (error) {
-        console.error(error);
-        res.status(500).json({ error: "An error occurred while fetching the party" });
+    catch (err) {
+        next(err);
     }
 });
 app.get("/parties/:partyId/stats", async (req, res) => {
@@ -322,9 +299,13 @@ app.post("/playerStats/start", async (req, res) => {
         });
     }
     const actualTournamentId = currentYearTournament.id;
-    const tournament = await prisma.tournament.findUnique({ where: { id: actualTournamentId } });
+    const tournament = await prisma.tournament.findUnique({
+        where: { id: actualTournamentId },
+    });
     if (!tournament) {
-        return res.status(400).json({ error: "The specified tournament does not exist" });
+        return res
+            .status(400)
+            .json({ error: "The specified tournament does not exist" });
     }
     // Create a new party
     const newParty = await prisma.party.create({
@@ -350,7 +331,10 @@ app.post("/playerStats/start", async (req, res) => {
         });
         newPlayerStats.push(playerStat);
     }
-    return res.json({ message: "New game started successfully", playerStats: newPlayerStats });
+    return res.json({
+        message: "New game started successfully",
+        playerStats: newPlayerStats,
+    });
 });
 // Assume each player provides playerId, points, and rebuys
 app.post("/playerStats", async (req, res) => {
@@ -424,10 +408,12 @@ app.put("/gamesResults/:id", async (req, res) => {
     }
     catch (error) {
         console.error(error);
-        return res.status(500).json({ error: "An error occurred while updating the game result" });
+        return res
+            .status(500)
+            .json({ error: "An error occurred while updating the game result" });
     }
 });
-// sais pas comment ça fonctionne 
+// sais pas comment ça fonctionne
 app.put("/playerStats/eliminate", async (req, res) => {
     console.log("Request received at /playerStats/eliminate");
     const { playerId, eliminatedById, partyId } = req.body;
@@ -438,10 +424,12 @@ app.put("/playerStats/eliminate", async (req, res) => {
         where: {
             playerId: playerId,
             partyId: partyId,
-        }
+        },
     });
     if (!playerStatRecord) {
-        return res.status(404).json({ error: `PlayerStats record with ID ${playerId} not found` });
+        return res
+            .status(404)
+            .json({ error: `PlayerStats record with ID ${playerId} not found` });
     }
     // Database transaction ensures that if one operation fails, all fail (for data consistency)
     const updatedStats = await prisma.$transaction(async (prisma) => {
@@ -472,7 +460,6 @@ app.put("/playerStats/eliminate", async (req, res) => {
         }
         return updatedPlayerStat;
     });
-    // If successful, send the updated player stats
     res.json({ message: "Player stats updated successfully", updatedStats });
 });
 app.put("/playerStats/out/:playerId", async (req, res) => {
@@ -485,11 +472,39 @@ app.put("/playerStats/out/:playerId", async (req, res) => {
             where: { id: Number(playerId) },
             data: { outAt: new Date() },
         });
-        return res.json({ message: "Player knocked out successfully", updatedPlayerStat });
+        return res.json({
+            message: "Player knocked out successfully",
+            updatedPlayerStat,
+        });
     }
     catch (error) {
         return res.status(400).json({ error: "Error knocking out player" });
     }
+});
+// Delete a specific party by its ID
+app.delete("/parties/:id", async (req, res, next) => {
+    try {
+        const { id } = req.params; // Get the ID from the URL params
+        // First delete related PlayerStats
+        await prisma.playerStats.deleteMany({
+            where: { partyId: Number(id) },
+        });
+        // Then delete the Party
+        await prisma.party.delete({
+            where: { id: Number(id) },
+        });
+        res.status(204).send();
+    }
+    catch (err) {
+        // Pass the error to the error-handling middleware
+        next(err);
+    }
+});
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res
+        .status(err.status || 500)
+        .json({ error: err.message || "Internal Server Error" });
 });
 const server = app.listen(3000, () => console.log(`Server is running on http://localhost:3000`));
 process.on("SIGINT", () => {

@@ -6,6 +6,7 @@ import { PlayerRanking } from "./components/PLayerRanking";
 import PartyResults from "./components/PartyResults";
 import StartGame from "./components/StartGame";
 import PartyPage from "./components/PartyPage";
+import { Image } from "@nextui-org/react";
 
 // import Ak from "./components/PokerLogo";
 import {
@@ -108,6 +109,7 @@ export default function App() {
       path: "/",
       element: (
         <h1 className="bg-blue-500 text-white p-4">Welcome to the App</h1>
+
       ),
     },
     {

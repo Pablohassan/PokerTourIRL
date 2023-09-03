@@ -112,7 +112,7 @@ const PartyResults: React.FC<PartyResultsProps> = ({
     <div style={{ margin: 0 }}  >
       {tableConfigs.map((config, i) => (
         <div   key={i}>
-          <PlayerTable
+          <PlayerTable aria-label="tableau des parties"
             config={config}
             players={players}
            

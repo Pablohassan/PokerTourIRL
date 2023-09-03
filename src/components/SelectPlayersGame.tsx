@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Modal, Checkbox, Button, ModalHeader, useDisclosure, ModalContent, ModalBody, ModalFooter, Input, Switch, Table, TableHeader, TableBody, TableCell, TableColumn, TableRow } from '@nextui-org/react';
+import { Modal, Checkbox, Button, ModalHeader, useDisclosure, ModalContent, ModalBody, ModalFooter, Input, Switch, Table, TableHeader, TableBody, TableCell, TableColumn, TableRow, Select, SelectItem } from '@nextui-org/react';
 import { Player,Tournaments } from './interfaces';
 import toast, {Toaster} from 'react-hot-toast';
 
@@ -18,9 +18,10 @@ interface SelectPlayersProps {
   setSelectedTournamentId:(value: number) => void;
 }
 
-const SelectPlayersGame: React.FC<SelectPlayersProps> = ({setSelectedTournamentId, selectedTournamentId, championnat,players, selectedPlayers, handlePlayerSelect, onStartGame }) => {
+const SelectPlayersGame: React.FC<SelectPlayersProps> = ({ setSelectedTournamentId, selectedTournamentId, championnat,players, selectedPlayers, handlePlayerSelect, onStartGame }) => {
   const {isOpen, onClose, onOpenChange} = useDisclosure(); // The modal is open by default
-    const [currentGame, setCurrentGame] = useState<CurrentGame>({
+  const [value, setValue] = useState(new Set([]));
+  const [currentGame, setCurrentGame] = useState<CurrentGame>({
       players: selectedPlayers.map(p => p.id), 
       tournamentId: selectedTournamentId,
     });
@@ -68,32 +69,46 @@ const SelectPlayersGame: React.FC<SelectPlayersProps> = ({setSelectedTournamentI
     const handleTournamentChange = (tournamentId:number) => {
       onSelectTournament(tournamentId);
       setSelectedTournamentId(tournamentId);
+
     };
    
     return (
+     
       <Modal style={{height:"750px"}} isOpen={isOpen} isDismissable={true} closeButton={true}>
-      <ModalContent  >
+      <ModalContent >
         <ModalHeader > Nouvelle Partie:</ModalHeader>
         <ModalBody >
           <div>
             {!noTournaments ? (
-              <select value={selectedTournamentId ?? ""} onChange={(e) => handleTournamentChange(Number(e.target.value))}>
-                <option value="" disabled>Selectionne un tournois</option>
+              <div>
+              <Select 
+              style={{color:"green"}} 
+              isRequired label="Tournois" 
+              className="max-w-xs"  selectedKeys={value}  
+              value={selectedTournamentId ?? ""}  
+              onChange={(e) => handleTournamentChange(Number(e.target.value)) }
+            
+                >
+                
                 {championnat.map((tournament) => (
-                  <option key={tournament.id} value={tournament.id}>
+                  <SelectItem key={tournament.id} value={tournament.id} >
                    Pitch Poker Tour {tournament.year}
-                  </option>
+                  </SelectItem>
                 ))}
-              </select>
+                
+              </Select>
+             
+              </div>
             ) : (
               <p>No tournaments available. A new tournament will be created automatically.</p>
             )}
           </div>
           <ModalHeader>Selection des Joueurs</ModalHeader>
+         
+
     <Table style={{height:"400px"}}>
         <TableHeader>
             <TableColumn>
-                
                 Nom
             </TableColumn>
             <TableColumn>Joueur</TableColumn>
@@ -104,7 +119,6 @@ const SelectPlayersGame: React.FC<SelectPlayersProps> = ({setSelectedTournamentI
                     <TableCell>
                         <Switch size="sm"
                            
-                           
                             onChange={() => handlePlayerChange(player.id)}
                         />
                     </TableCell>
@@ -113,9 +127,9 @@ const SelectPlayersGame: React.FC<SelectPlayersProps> = ({setSelectedTournamentI
             ))}
         </TableBody>
     </Table>
-          <div>
-            <Button className='p-4 m-4' variant='bordered' onClick={() => onClose()}>Cancel</Button>
-            <Button color='success' className='p-4 m-4'  onClick={handleStartGame}>Start Game</Button>
+          <div className='bg-[length:200px_100px]  bg-black'>
+            <Button style={{margin:"2px",fontWeight:"bolder",}} variant='bordered' color='warning' onClick={() => onClose()}>Cancel</Button>
+            <Button color='success' style={{margin:"2px", fontWeight:"bolder"}}   onClick={handleStartGame}>Start Game</Button>
           </div>
         </ModalBody>
         <ModalFooter></ModalFooter>
