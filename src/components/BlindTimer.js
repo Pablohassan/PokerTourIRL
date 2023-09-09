@@ -67,7 +67,7 @@ const BlindTimer = ({ gameStarted, isPaused, onBlindChange, onTimeChange }) => {
     const handleCloseModal = () => {
         setShowModal(false);
     };
-    return (_jsxs(_Fragment, { children: [playAlert && _jsx("audio", { src: alerteSon, autoPlay: true }), _jsx(Modal, { isOpen: showModal, className: "fixed inset-0 flex items-center justify-center z-50", onClick: handleCloseModal, children: _jsxs("div", { className: "relative w-4/5 h-4/5 bg-white shadow-lg overflow-auto", onClick: (e) => e.stopPropagation(), children: [_jsx(ModalHeader, { children: "New Blind Level" }), _jsxs(ModalBody, { children: ["Small: ", blinds[blindIndex].small, " / Big: ", blinds[blindIndex].big, " Ante: ", blinds[blindIndex].ante] })] }) })] }));
+    return (_jsxs(_Fragment, { children: [playAlert && _jsx("audio", { src: alerteSon, autoPlay: true }), _jsx(Modal, { isOpen: showModal, className: "fixed inset-0 flex items-center justify-center z-50", onClick: handleCloseModal, children: _jsxs("div", { className: "relative w-4/5 h-4/5 bg-white shadow-lg overflow-auto rounded-lg p-4", onClick: (e) => e.stopPropagation(), children: [_jsx(ModalHeader, { className: "text-center text-lg font-bold", children: "New Blind Level" }), _jsxs(ModalBody, { className: "text-center text-base", children: ["Small: ", blinds[blindIndex].small, " / Big: ", blinds[blindIndex].big, " Ante: ", blinds[blindIndex].ante] })] }) })] }));
 };
 export default BlindTimer;
 //# sourceMappingURL=BlindTimer.js.map

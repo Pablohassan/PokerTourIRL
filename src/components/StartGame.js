@@ -8,6 +8,7 @@ import ReviewSelectedPlayers from "../components/ReviewSelectedPlayers";
 import { Modal, Button, ModalHeader, ModalBody, ModalContent, ButtonGroup, } from "@nextui-org/react";
 import { CardPlayer } from "./CardPlayer";
 import BlindTimer from "./BlindTimer";
+import GameTimer from "./GameTimer";
 import toast from "react-hot-toast";
 const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, handlePlayerSelect, players, updateAfterGameEnd, }) => {
     const [gameStarted, setGameStarted] = useState(false);
@@ -28,14 +29,15 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, handlePla
     const [currentParty, setCurrentParty] = useState(null);
     const [partyId, setPartyId] = useState(false);
     const [partyEnded, setPartyEnded] = useState(null);
+    const [middleStack, setMiddleStack] = useState(5350);
+    const [totalStack, setTotalStack] = useState(0);
     useEffect(() => {
         const restoreState = async () => {
-            // If the game is not started, try to restore the state
             if (!gameStarted) {
-                // Fetch data from your API or localStorage
+                // Fetch data from your API or localStorageh
                 const savedState = localStorage.getItem('gameState');
                 if (savedState) {
-                    const { timeLeft, smallBlind, bigBlind, killer, rebuyPlayerId, games, outPlayers, initialPlayerCount, selectedTournamentId, partyStarted, showReview } = JSON.parse(savedState);
+                    const { timeLeft, smallBlind, bigBlind, killer, rebuyPlayerId, games, outPlayers, initialPlayerCount, selectedTournamentId, partyStarted, showReview, selectedPlayers } = JSON.parse(savedState);
                     setTimeLeft(timeLeft);
                     setSmallBlind(smallBlind);
                     setBigBlind(bigBlind);
@@ -46,10 +48,11 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, handlePla
                     setInitialPlayerCount(initialPlayerCount);
                     setSelectedTournamentId(selectedTournamentId);
                     setPartyStarted(partyStarted);
-                    // ...set other state variables
+                    setSelectedPLayers(selectedPlayers);
                     setGameStarted(true); // Now, the game is restored
                     setShowReview(showReview);
                 }
+                console.log(selectedPlayers);
             }
         };
         restoreState();
@@ -72,21 +75,20 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, handlePla
         }
     }, [partyId]);
     useEffect(() => {
-        const fetchCurrentParty = async () => {
-            try {
-                const response = await api.get("/api/currentParty"); // <-- Replace with your actual API endpoint
-                const data = await response.data;
-                if (data && data.id) {
-                    setCurrentParty(data);
-                    setGameStarted(true);
-                }
-            }
-            catch (err) {
-                console.error("Error fetching current party:", err);
-            }
-        };
-        fetchCurrentParty();
-    }, []);
+        if (!gameStarted) {
+            console.log('Initializing totalStack based on selectedPlayers.length:', selectedPlayers.length);
+            setTotalStack(selectedPlayers.length * 5350);
+            // Mark the game as initialized
+        }
+    }, [selectedPlayers.length, gameStarted]);
+    useEffect(() => {
+        // Recalculate middle stack whenever the total stack or player count changes
+        const remainingPlayers = selectedPlayers.length;
+        if (remainingPlayers > 0) { // Avoid division by zero
+            const newMiddleStack = totalStack / remainingPlayers;
+            setMiddleStack(newMiddleStack);
+        }
+    }, [totalStack, selectedPlayers.length]);
     const navigate = useNavigate();
     const onStartGameReview = () => {
         setShowReview(true);
@@ -96,6 +98,33 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, handlePla
         await onStartGame(); // Now, start the game
     };
     const noTournaments = championnat.length === 0;
+    const saveGameState = () => {
+        const gameState = {
+            timeLeft,
+            smallBlind,
+            bigBlind,
+            killer,
+            rebuyPlayerId,
+            games,
+            outPlayers,
+            initialPlayerCount,
+            selectedTournamentId,
+            partyStarted,
+            showReview,
+            selectedPlayers
+        };
+        localStorage.setItem('gameState', JSON.stringify(gameState));
+    };
+    const currentlyPlayingPlayers = games
+        .filter((game) => !game.outAt)
+        .map((game) => {
+        return players.find((player) => player.id === game.playerId);
+    });
+    const formatTime = (seconds) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
+    };
     const onStartGame = async () => {
         if (gameStarted) {
             // If a game is already started, don't start a new game.
@@ -124,20 +153,7 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, handlePla
             toast("Failed to start new game");
         }
         setInitialPlayerCount(selectedPlayers.length);
-        const gameState = {
-            timeLeft,
-            smallBlind,
-            bigBlind,
-            killer,
-            rebuyPlayerId,
-            games,
-            outPlayers,
-            initialPlayerCount,
-            selectedTournamentId,
-            partyStarted,
-            showReview
-        };
-        localStorage.setItem('gameState', JSON.stringify(gameState));
+        saveGameState();
         // setSelectPlayersModalOpen(false);
     };
     const handleRebuy = (playerId) => {
@@ -152,6 +168,8 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, handlePla
                 }
                 : game));
         }
+        setTotalStack((prevTotalStack) => prevTotalStack + 5350);
+        saveGameState();
     };
     const calculatePoints = (position, isWinner = false) => {
         if (isWinner) {
@@ -166,6 +184,7 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, handlePla
             ? { ...game, kills: game.kills + 1 }
             : game));
         setKiller(false); // Close the modal for selecting the killer
+        setRebuyPlayerId(null);
         // Any other logic that you need to add for the killer
     };
     const handlePlayerKillSelection = async (killerPlayerId, partyId) => {
@@ -221,6 +240,7 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, handlePla
                     setSelectedPLayers((prevSelectedPlayers) => {
                         return prevSelectedPlayers.filter((player) => player.id !== playerId);
                     });
+                    saveGameState();
                 }
                 catch (error) {
                     console.error("An error occurred while updating player stats:");
@@ -265,25 +285,12 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, handlePla
             navigate("/results");
         }
     };
-    const currentlyPlayingPlayers = games
-        .filter((game) => !game.outAt)
-        .map((game) => {
-        return players.find((player) => player.id === game.playerId);
-    });
-    const formatTime = (seconds) => {
-        const mins = Math.floor(seconds / 60);
-        const secs = seconds % 60;
-        return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
-    };
-    return (_jsxs("div", { className: "", children: [_jsx(BlindTimer, { gameStarted: gameStarted, isPaused: isPaused, 
-                // Handle the blind change here
-                onBlindChange: (small, big) => {
-                    setSmallBlind(small);
-                    setBigBlind(big);
-                }, onTimeChange: (time) => {
-                    // Handle time change here
-                    setTimeLeft(time);
-                } }), _jsx(Modal, { isOpen: killer, children: _jsxs(ModalContent, { children: [_jsx(ModalHeader, { className: "with-full height-full", children: "Select a Killer" }), _jsx(ModalBody, { children: _jsx("div", { color: "danger", children: games &&
+    return (_jsxs("div", { style: {
+            maxWidth: '90%',
+            maxHeight: '90vh',
+            margin: 'auto',
+            overflow: 'auto'
+        }, children: [_jsx(Modal, { isOpen: killer, children: _jsxs(ModalContent, { children: [_jsx(ModalHeader, { className: "with-full height-full", children: "Select a Killer" }), _jsx(ModalBody, { children: _jsx("div", { color: "danger", children: games &&
                                     games.map((game) => {
                                         const player = currentlyPlayingPlayers.find((p) => p?.id === game.playerId);
                                         if (player && !game.outAt && player.id !== rebuyPlayerId && player.id !== playerOutGame) {
@@ -292,20 +299,27 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, handlePla
                                         else {
                                             return null; // Si le joueur n'est pas trouvé ou est "out", ne rien retourner
                                         }
-                                    }) }) })] }) }), _jsxs(Modal, { isOpen: !gameStarted && !currentParty, children: [_jsx(ModalHeader, { children: "Select Players and Game Details" }), _jsx(ModalBody, { children: _jsx(Modal, { isOpen: isSelectPlayersModalOpen, children: _jsx(SelectPlayersGame, { players: players, selectedPlayers: selectedPlayers, handlePlayerSelect: handlePlayerSelect, onStartGame: onStartGameReview, championnat: championnat, selectedTournamentId: selectedTournamentId, setSelectedTournamentId: setSelectedTournamentId }) }) })] }), showReview && !partyId ? (_jsx(ReviewSelectedPlayers, { selectedPlayers: selectedPlayers, onConfirm: confirmAndStartGame })) : (_jsxs("div", { children: [" ", _jsxs(Modal, { isOpen: gameStarted, onClose: handleGameEnd, children: [_jsx(ModalHeader, { className: "text-xl bg-color-red", children: "Game in Progress" }), _jsx(Content, { championnat: championnat }), _jsx(ModalBody, { children: _jsxs("div", { style: {
-                                        margin: "10 auto",
-                                        // display: "flex",
-                                        // justifyContent: "center",
-                                    }, children: [gameStarted && (_jsxs("div", { className: "max-w-sm flex flex-col border-3 border-black rounded-md", children: [_jsxs("div", { className: "w-4/5 p-5 flex sm:flex-col md:flex-row justify-between items-center border-dotted border-x-2 border-black", children: [_jsxs("div", { className: "text-xl font-digital-7", children: ["Time left: ", formatTime(timeLeft)] }), _jsxs("div", { className: "text-xl bg-slate-900", children: ["Small: ", smallBlind, " / Big :", bigBlind] })] }), _jsxs("div", { className: "flex flex-row justify-center space-x-4 items-center", children: [_jsx("div", { className: "p-4", children: _jsx(Button, { color: "danger", className: "text-white", onClick: handleGameEnd, children: "Stop Partie" }) }), _jsx("div", { children: _jsx(Button, { className: "p-4", color: "warning", onClick: () => setIsPaused(!isPaused), children: isPaused ? "Resume" : "Pause" }) })] })] })), _jsx("div", { style: {
-                                                display: "flex",
-                                                flexDirection: "row",
-                                                flexWrap: "wrap",
-                                            }, children: currentlyPlayingPlayers.map((player) => {
-                                                // Trouver le jeu correspondant au joueur actuel
-                                                const gameForPlayer = games.find((game) => game.playerId === player?.id);
-                                                // Si le jeu existe pour ce joueur, affichez les détails, sinon affichez une erreur
-                                                return (_jsx("div", { style: { display: "flex", flexDirection: "column", }, children: gameForPlayer ? (_jsx("div", { className: "p-1", children: _jsx(CardPlayer, { playername: player?.name ?? " none", recave: gameForPlayer.rebuys, kill: gameForPlayer.kills, rebuy: () => handleRebuy(gameForPlayer.playerId), outOfGame: () => handleOutOfGame(gameForPlayer.partyId, gameForPlayer.playerId, gameForPlayer.eliminatedById) }) })) : (_jsxs("div", { children: ["Erreur: Pas de jeu pour ", player?.name] })) }, player?.id));
-                                            }) })] }) })] })] }))] }));
+                                    }) }) })] }) }), _jsxs(Modal, { isOpen: !gameStarted && !currentParty, children: [_jsx(ModalHeader, { children: "Select Players and Game Details" }), _jsx(ModalBody, { children: _jsx(Modal, { isOpen: isSelectPlayersModalOpen, children: _jsx(SelectPlayersGame, { players: players, selectedPlayers: selectedPlayers, handlePlayerSelect: handlePlayerSelect, onStartGame: onStartGameReview, championnat: championnat, selectedTournamentId: selectedTournamentId, setSelectedTournamentId: setSelectedTournamentId }) }) })] }), showReview && !partyId ? (_jsx(ReviewSelectedPlayers, { selectedPlayers: selectedPlayers, onConfirm: confirmAndStartGame })) : (_jsx("div", { children: _jsxs(Modal, { isOpen: gameStarted, onClose: handleGameEnd, children: [_jsx(ModalHeader, { className: "text-xl bg-color-red", children: "Game in Progress" }), _jsx(Content, { championnat: championnat }), _jsx(ModalBody, { children: _jsxs("div", { style: {
+                                    margin: "10 auto",
+                                    height: '200px'
+                                }, children: [_jsx(BlindTimer, { gameStarted: gameStarted, isPaused: isPaused, 
+                                        // Handle the blind change here
+                                        onBlindChange: (small, big) => {
+                                            setSmallBlind(small);
+                                            setBigBlind(big);
+                                        }, onTimeChange: (time) => {
+                                            // Handle time change here
+                                            setTimeLeft(time);
+                                        } }), gameStarted && (_jsxs("div", { children: [_jsx(GameTimer, { formatTime: formatTime, timeLeft: timeLeft, smallBlind: smallBlind, bigBlind: bigBlind, handleGameEnd: handleGameEnd, isPaused: isPaused, setIsPaused: setIsPaused }), _jsxs("div", { style: { fontSize: "20px" }, children: [_jsx("span", { children: "Stack moyen: " }), _jsx("span", { style: { fontFamily: "DS-DIGI", fontSize: "24px", display: "inline-block", color: "green" }, children: middleStack })] })] })), _jsx("div", { style: {
+                                            display: "flex",
+                                            flexDirection: "row",
+                                            flexWrap: "wrap",
+                                        }, children: currentlyPlayingPlayers.map((player) => {
+                                            // Trouver le jeu correspondant au joueur actuel
+                                            const gameForPlayer = games.find((game) => game.playerId === player?.id);
+                                            // Si le jeu existe pour ce joueur, affichez les détails, sinon affichez une erreur
+                                            return (_jsx("div", { style: { display: "flex", flexDirection: "column", }, children: gameForPlayer ? (_jsx("div", { className: "p-1", children: _jsx(CardPlayer, { playername: player?.name ?? " none", recave: gameForPlayer.rebuys, kill: gameForPlayer.kills, rebuy: () => handleRebuy(gameForPlayer.playerId), outOfGame: () => handleOutOfGame(gameForPlayer.partyId, gameForPlayer.playerId, gameForPlayer.eliminatedById) }) })) : (_jsxs("div", { children: ["Erreur: Pas de jeu pour ", player?.name] })) }, player?.id));
+                                        }) })] }) })] }) }))] }));
 };
 export default StartGame;
 //# sourceMappingURL=StartGame.js.map

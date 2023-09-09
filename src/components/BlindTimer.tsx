@@ -97,15 +97,16 @@ const BlindTimer: React.FC<{
   <>
     {playAlert && <audio src={alerteSon} autoPlay />}
   
-    <Modal isOpen={showModal} className="fixed inset-0 flex items-center justify-center z-50" onClick={handleCloseModal}>
-    <div className="relative w-4/5 h-4/5 bg-white shadow-lg overflow-auto" onClick={(e) => e.stopPropagation()}>
-      <ModalHeader>New Blind Level</ModalHeader>
-      <ModalBody>
-        Small: {blinds[blindIndex].small} / Big: {blinds[blindIndex].big} Ante: {blinds[blindIndex].ante}
-      </ModalBody>
+   <Modal isOpen={showModal} className="fixed inset-0 flex items-center justify-center z-50" onClick={handleCloseModal}>
+      <div className="relative w-4/5 h-4/5 bg-white shadow-lg overflow-auto rounded-lg p-4" onClick={(e) => e.stopPropagation()}>
+        <ModalHeader className="text-center text-lg font-bold">
+          New Blind Level
+        </ModalHeader>
+        <ModalBody className="text-center text-base">
+          Small: {blinds[blindIndex].small} / Big: {blinds[blindIndex].big} Ante: {blinds[blindIndex].ante}
+        </ModalBody>
       </div>
     </Modal>
-   
   </>
 );
 }

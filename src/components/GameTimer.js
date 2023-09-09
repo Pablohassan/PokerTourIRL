@@ -1,0 +1,8 @@
+import { jsxs as _jsxs, jsx as _jsx } from "react/jsx-runtime";
+import React from 'react';
+import { Button } from '@nextui-org/react'; // Replace with the actual path to your Button component
+const GameTimer = ({ formatTime, timeLeft, smallBlind, bigBlind, handleGameEnd, isPaused, setIsPaused, }) => {
+    return (_jsxs("div", { style: { display: 'grid', gridTemplateRows: '1fr 1fr 1fr', height: '250px', width: "600px", border: '4px solid #D1D5DB', borderRadius: '8px' }, children: [_jsxs("div", { style: { display: 'flex', justifyContent: 'center', alignItems: 'center', height: '150px', borderBottom: '2px solid #D1D5DB', color: 'white' }, children: [_jsxs("div", { style: { fontSize: '32px', background: '#1E3A8A', padding: '16px', borderRadius: '10px', fontFamily: "DS-DIGI" }, children: ["Time left: ", formatTime(timeLeft)] }), _jsxs("div", { style: { fontSize: '24px', background: 'black', marginLeft: '16px', padding: '16px', borderRadius: '10px', color: 'white' }, children: ["Small: ", smallBlind, " / Big: ", bigBlind] })] }), _jsxs("div", { style: { display: 'flex', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', height: '50%' }, children: [_jsx("div", { style: { padding: '10px' }, children: _jsx(Button, { color: "danger", className: "text-white", onClick: handleGameEnd, children: "Stop Partie" }) }), _jsx("div", { style: { padding: '10px' }, children: _jsx(Button, { className: "text-white", color: "warning", onClick: () => setIsPaused(!isPaused), children: isPaused ? 'Resume' : 'Pause' }) })] })] }));
+};
+export default React.memo(GameTimer);
+//# sourceMappingURL=GameTimer.js.map

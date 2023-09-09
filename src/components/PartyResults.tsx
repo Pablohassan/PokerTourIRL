@@ -109,9 +109,18 @@ const PartyResults: React.FC<PartyResultsProps> = ({
   // Define playerGames inside the map function, so 'player' is accessible
   
   return (
-    <div style={{ margin: 0 }}  >
+    
+    <div style={{ display: 'grid',
+     gridTemplateColumns: 'repeat(2, 1fr)',
+     justifyContent: 'center', // Center horizontally
+  alignItems: 'stretch', // Center vertically
+  justifyItems:'center',
+  gap: '10px',
+  margin:"10px"
+
+     }}>
       {tableConfigs.map((config, i) => (
-        <div   key={i}>
+        <div key={i}>
           <PlayerTable aria-label="tableau des parties"
             config={config}
             players={players}
@@ -120,6 +129,7 @@ const PartyResults: React.FC<PartyResultsProps> = ({
         </div>
       ))}
     </div>
+   
   );
 };
 

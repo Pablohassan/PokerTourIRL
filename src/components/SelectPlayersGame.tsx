@@ -74,7 +74,7 @@ const SelectPlayersGame: React.FC<SelectPlayersProps> = ({ setSelectedTournament
    
     return (
      
-      <Modal style={{height:"750px"}} isOpen={isOpen} isDismissable={true} closeButton={true}>
+      <Modal style={{height:"950px"}} isOpen={isOpen} isDismissable={true} closeButton={true}>
       <ModalContent >
         <ModalHeader > Nouvelle Partie:</ModalHeader>
         <ModalBody >
