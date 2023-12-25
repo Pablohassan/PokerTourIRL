@@ -14,13 +14,13 @@ import autoprefixer from 'autoprefixer';
 
 
 export default defineConfig({
-
-  
-  assetsInclude: ['**/*.ttf'],
   server: {
     host: '0.0.0.0', // Listen on all network interfaces
     port: 5173,      // Optional: Define a specific port
   },
+  
+  assetsInclude: ['**/*.ttf'],
+  
   plugins: [react()],
   // resolve: {
   //   alias: {
