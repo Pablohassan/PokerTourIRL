@@ -4,7 +4,7 @@
     "typeRoots" : ["./node_modules/@types"],
     "target": "ES2018",
     "module": "ESNext",
-    "outDir": "./dist",
+    "outDir": "./build",
     "esModuleInterop": true,
     "strict": false,
     "skipLibCheck": true,
