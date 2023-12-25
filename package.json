@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "concurrently \"npm run watch-ts\" \"vite\" ",
     "watch-ts": "tsc -w",
-    "build": "tsc && vite build && tsc -p src/backend/tsconfig.backend.json",
+    "build": "tsc && vite build",
     "preview": "vite preview",
     "build:backend": "tsc -p src/backend/tsconfig.backend.json"
   },
