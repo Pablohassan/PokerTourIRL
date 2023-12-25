@@ -45,10 +45,12 @@ const StartGame: React.FC<StartGameProps> = ({
 }) => {
   const [gameStarted, setGameStarted] = useState(false);
   const [showReview, setShowReview] = useState(false);
+  const [pot, setPot] = useState(0)
   const [games, setGames] = useState<PlayerStats[]>([]);
   const [timeLeft, setTimeLeft] = useState(20 * 60); // 20 minutes in seconds
   const [smallBlind, setSmallBlind] = useState(10);
   const [bigBlind, setBigBlind] = useState(20);
+  const [ante, setAnte] = useState(0)
   const [outPlayers, setOutPlayers] = useState<Player[]>([]);
   const [initialPlayerCount, setInitialPlayerCount] = useState<number>(0);
   const [isPaused, setIsPaused] = useState(false);
@@ -64,8 +66,8 @@ const StartGame: React.FC<StartGameProps> = ({
   const [middleStack, setMiddleStack] = useState(5350);
   const [totalStack, setTotalStack] = useState(0);
 
+  console.log("pot", pot)
 
-  
   useEffect(() => {
     const restoreState = async () => {
       if (!gameStarted) {
@@ -133,15 +135,29 @@ const StartGame: React.FC<StartGameProps> = ({
     if (!gameStarted) {
       console.log('Initializing totalStack based on selectedPlayers.length:', selectedPlayers.length);
       setTotalStack(selectedPlayers.length * 5350);
-       // Mark the game as initialized
+      // Mark the game as initialized
     }
   }, [selectedPlayers.length, gameStarted]);
+
+
+  useEffect(() => {
+    if (gameStarted && initialPlayerCount > 0 && pot === 0) {
+      const initialPot = initialPlayerCount * 5;
+      setPot(initialPot);
+
+    }
+
+  }, [gameStarted, initialPlayerCount, pot]);
+
+
+
   useEffect(() => {
     // Recalculate middle stack whenever the total stack or player count changes
     const remainingPlayers = selectedPlayers.length;
     if (remainingPlayers > 0) { // Avoid division by zero
       const newMiddleStack = totalStack / remainingPlayers;
-      setMiddleStack(newMiddleStack);
+      const roundedMiddleStack = Math.round(newMiddleStack);
+      setMiddleStack(roundedMiddleStack);
     }
   }, [totalStack, selectedPlayers.length]);
 
@@ -158,6 +174,21 @@ const StartGame: React.FC<StartGameProps> = ({
     await onStartGame();  // Now, start the game
 
   };
+
+  const renderOutOfGamePlayers = () => {
+    return outPlayers.map((player, index) => {
+      const gameForPlayer = games.find(game => game.playerId === player.id);
+      const position = gameForPlayer?.position ?? 'N/A';  // If position is undefined, fallback to 'N/A'
+
+      return (
+        <div key={player.id} className="out-player">
+          <div style={{ display: 'inline-block', margin: "20px", fontSize: "1.5em" }}>{player.name} : <div style={{ display: 'inline-block', marginRight: "10px" }}>Position {position}</div> </div>
+
+        </div>
+      );
+    });
+  };
+
 
   const noTournaments = championnat.length === 0;
 
@@ -219,6 +250,8 @@ const StartGame: React.FC<StartGameProps> = ({
         ) {
           setGames(response.data.playerStats);
         }
+
+
       }
     } catch (err: any) {
       console.error("Server response:", err.response?.data);
@@ -250,6 +283,7 @@ const StartGame: React.FC<StartGameProps> = ({
       );
     }
     setTotalStack((prevTotalStack) => prevTotalStack + 5350);
+    setPot(prevPot => prevPot + 4);
     saveGameState();
   };
   const calculatePoints = (position: number, isWinner: boolean = false) => {
@@ -465,16 +499,16 @@ const StartGame: React.FC<StartGameProps> = ({
         ) : (
 
           <div >
-          
+
             <Modal isOpen={gameStarted} onClose={handleGameEnd}>
               <ModalHeader className="text-xl bg-color-red">Game in Progress</ModalHeader>
               <Content championnat={championnat} />
               <ModalBody>
-              
+
                 <div
                   style={{
                     margin: "10 auto",
-                    height:'200px'
+                    height: '200px'
 
                   }}
                 >
@@ -482,36 +516,41 @@ const StartGame: React.FC<StartGameProps> = ({
                     gameStarted={gameStarted}
                     isPaused={isPaused}
                     // Handle the blind change here
-                    onBlindChange={(small, big) => {
+                    onBlindChange={(small, big, ante) => {
                       setSmallBlind(small);
                       setBigBlind(big);
+                      setAnte(ante)
                     }}
                     onTimeChange={(time) => {
                       // Handle time change here
                       setTimeLeft(time);
                     }} />
-                  {gameStarted && (
-               <div >
-                  <GameTimer
-  formatTime={formatTime}
-  timeLeft={timeLeft}
-  smallBlind={smallBlind}
-  bigBlind={bigBlind}
-  handleGameEnd={handleGameEnd}
-  isPaused={isPaused}
-  setIsPaused={setIsPaused}
-/>
-<div style={{ fontSize:"20px" }}>
-  <span>Stack moyen: </span>
-  <span style={{ fontFamily:"DS-DIGI", fontSize:"24px", display: "inline-block", color:"green" }}>
-    {middleStack}
-  </span>
-</div>
 
-                  </div>
+
+                  {gameStarted && (
+                    <div >
+                      <GameTimer
+                        formatTime={formatTime}
+                        timeLeft={timeLeft}
+                        smallBlind={smallBlind}
+                        bigBlind={bigBlind}
+                        ante={ante}
+                        handleGameEnd={handleGameEnd}
+                        isPaused={isPaused}
+                        setIsPaused={setIsPaused}
+                        totalPot={pot}
+                        middleStack={middleStack}
+                      />
+
+                      <div style={{ fontSize: "20px" }}>
+
+
+                      </div>
+
+                    </div>
                   )}
 
-                 <div
+                  <div
                     style={{
                       display: "flex",
                       flexDirection: "row",
@@ -554,9 +593,18 @@ const StartGame: React.FC<StartGameProps> = ({
                         </div>
                       );
                     })}
+                    <div style={{
+                      position: 'absolute', // or 'fixed' if you want it to stay in the same place even when scrolling
+                      right: '10%', marginLeft: "20px", marginTop: "10px", border: "solid 2px", borderRadius: "5%"
+                    }}>
+
+                      <div style={{ margin: "20px", fontSize: "1.5em" }}>Joueurs Sortis</div>
+                      <div style={{ width: "100%", marginTop: "10px", height: "2px", border: "solid" }}></div>
+                      <div >  {renderOutOfGamePlayers()}</div>
+                    </div>
                   </div>
-               </div>
-               
+                </div>
+
               </ModalBody>
 
             </Modal>

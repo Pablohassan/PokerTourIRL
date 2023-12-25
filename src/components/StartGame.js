@@ -1,4 +1,4 @@
-import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+import { jsxs as _jsxs, jsx as _jsx } from "react/jsx-runtime";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api";
@@ -13,10 +13,12 @@ import toast from "react-hot-toast";
 const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, handlePlayerSelect, players, updateAfterGameEnd, }) => {
     const [gameStarted, setGameStarted] = useState(false);
     const [showReview, setShowReview] = useState(false);
+    const [pot, setPot] = useState(0);
     const [games, setGames] = useState([]);
     const [timeLeft, setTimeLeft] = useState(20 * 60); // 20 minutes in seconds
     const [smallBlind, setSmallBlind] = useState(10);
     const [bigBlind, setBigBlind] = useState(20);
+    const [ante, setAnte] = useState(0);
     const [outPlayers, setOutPlayers] = useState([]);
     const [initialPlayerCount, setInitialPlayerCount] = useState(0);
     const [isPaused, setIsPaused] = useState(false);
@@ -31,6 +33,7 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, handlePla
     const [partyEnded, setPartyEnded] = useState(null);
     const [middleStack, setMiddleStack] = useState(5350);
     const [totalStack, setTotalStack] = useState(0);
+    console.log("pot", pot);
     useEffect(() => {
         const restoreState = async () => {
             if (!gameStarted) {
@@ -82,11 +85,18 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, handlePla
         }
     }, [selectedPlayers.length, gameStarted]);
     useEffect(() => {
+        if (gameStarted && initialPlayerCount > 0 && pot === 0) {
+            const initialPot = initialPlayerCount * 5;
+            setPot(initialPot);
+        }
+    }, [gameStarted, initialPlayerCount, pot]);
+    useEffect(() => {
         // Recalculate middle stack whenever the total stack or player count changes
         const remainingPlayers = selectedPlayers.length;
         if (remainingPlayers > 0) { // Avoid division by zero
             const newMiddleStack = totalStack / remainingPlayers;
-            setMiddleStack(newMiddleStack);
+            const roundedMiddleStack = Math.round(newMiddleStack);
+            setMiddleStack(roundedMiddleStack);
         }
     }, [totalStack, selectedPlayers.length]);
     const navigate = useNavigate();
@@ -96,6 +106,13 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, handlePla
     const confirmAndStartGame = async () => {
         setShowReview(false); // Hide the review
         await onStartGame(); // Now, start the game
+    };
+    const renderOutOfGamePlayers = () => {
+        return outPlayers.map((player, index) => {
+            const gameForPlayer = games.find(game => game.playerId === player.id);
+            const position = gameForPlayer?.position ?? 'N/A'; // If position is undefined, fallback to 'N/A'
+            return (_jsx("div", { className: "out-player", children: _jsxs("div", { style: { display: 'inline-block', margin: "20px", fontSize: "1.5em" }, children: [player.name, " : ", _jsxs("div", { style: { display: 'inline-block', marginRight: "10px" }, children: ["Position ", position] }), " "] }) }, player.id));
+        });
     };
     const noTournaments = championnat.length === 0;
     const saveGameState = () => {
@@ -169,6 +186,7 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, handlePla
                 : game));
         }
         setTotalStack((prevTotalStack) => prevTotalStack + 5350);
+        setPot(prevPot => prevPot + 4);
         saveGameState();
     };
     const calculatePoints = (position, isWinner = false) => {
@@ -304,22 +322,26 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, handlePla
                                     height: '200px'
                                 }, children: [_jsx(BlindTimer, { gameStarted: gameStarted, isPaused: isPaused, 
                                         // Handle the blind change here
-                                        onBlindChange: (small, big) => {
+                                        onBlindChange: (small, big, ante) => {
                                             setSmallBlind(small);
                                             setBigBlind(big);
+                                            setAnte(ante);
                                         }, onTimeChange: (time) => {
                                             // Handle time change here
                                             setTimeLeft(time);
-                                        } }), gameStarted && (_jsxs("div", { children: [_jsx(GameTimer, { formatTime: formatTime, timeLeft: timeLeft, smallBlind: smallBlind, bigBlind: bigBlind, handleGameEnd: handleGameEnd, isPaused: isPaused, setIsPaused: setIsPaused }), _jsxs("div", { style: { fontSize: "20px" }, children: [_jsx("span", { children: "Stack moyen: " }), _jsx("span", { style: { fontFamily: "DS-DIGI", fontSize: "24px", display: "inline-block", color: "green" }, children: middleStack })] })] })), _jsx("div", { style: {
+                                        } }), gameStarted && (_jsxs("div", { children: [_jsx(GameTimer, { formatTime: formatTime, timeLeft: timeLeft, smallBlind: smallBlind, bigBlind: bigBlind, ante: ante, handleGameEnd: handleGameEnd, isPaused: isPaused, setIsPaused: setIsPaused, totalPot: pot, middleStack: middleStack }), _jsx("div", { style: { fontSize: "20px" } })] })), _jsxs("div", { style: {
                                             display: "flex",
                                             flexDirection: "row",
                                             flexWrap: "wrap",
-                                        }, children: currentlyPlayingPlayers.map((player) => {
-                                            // Trouver le jeu correspondant au joueur actuel
-                                            const gameForPlayer = games.find((game) => game.playerId === player?.id);
-                                            // Si le jeu existe pour ce joueur, affichez les détails, sinon affichez une erreur
-                                            return (_jsx("div", { style: { display: "flex", flexDirection: "column", }, children: gameForPlayer ? (_jsx("div", { className: "p-1", children: _jsx(CardPlayer, { playername: player?.name ?? " none", recave: gameForPlayer.rebuys, kill: gameForPlayer.kills, rebuy: () => handleRebuy(gameForPlayer.playerId), outOfGame: () => handleOutOfGame(gameForPlayer.partyId, gameForPlayer.playerId, gameForPlayer.eliminatedById) }) })) : (_jsxs("div", { children: ["Erreur: Pas de jeu pour ", player?.name] })) }, player?.id));
-                                        }) })] }) })] }) }))] }));
+                                        }, children: [currentlyPlayingPlayers.map((player) => {
+                                                // Trouver le jeu correspondant au joueur actuel
+                                                const gameForPlayer = games.find((game) => game.playerId === player?.id);
+                                                // Si le jeu existe pour ce joueur, affichez les détails, sinon affichez une erreur
+                                                return (_jsx("div", { style: { display: "flex", flexDirection: "column", }, children: gameForPlayer ? (_jsx("div", { className: "p-1", children: _jsx(CardPlayer, { playername: player?.name ?? " none", recave: gameForPlayer.rebuys, kill: gameForPlayer.kills, rebuy: () => handleRebuy(gameForPlayer.playerId), outOfGame: () => handleOutOfGame(gameForPlayer.partyId, gameForPlayer.playerId, gameForPlayer.eliminatedById) }) })) : (_jsxs("div", { children: ["Erreur: Pas de jeu pour ", player?.name] })) }, player?.id));
+                                            }), _jsxs("div", { style: {
+                                                    position: 'absolute',
+                                                    right: '10%', marginLeft: "20px", marginTop: "10px", border: "solid 2px", borderRadius: "5%"
+                                                }, children: [_jsx("div", { style: { margin: "20px", fontSize: "1.5em" }, children: "Joueurs Sortis" }), _jsx("div", { style: { width: "100%", marginTop: "10px", height: "2px", border: "solid" } }), _jsxs("div", { children: ["  ", renderOutOfGamePlayers()] })] })] })] }) })] }) }))] }));
 };
 export default StartGame;
 //# sourceMappingURL=StartGame.js.map

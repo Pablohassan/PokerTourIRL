@@ -3,15 +3,20 @@ import {Button} from '@nextui-org/react'; // Replace with the actual path to you
 
 interface GameTimerProps {
   formatTime: (time: number) => string;
+  totalPot:number,
+  middleStack:number,
   timeLeft: number;
   smallBlind: number;
   bigBlind: number;
+  ante : number
   handleGameEnd: () => void;
   isPaused: boolean;
   setIsPaused: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const GameTimer: React.FC<GameTimerProps> = ({
+  middleStack,
+  totalPot,
   formatTime,
   timeLeft,
   smallBlind,
@@ -19,41 +24,113 @@ const GameTimer: React.FC<GameTimerProps> = ({
   handleGameEnd,
   isPaused,
   setIsPaused,
+  ante
 }) => {
 
  
   return (
-    <div style={{ display: 'grid', gridTemplateRows: '1fr 1fr 1fr', height: '250px', width:"600px", border: '4px solid #D1D5DB', borderRadius: '8px' }}>
-      {/* Timer and Blinds */}
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '150px', borderBottom: '2px solid #D1D5DB', color: 'white'}}>
-        {/* Timer */}
-        <div style={{ fontSize: '32px', background: '#1E3A8A', padding: '16px', borderRadius: '10px', fontFamily:"DS-DIGI" }}>
-          Time left: {formatTime(timeLeft)}
+    <div style={{
+      display: 'grid',
+      gridTemplateRows: '3fr 1fr',
+      height: '470px',
+      width: '1000px',
+      border: '4px solid black',
+      borderRadius: '16px',
+      background: 'rgba(0, 0, 0, 0.2)',
+      boxShadow: '0px 4px 6px rgba(0, 0,5, 0, 0.3)'
+    }}>
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-around',
+        alignItems: 'center',
+        padding: '20px',
+        borderBottom: '2px solid #D1D5DB'
+      }}>
+        <div style={{
+          fontFamily:"DS-DIGI",
+          alignItems:"center",
+          fontSize: '2.5em',
+          height:"95%",
+          width:"40%",
+          padding: '20px',
+          margin:'10px',
+          border:"4px solid black",
+          borderRadius: '12px',
+          background: '#100D14',
+          color: 'white',
+          boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.2)'
+        }}>
+         
+          Time left: 
+          <div style={{fontSize:"3.5em" ,   alignItems:"center", padding:'2px'}}>{formatTime(timeLeft)}</div>
         </div>
-    
-        <div style={{ fontSize: '24px', background: 'black', marginLeft: '16px', padding: '16px', borderRadius: '10px', color: 'white' }}>
-          Small: {smallBlind} / Big: {bigBlind}
-        </div>
-      </div>
+        <div style={{
+          fontFamily:"DS-DIGI",
+          height:'95%',
+          fontSize: '3em',
+          padding: '20px',
+          width:'30%',
+          borderRadius: '12px',
+          background: '#100D14',
+          margin:'10px',
+          color: 'white',
+          boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.2)'
+        }}>
+          Small : {smallBlind} <div>Big : {bigBlind}</div> 
+          <div style={{background:"white", width:"100%", height:"2px", margin:"5px" }}>
 
-      {/* Buttons */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', height: '50%' }}>
-        <div style={{ padding: '10px' }}>
-          <Button color="danger" className="text-white" onClick={handleGameEnd}>
-            Stop Partie
+          
+          </div>
+            
+           
+          <div style={{ marginTop: '8px' }}>Ante: {ante}</div>
+        </div>
+
+        <div style={{
+    fontFamily:"DS-DIGI",
+    height:'95%',
+    fontSize: '2.5em',
+    padding: '20px',
+    width:'30%',
+    borderRadius: '12px',
+    background: '#100D14',  // different background for demonstration
+    margin:'10px',
+    color: 'white',
+    boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.2)'
+  }}>
+    {/* Your new content here */}
+    <div> Pot : {totalPot} </div>
+    <div>M-Stack {middleStack}</div>
+  
+  </div>
+
+      </div>
+      <div style={{background:"black", width:"100%", height:"2px", margin:"5px" }}>
+
+          
+</div>
+      
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-around',
+        alignItems: 'center',
+        padding: '5px'
+      }}>
+        <div >
+          <Button color="danger"  size='lg' className="text-white" onClick={handleGameEnd}>
+            <div style={{fontSize:"20px"}}>Stop Partie</div>
+            
           </Button>
         </div>
-        <div style={{ padding: '10px' }}>
-          <Button
-            className="text-white"
-            color="warning"
-            onClick={() => setIsPaused(!isPaused)}
-          >
-            {isPaused ? 'Resume' : 'Pause'}
+        <div >
+          <Button color="warning" className="text-black" size='lg' onClick={() => setIsPaused(!isPaused)}>
+            <div style={{fontSize:"2Opx"}}>
+            {isPaused ? 'Resume' : 'Pause'}</div>
           </Button>
         </div>
       </div>
     </div>
+    
   );
 };
 

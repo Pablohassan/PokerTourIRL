@@ -7,6 +7,7 @@ import PartyResults from "./components/PartyResults";
 import StartGame from "./components/StartGame";
 import PartyPage from "./components/PartyPage";
 import { Image } from "@nextui-org/react";
+import PokerLogo from"./components/PokerLogo";
 
 // import Ak from "./components/PokerLogo";
 import {
@@ -164,13 +165,14 @@ element:( <PartyPage
         {isLoading ? (
       <div>Loading...</div>
     ) : (
-          // <Layout championnat={championnat}>
+          
             <Navbar position="static" className="" >
               <NavbarBrand>
-                {/* <Ak /> */}
+          <PokerLogo/>
               </NavbarBrand>
               <NavbarContent className="sm:flex gap-4" justify="center">
               <NavbarItem>
+                
                 <Link color="foreground" href="/ranking">Ranking</Link>
                 </NavbarItem>
                 <NavbarItem>
@@ -191,15 +193,15 @@ element:( <PartyPage
              
              
             </Navbar>
-          // </Layout>
+        
           )}
         </SignedIn>
 
         <SignedOut>
-          {/* <Layout championnat={championnat}> */}
+         
             <Navbar shouldHideOnScroll>
               <NavbarBrand>
-                {/* <Ak /> */}
+              
               </NavbarBrand>
               <NavbarContent >
               <NavbarItem>
@@ -215,7 +217,7 @@ element:( <PartyPage
               </NavbarContent>
               <SignOutButton />
             </Navbar>
-          {/* </Layout> */}
+         
           <Routes>
             <Route path="/sign-in/*" element={<SignIn />} />
             <Route path="/sign-up/*" element={<SignUp />} />
@@ -224,7 +226,6 @@ element:( <PartyPage
           ;
         </SignedOut>
       </ClerkProvider>
-      {/* <SelectedPlayers selectedPlayers={selectedPlayers}  /> */}
       {element}
     </div>
   );

@@ -74,10 +74,10 @@ const SelectPlayersGame: React.FC<SelectPlayersProps> = ({ setSelectedTournament
    
     return (
      
-      <Modal style={{height:"950px"}} isOpen={isOpen} isDismissable={true} closeButton={true}>
+      <Modal style={{height:"750px"}} isOpen={isOpen} isDismissable={true} closeButton={true}>
       <ModalContent >
         <ModalHeader > Nouvelle Partie:</ModalHeader>
-        <ModalBody >
+        <ModalBody   style={{overflowY: "auto"}}  >
           <div>
             {!noTournaments ? (
               <div>
@@ -106,17 +106,20 @@ const SelectPlayersGame: React.FC<SelectPlayersProps> = ({ setSelectedTournament
           <ModalHeader>Selection des Joueurs</ModalHeader>
          
 
-    <Table style={{height:"400px"}}>
-        <TableHeader>
-            <TableColumn>
+    <Table  >
+
+        <TableHeader  style={{  overflowY: "auto" }}>
+            <TableColumn >
                 Nom
             </TableColumn>
             <TableColumn>Joueur</TableColumn>
         </TableHeader>
-        <TableBody>
+        <TableBody  style={{  overflowY: "auto" }}>
             {players.map((player) => (
                 <TableRow key={player.id}>
+                  
                     <TableCell>
+                      
                         <Switch size="sm"
                            
                             onChange={() => handlePlayerChange(player.id)}

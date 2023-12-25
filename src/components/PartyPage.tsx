@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Table, TableBody, TableCell, TableColumn, TableHeader, TableRow, Button } from '@nextui-org/react';
+import { useEffect, useState , useCallback} from 'react';
+import { Table, TableBody, TableCell, TableColumn, TableHeader, TableRow, Button, Modal } from '@nextui-org/react';
 import api from '../api'; // replace with your actual API import
 import { PlayerStats } from './interfaces';
 
@@ -29,6 +29,8 @@ interface Party {
 
 export const PartyPage = () => {
   const [parties, setParties] = useState<Party[]>([]);
+  const [isModalOpen, setModalOpen] = useState(false);
+  const [selectedParty, setSelectedParty] = useState<Party | null>(null);
 
   useEffect(() => {
     const fetchParties = async () => {
@@ -49,6 +51,54 @@ export const PartyPage = () => {
 
     fetchParties();
   }, []);
+  const openModal = useCallback((party: Party) => {
+    setSelectedParty(party);
+    setModalOpen(true);
+  }, []);
+
+  const closeModal = () => {
+    setModalOpen(false);
+    setSelectedParty(null);
+  };
+
+
+  const updateAllPlayerStats = async () => {
+    if (!selectedParty) return;
+  
+    try {
+      // Prepare the data for the API call
+      const updates = selectedParty.playerStats.map((stat) => ({
+        id: stat.id,  // Assuming each playerStat has an 'id' field
+        data: {
+          position: stat.position,
+          points: stat.points,
+          rebuys: stat.rebuys,
+          // Add any other fields you want to update
+        },
+      }));
+  
+      // Make the API call to update all player stats for this party
+      await api.put("/updateMultipleGamesResults", updates);
+  
+      // Close the modal and maybe refetch the party data
+      closeModal();
+    } catch (error) {
+      console.error("An error occurred while updating the player stats:", error);
+      // Handle the error accordingly
+    }
+  };
+
+
+  const editStat = (playerIndex: number, field: keyof PlayerStats, value: any) => {
+    if (!selectedParty) return;
+    const updatedStats: PlayerStats[] = [...selectedParty.playerStats];
+    (updatedStats[playerIndex] as any )[field] = value;
+    setSelectedParty({
+      ...selectedParty,
+      playerStats: updatedStats,
+    });
+  };
+
 
   const deleteParty = async (partyId: number) => {
     if (window.confirm(`Supprimer la partie ${partyId}?`))
@@ -64,6 +114,7 @@ export const PartyPage = () => {
       // Handle error accordingly
     }
   };
+
 
   return (
     <div>
@@ -103,8 +154,44 @@ export const PartyPage = () => {
               ))}
             </TableBody>
           </Table>
+          <Button
+            size="sm"
+            color="primary"
+            onClick={() => openModal(party)}
+          >
+            Edit
+          </Button>
         </div>
       ))}
+
+
+
+    {isModalOpen && selectedParty && (
+        <Modal isOpen={isModalOpen} onClose={closeModal}>
+          <h2>Edit Party</h2>
+          {selectedParty.playerStats.map((stat, i) => (
+            <div key={i}>
+              <input
+                type="number"
+                value={stat.position}
+                onChange={(e) => editStat(i, 'position', Number(e.target.value))}
+              />
+              <input
+                type="number"
+                value={stat.points}
+                onChange={(e) => editStat(i, 'points', Number(e.target.value))}
+              />
+              <input
+                type="number"
+                value={stat.rebuys}
+                onChange={(e) => editStat(i, 'rebuys', Number(e.target.value))}
+              />
+            </div>
+          ))}
+          <Button onClick={updateAllPlayerStats}>Save</Button>
+          <Button onClick={closeModal}>Cancel</Button>
+        </Modal>
+      )}
     </div>
   );
 };

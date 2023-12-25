@@ -13,16 +13,17 @@ const BlindTimer = ({ gameStarted, isPaused, onBlindChange, onTimeChange }) => {
         { small: 50, big: 100, ante: 0 },
         { small: 100, big: 200, ante: 0 },
         { small: 150, big: 300, ante: 0 },
-        { small: 200, big: 400, ante: 0 },
-        { small: 250, big: 500, ante: 0 },
-        { small: 300, big: 600, ante: 0 },
-        { small: 400, big: 800, ante: 10 },
-        { small: 500, big: 1000, ante: 10 },
-        { small: 600, big: 1200, ante: 25 },
-        { small: 700, big: 1400, ante: 25 },
-        { small: 800, big: 1600, ante: 50 },
-        { small: 900, big: 1800, ante: 50 },
-        { small: 1000, big: 2000, ante: 100 }
+        { small: 200, big: 400, ante: 10 },
+        { small: 250, big: 500, ante: 10 },
+        { small: 300, big: 600, ante: 25 },
+        { small: 400, big: 800, ante: 25 },
+        { small: 500, big: 1000, ante: 50 },
+        { small: 600, big: 1200, ante: 50 },
+        { small: 700, big: 1400, ante: 100 },
+        { small: 800, big: 1600, ante: 100 },
+        { small: 900, big: 1800, ante: 200 },
+        { small: 1000, big: 2000, ante: 200 },
+        { small: 1500, big: 3000, ante: 300 }
     ];
     useEffect(() => {
         if (!gameStarted) {
@@ -41,7 +42,7 @@ const BlindTimer = ({ gameStarted, isPaused, onBlindChange, onTimeChange }) => {
                         newBlindIndex = blindIndex + 1;
                         setBlindIndex(newBlindIndex);
                     }
-                    onBlindChange(blinds[newBlindIndex].small, blinds[newBlindIndex].big);
+                    onBlindChange(blinds[newBlindIndex].small, blinds[newBlindIndex].big, blinds[newBlindIndex].ante);
                     // onAnteChange(blinds[newBlindIndex].ante);
                     return 20 * 60; // reset time
                 }
@@ -57,7 +58,7 @@ const BlindTimer = ({ gameStarted, isPaused, onBlindChange, onTimeChange }) => {
             const timer = setTimeout(() => {
                 setShowModal(false);
                 setPlayAlert(false); // Also stop the sound effect
-            }, 10000); // 10 seconds
+            }, 5000); // 10 seconds
             return () => clearTimeout(timer); // Cleanup
         }
     }, [showModal]);

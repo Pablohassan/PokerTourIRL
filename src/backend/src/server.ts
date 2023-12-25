@@ -8,7 +8,8 @@ const prisma = new PrismaClient();
 const app = express();
 
 app.options("*", cors());
-app.use(cors({ origin: "http://localhost:5173" }));
+app.use(cors({ origin: process.env.CORS_ORIGIN || "http://localhost:5173" }));
+
 app.use(express.json());
 
 app.use((req, res, next) => {
@@ -488,6 +489,26 @@ app.put("/gamesResults/:id", async (req: Request, res: Response) => {
       .json({ error: "An error occurred while updating the game result" });
   }
 });
+
+app.put("/updateMultipleGamesResults", async (req: Request, res: Response) => {
+  try {
+    const gameUpdates: Array<{ id: number, data: any }> = req.body;
+
+    const updatedGames = await Promise.all(
+      gameUpdates.map(async (update) => {
+        return await prisma.playerStats.update({
+          where: { id: update.id },
+          data: update.data,
+        });
+      })
+    );
+
+    res.json({ updatedGames });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "An error occurred while updating the game results" });
+  }
+});
 // sais pas comment ça fonctionne
 app.put("/playerStats/eliminate", async (req: Request, res: Response) => {
   console.log("Request received at /playerStats/eliminate");
@@ -597,8 +618,9 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
     .json({ error: err.message || "Internal Server Error" });
 });
 
-const server = app.listen(3000, () =>
-  console.log(`Server is running on http://localhost:3000`)
+const port = process.env.PORT || 3000;
+const server = app.listen(port, () =>
+  console.log(`Server is running on http://localhost:${port}`)
 );
 
 process.on("SIGINT", () => {

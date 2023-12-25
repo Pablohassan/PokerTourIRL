@@ -12,7 +12,9 @@
   },
   "dependencies": {
     "@clerk/clerk-react": "^4.23.1",
-    "@nextui-org/react": "^2.1.8",
+    "@nextui-org/react": "^2.2.9",
+    "@nextui-org/use-infinite-scroll": "^2.1.2",
+    "@types/infinite-scroll": "^4.0.3",
     "axios": "^1.4.0",
     "dotenv": "^16.3.1",
     "framer-motion": "^10.15.2",

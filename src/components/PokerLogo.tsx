@@ -1,5 +1,5 @@
 import React from 'react'
-import ak from "../assets/ak.jpg"
+import ak from "../assets/pokerlogobourly.jpeg"
 
 
 export default function PokerLogo() {
