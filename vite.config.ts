@@ -1,11 +1,12 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react-swc'
 import { resolve } from 'path';
-import postcssImport from 'postcss-import';
+
 // Plugins
 
 import tailwindcss from 'tailwindcss';
-import autoprefixer from 'autoprefixer';
+import * as postcssImport from 'postcss-import';
+import * as autoprefixer from 'autoprefixer';
 
 
 
