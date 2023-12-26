@@ -85,8 +85,8 @@ const PartyResults = ({ players, playerStats }) => {
     // Define playerGames inside the map function, so 'player' is accessible
     return (_jsx("div", { style: { display: 'grid',
             gridTemplateColumns: 'repeat(2, 1fr)',
-            justifyContent: 'center', // Center horizontally
-            alignItems: 'stretch', // Center vertically
+            justifyContent: 'center',
+            alignItems: 'stretch',
             justifyItems: 'center',
             gap: '10px',
             margin: "10px"

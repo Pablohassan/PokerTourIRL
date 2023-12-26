@@ -9,18 +9,30 @@ export const PartyPage = () => {
     const [selectedParty, setSelectedParty] = useState(null);
     useEffect(() => {
         const fetchParties = async () => {
-            const response = await api.get("/parties");
-            const allParties = response.data;
-            const limit = pLimit(5);
-            // Fetch detailed stats for each party
-            const partiesWithStats = await Promise.all(allParties.map(async (party) => limit(async () => {
-                const statsResponse = await api.get(`/parties/${party.id}/stats`);
-                return {
-                    ...party,
-                    playerStats: statsResponse.data,
-                };
-            })));
-            setParties(partiesWithStats);
+            try {
+                const response = await api.get("/parties");
+                const allParties = response.data;
+                const limit = pLimit(5);
+                // Fetch detailed stats for each party
+                const partiesWithStats = await Promise.all(allParties.map((party) => limit(async () => {
+                    try {
+                        const statsResponse = await api.get(`/parties/${party.id}/stats`);
+                        return {
+                            ...party,
+                            playerStats: statsResponse.data,
+                        };
+                    }
+                    catch (error) {
+                        console.error(`Failed to fetch stats for party ${party.id}:`, error);
+                        // Return the party without stats
+                        return party;
+                    }
+                })));
+                setParties(partiesWithStats);
+            }
+            catch (error) {
+                console.error('Failed to fetch parties:', error);
+            }
         };
         fetchParties();
     }, []);
@@ -38,7 +50,7 @@ export const PartyPage = () => {
         try {
             // Prepare the data for the API call
             const updates = selectedParty.playerStats.map((stat) => ({
-                id: stat.id, // Assuming each playerStat has an 'id' field
+                id: stat.id,
                 data: {
                     position: stat.position,
                     points: stat.points,

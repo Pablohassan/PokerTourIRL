@@ -22,23 +22,35 @@ export const PartyPage = () => {
 
   useEffect(() => {
     const fetchParties = async () => {
-      const response = await api.get("/parties");
-      const allParties = response.data;
-      const limit = pLimit(5);
-      // Fetch detailed stats for each party
-      const partiesWithStats = await Promise.all(allParties.map(async (party: Party)=> limit(async ()  => {
-        const statsResponse = await api.get(`/parties/${party.id}/stats`);
-        return {
-          ...party,
-          playerStats: statsResponse.data,
-        };
-      })));
-
-      setParties(partiesWithStats);
+      try {
+        const response = await api.get("/parties");
+        const allParties = response.data;
+        const limit = pLimit(5);
+  
+        // Fetch detailed stats for each party
+        const partiesWithStats = await Promise.all(allParties.map((party: Party) => limit(async () => {
+          try {
+            const statsResponse = await api.get(`/parties/${party.id}/stats`);
+            return {
+              ...party,
+              playerStats: statsResponse.data,
+            };
+          } catch (error) {
+            console.error(`Failed to fetch stats for party ${party.id}:`, error);
+            // Return the party without stats
+            return party;
+          }
+        })));
+  
+        setParties(partiesWithStats);
+      } catch (error) {
+        console.error('Failed to fetch parties:', error);
+      }
     };
-
+  
     fetchParties();
   }, []);
+  
   const openModal = useCallback((party: Party) => {
     setSelectedParty(party);
     setModalOpen(true);
