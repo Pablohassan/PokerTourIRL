@@ -1,7 +1,7 @@
 import express, { Request, Response, NextFunction } from "express";
 import _ from "lodash";
 import cors from "cors";
-import { PrismaClient } from "@prisma/client";
+import { Prisma, PrismaClient } from "@prisma/client";
 import { fetchGamesForPlayer } from "./services/fetsh-game-for-player.js";
 
 const prisma = new PrismaClient();
@@ -246,6 +246,12 @@ app.get(
   async (req: Request, res: Response, next: NextFunction) => {
     const playerId = Number(req.params.playerId);
 
+    // Check if playerId is a number
+    if (isNaN(playerId)) {
+      return res.status(400).json({ error: "Player ID must be a number" });
+    }
+
+    // Check if playerId is not zero
     if (!playerId) {
       return res.status(400).json({ error: "A valid player ID is required" });
     }
@@ -258,6 +264,7 @@ app.get(
         include: {
           party: true, // Including party details for context
         },
+        take: 10, // Limit the results to 10
       });
 
       if (!playerGames || playerGames.length === 0) {
@@ -293,13 +300,41 @@ app.get(
 
 app.get("/parties/:partyId/stats", async (req, res) => {
   const partyId = Number(req.params.partyId);
-  const stats = await prisma.playerStats.findMany({
-    where: { partyId: partyId },
-    include: { player: true },
-  });
-  res.json(stats);
+
+  // Vérifiez si partyId est un nombre
+  if (isNaN(partyId)) {
+    return res.status(400).json({ error: "Party ID must be a number" });
+  }
+
+  try {
+    console.log(`Fetching stats for party id: ${partyId}`);
+    const stats = await prisma.playerStats.findMany({
+      where: { partyId: partyId },
+      include: { player: true },
+      take: 10, // Limit the results to 10
+    });
+    console.log(`Fetched stats for party id: ${partyId} successfully`);
+
+    // Vérifiez si des statistiques ont été trouvées
+    if (!stats || stats.length === 0) {
+      return res.status(404).json({ error: "No stats found for this party ID" });
+    
+    }
+
+    res.json(stats);
+  } catch (err) {
+    console.log(`Error fetching stats for party id: ${partyId}: `, err);
+    res.status(500).json({ error: "An error occurred while fetching stats" });
+  }
 });
 
+app.post("/tournaments", async (req: Request, res: Response) => {
+  const { year } = req.body;
+  const tournaments = await prisma.tournament.create({
+    data: { year },
+  });
+  res.json(tournaments);
+});
 app.post("/tournaments", async (req: Request, res: Response) => {
   const { year } = req.body;
   const tournaments = await prisma.tournament.create({
@@ -380,7 +415,7 @@ app.post("/playerStats/start", async (req: Request, res: Response) => {
     },
   });
 
-  const newPlayerStats = [];
+  const newPlayerStats:Prisma.PromiseReturnType<typeof prisma.playerStats.create>[] = [];
 
   for (const playerId of players) {
     // Start a new game for each player
@@ -444,7 +479,7 @@ app.post("/playerStats", async (req: Request, res: Response) => {
 
 app.post("/gameResults", async (req: Request, res: Response) => {
   const games = req.body;
-  const updatedGames = [];
+  const updatedGames:Prisma.PromiseReturnType<typeof prisma.playerStats.update>[] = [];
 
   try {
     for (const game of games) {

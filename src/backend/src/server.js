@@ -351,6 +351,11 @@ app.get("/gameResults/:playerId", function (req, res, next) { return __awaiter(v
         switch (_a.label) {
             case 0:
                 playerId = Number(req.params.playerId);
+                // Check if playerId is a number
+                if (isNaN(playerId)) {
+                    return [2 /*return*/, res.status(400).json({ error: "Player ID must be a number" })];
+                }
+                // Check if playerId is not zero
                 if (!playerId) {
                     return [2 /*return*/, res.status(400).json({ error: "A valid player ID is required" })];
                 }
@@ -364,6 +369,7 @@ app.get("/gameResults/:playerId", function (req, res, next) { return __awaiter(v
                         include: {
                             party: true, // Including party details for context
                         },
+                        take: 10, // Limit the results to 10
                     })];
             case 2:
                 playerGames = _a.sent();
@@ -409,18 +415,54 @@ app.get("/parties/:id", function (req, res, next) { return __awaiter(void 0, voi
     });
 }); });
 app.get("/parties/:partyId/stats", function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var partyId, stats;
+    var partyId, stats, err_12;
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0:
                 partyId = Number(req.params.partyId);
+                // Vérifiez si partyId est un nombre
+                if (isNaN(partyId)) {
+                    return [2 /*return*/, res.status(400).json({ error: "Party ID must be a number" })];
+                }
+                _a.label = 1;
+            case 1:
+                _a.trys.push([1, 3, , 4]);
+                console.log("Fetching stats for party id: ".concat(partyId));
                 return [4 /*yield*/, prisma.playerStats.findMany({
                         where: { partyId: partyId },
                         include: { player: true },
+                        take: 10, // Limit the results to 10
+                    })];
+            case 2:
+                stats = _a.sent();
+                console.log("Fetched stats for party id: ".concat(partyId, " successfully"));
+                // Vérifiez si des statistiques ont été trouvées
+                if (!stats || stats.length === 0) {
+                    return [2 /*return*/, res.status(404).json({ error: "No stats found for this party ID" })];
+                }
+                res.json(stats);
+                return [3 /*break*/, 4];
+            case 3:
+                err_12 = _a.sent();
+                console.log("Error fetching stats for party id: ".concat(partyId, ": "), err_12);
+                res.status(500).json({ error: "An error occurred while fetching stats" });
+                return [3 /*break*/, 4];
+            case 4: return [2 /*return*/];
+        }
+    });
+}); });
+app.post("/tournaments", function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+    var year, tournaments;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0:
+                year = req.body.year;
+                return [4 /*yield*/, prisma.tournament.create({
+                        data: { year: year },
                     })];
             case 1:
-                stats = _a.sent();
-                res.json(stats);
+                tournaments = _a.sent();
+                res.json(tournaments);
                 return [2 /*return*/];
         }
     });
@@ -809,7 +851,7 @@ app.put("/playerStats/out/:playerId", function (req, res) { return __awaiter(voi
 }); });
 // Delete a specific party by its ID
 app.delete("/parties/:id", function (req, res, next) { return __awaiter(void 0, void 0, void 0, function () {
-    var id, err_12;
+    var id, err_13;
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0:
@@ -832,9 +874,9 @@ app.delete("/parties/:id", function (req, res, next) { return __awaiter(void 0, 
                 res.status(204).send();
                 return [3 /*break*/, 4];
             case 3:
-                err_12 = _a.sent();
+                err_13 = _a.sent();
                 // Pass the error to the error-handling middleware
-                next(err_12);
+                next(err_13);
                 return [3 /*break*/, 4];
             case 4: return [2 /*return*/];
         }

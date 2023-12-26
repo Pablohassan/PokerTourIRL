@@ -230,7 +230,7 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, handlePla
                 try {
                     await api.put(`/gamesResults/${game.id}`, updatedGameForApi);
                     await api.put("/playerStats/eliminate", {
-                        partyId: partyId, // Remplacez par l'ID de la partie en cours
+                        partyId: partyId,
                         playerId: playerId,
                         eliminatedById: eliminatedById,
                         points: points,
@@ -339,7 +339,7 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, handlePla
                                                 // Si le jeu existe pour ce joueur, affichez les détails, sinon affichez une erreur
                                                 return (_jsx("div", { style: { display: "flex", flexDirection: "column", }, children: gameForPlayer ? (_jsx("div", { className: "p-1", children: _jsx(CardPlayer, { playername: player?.name ?? " none", recave: gameForPlayer.rebuys, kill: gameForPlayer.kills, rebuy: () => handleRebuy(gameForPlayer.playerId), outOfGame: () => handleOutOfGame(gameForPlayer.partyId, gameForPlayer.playerId, gameForPlayer.eliminatedById) }) })) : (_jsxs("div", { children: ["Erreur: Pas de jeu pour ", player?.name] })) }, player?.id));
                                             }), _jsxs("div", { style: {
-                                                    position: 'absolute', // or 'fixed' if you want it to stay in the same place even when scrolling
+                                                    position: 'absolute',
                                                     right: '10%', marginLeft: "20px", marginTop: "10px", border: "solid 2px", borderRadius: "5%"
                                                 }, children: [_jsx("div", { style: { margin: "20px", fontSize: "1.5em" }, children: "Joueurs Sortis" }), _jsx("div", { style: { width: "100%", marginTop: "10px", height: "2px", border: "solid" } }), _jsxs("div", { children: ["  ", renderOutOfGamePlayers()] })] })] })] }) })] }) }))] }));
 };

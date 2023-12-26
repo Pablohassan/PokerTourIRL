@@ -6,10 +6,10 @@ import { fetchGamesForPlayer } from "./services/fetsh-game-for-player.js";
 const prisma = new PrismaClient();
 const app = express();
 app.options("*", cors());
-app.use(cors({ origin: process.env.CORS_ORIGIN || "http://localhost:5173" }));
+app.use(cors({ origin: process.env.CORS_ORIGIN || "http://192.168.0.24:5173" }));
 app.use(express.json());
 app.use((req, res, next) => {
-    res.header("Access-Control-Allow-Origin", "http://localhost:5173");
+    res.header("Access-Control-Allow-Origin", "http://192.168.0.24:5173");
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
     next();
 });
@@ -198,6 +198,11 @@ app.get("/parties/state/:id", async (req, res, next) => {
 });
 app.get("/gameResults/:playerId", async (req, res, next) => {
     const playerId = Number(req.params.playerId);
+    // Check if playerId is a number
+    if (isNaN(playerId)) {
+        return res.status(400).json({ error: "Player ID must be a number" });
+    }
+    // Check if playerId is not zero
     if (!playerId) {
         return res.status(400).json({ error: "A valid player ID is required" });
     }
@@ -209,6 +214,7 @@ app.get("/gameResults/:playerId", async (req, res, next) => {
             include: {
                 party: true, // Including party details for context
             },
+            take: 10, // Limit the results to 10
         });
         if (!playerGames || playerGames.length === 0) {
             return res
@@ -238,11 +244,35 @@ app.get("/parties/:id", async (req, res, next) => {
 });
 app.get("/parties/:partyId/stats", async (req, res) => {
     const partyId = Number(req.params.partyId);
-    const stats = await prisma.playerStats.findMany({
-        where: { partyId: partyId },
-        include: { player: true },
+    // Vérifiez si partyId est un nombre
+    if (isNaN(partyId)) {
+        return res.status(400).json({ error: "Party ID must be a number" });
+    }
+    try {
+        console.log(`Fetching stats for party id: ${partyId}`);
+        const stats = await prisma.playerStats.findMany({
+            where: { partyId: partyId },
+            include: { player: true },
+            take: 10, // Limit the results to 10
+        });
+        console.log(`Fetched stats for party id: ${partyId} successfully`);
+        // Vérifiez si des statistiques ont été trouvées
+        if (!stats || stats.length === 0) {
+            return res.status(404).json({ error: "No stats found for this party ID" });
+        }
+        res.json(stats);
+    }
+    catch (err) {
+        console.log(`Error fetching stats for party id: ${partyId}: `, err);
+        res.status(500).json({ error: "An error occurred while fetching stats" });
+    }
+});
+app.post("/tournaments", async (req, res) => {
+    const { year } = req.body;
+    const tournaments = await prisma.tournament.create({
+        data: { year },
     });
-    res.json(stats);
+    res.json(tournaments);
 });
 app.post("/tournaments", async (req, res) => {
     const { year } = req.body;
@@ -523,7 +553,7 @@ app.use((err, req, res, next) => {
         .json({ error: err.message || "Internal Server Error" });
 });
 const port = process.env.PORT || 3000;
-const server = app.listen(port, () => console.log(`Server is running on http://localhost:${port}`));
+const server = app.listen(port, () => console.log(`Server is running on http://192.168.0.24 :${port}`));
 process.on("SIGINT", () => {
     server.close(() => {
         prisma.$disconnect();
