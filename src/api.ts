@@ -5,7 +5,7 @@ import axios from 'axios';
 // For local development, this is typically http://localhost:3000
 const api = axios.create({
   
-  baseURL: 'http://localhost:3000',
+  baseURL: 'http://192.168.0.24:3000',
 
 });
 // api.defaults.withCredentials = true;

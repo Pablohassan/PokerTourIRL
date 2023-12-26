@@ -28,7 +28,7 @@ export default function App() {
     useEffect(() => {
         const fetchChampionnat = async () => {
             try {
-                const response = await axios.get("http://localhost:3000/tournaments");
+                const response = await axios.get("http://192.168.0.24:3000/tournaments");
                 // Si vous souhaitez stocker tous les tournois dans le tableau:
                 setChampionnat(response.data.map((t) => ({
                     id: t.id,

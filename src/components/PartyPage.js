@@ -45,7 +45,7 @@ export const PartyPage = () => {
         try {
             // Prepare the data for the API call
             const updates = selectedParty.playerStats.map((stat) => ({
-                id: stat.id,
+                id: stat.id, // Assuming each playerStat has an 'id' field
                 data: {
                     position: stat.position,
                     points: stat.points,

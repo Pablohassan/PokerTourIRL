@@ -16,7 +16,7 @@ function AddPlayer() {
     useEffect(() => {
         const fetchPlayers = async () => {
             try {
-                const response = await axios.get("http://localhost:3000/player");
+                const response = await axios.get("http://192.168.0.24:3000/player");
                 setPlayers(response.data);
             }
             catch (error) {
@@ -38,7 +38,7 @@ function AddPlayer() {
         }
         try {
             // Fetch all players
-            const response = await axios.get("http://localhost:3000/player");
+            const response = await axios.get("http://192.168.0.24:3000/player");
             const players = response.data;
             // Check if a player with the given name already exists
             const playerExists = players.some((player) => player.name.toLowerCase() === name.toLowerCase());
@@ -48,7 +48,7 @@ function AddPlayer() {
                 return;
             }
             // If the player doesn't exist, proceed to create a new player
-            const postResponse = await axios.post("http://localhost:3000/players", { name, phoneNumber });
+            const postResponse = await axios.post("http://192.168.0.24:3000/players", { name, phoneNumber });
             // If the player is successfully created, show a success toast
             if (postResponse.data) {
                 notify('success', `Player ${name} has been added successfully`);
