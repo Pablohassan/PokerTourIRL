@@ -21,6 +21,7 @@
     "framer-motion": "^10.15.2",
     "jest": "^29.5.0",
     "loadash": "^1.0.0",
+    "p-limit": "^5.0.0",
     "postcss-import": "^15.1.0",
     "react": "^18.2.0",
     "react-datepicker": "^4.12.0",

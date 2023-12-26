@@ -48,7 +48,7 @@ const GameTimer = ({ middleStack, totalPot, formatTime, timeLeft, smallBlind, bi
                             padding: '20px',
                             width: '30%',
                             borderRadius: '12px',
-                            background: '#100D14',
+                            background: '#100D14', // different background for demonstration
                             margin: '10px',
                             color: 'white',
                             boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.2)'

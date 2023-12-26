@@ -1,16 +1,8 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { useEffect, useState, useCallback } from 'react';
+import pLimit from 'p-limit';
 import { Table, TableBody, TableCell, TableColumn, TableHeader, TableRow, Button, Modal } from '@nextui-org/react';
 import api from '../api'; // replace with your actual API import
-// function calculateGains(playerStats: PlayerStats[]): number {
-//   return playerStats.reduce((sum, game) => {
-//     let gain = 0;
-//     if (game.position === 1) gain = game.totalCost * 0.6;
-//     else if (game.position === 2) gain = game.totalCost * 0.3;
-//     else if (game.position === 3) gain = game.totalCost * 0.1;
-//     return sum + Math.round(gain);
-//   }, 0);
-// }
 export const PartyPage = () => {
     const [parties, setParties] = useState([]);
     const [isModalOpen, setModalOpen] = useState(false);
@@ -19,14 +11,15 @@ export const PartyPage = () => {
         const fetchParties = async () => {
             const response = await api.get("/parties");
             const allParties = response.data;
+            const limit = pLimit(5);
             // Fetch detailed stats for each party
-            const partiesWithStats = await Promise.all(allParties.map(async (party) => {
+            const partiesWithStats = await Promise.all(allParties.map(async (party) => limit(async () => {
                 const statsResponse = await api.get(`/parties/${party.id}/stats`);
                 return {
                     ...party,
                     playerStats: statsResponse.data,
                 };
-            }));
+            })));
             setParties(partiesWithStats);
         };
         fetchParties();
@@ -45,7 +38,7 @@ export const PartyPage = () => {
         try {
             // Prepare the data for the API call
             const updates = selectedParty.playerStats.map((stat) => ({
-                id: stat.id,
+                id: stat.id, // Assuming each playerStat has an 'id' field
                 data: {
                     position: stat.position,
                     points: stat.points,

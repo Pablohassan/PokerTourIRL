@@ -1,4 +1,5 @@
 import { useEffect, useState , useCallback} from 'react';
+import pLimit from 'p-limit';
 import { Table, TableBody, TableCell, TableColumn, TableHeader, TableRow, Button, Modal } from '@nextui-org/react';
 import api from '../api'; // replace with your actual API import
 import { PlayerStats } from './interfaces';
@@ -8,24 +9,11 @@ interface Player {
   name: string;
 }
 
-
-
 interface Party {
   id: number;
   date: string;
   playerStats: PlayerStats[];
 }
-
-
-// function calculateGains(playerStats: PlayerStats[]): number {
-//   return playerStats.reduce((sum, game) => {
-//     let gain = 0;
-//     if (game.position === 1) gain = game.totalCost * 0.6;
-//     else if (game.position === 2) gain = game.totalCost * 0.3;
-//     else if (game.position === 3) gain = game.totalCost * 0.1;
-//     return sum + Math.round(gain);
-//   }, 0);
-// }
 
 export const PartyPage = () => {
   const [parties, setParties] = useState<Party[]>([]);
@@ -36,15 +24,15 @@ export const PartyPage = () => {
     const fetchParties = async () => {
       const response = await api.get("/parties");
       const allParties = response.data;
-
+      const limit = pLimit(5);
       // Fetch detailed stats for each party
-      const partiesWithStats = await Promise.all(allParties.map(async (party: Party) => {
+      const partiesWithStats = await Promise.all(allParties.map(async (party: Party)=> limit(async ()  => {
         const statsResponse = await api.get(`/parties/${party.id}/stats`);
         return {
           ...party,
           playerStats: statsResponse.data,
         };
-      }));
+      })));
 
       setParties(partiesWithStats);
     };
@@ -114,7 +102,6 @@ export const PartyPage = () => {
       // Handle error accordingly
     }
   };
-
 
   return (
     <div>
