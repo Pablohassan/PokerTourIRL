@@ -6,10 +6,10 @@ import { fetchGamesForPlayer } from "./services/fetsh-game-for-player.js";
 const prisma = new PrismaClient();
 const app = express();
 app.options("*", cors());
-app.use(cors({ origin: process.env.CORS_ORIGIN || "http://192.168.0.24:5173" }));
+app.use(cors({ origin: process.env.CORS_ORIGIN || "http://bourlypokertour.fr" }));
 app.use(express.json());
 app.use((req, res, next) => {
-    res.header("Access-Control-Allow-Origin", "http://192.168.0.24:5173");
+    res.header("Access-Control-Allow-Origin", "http://bourlypokertour.fr");
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
     next();
 });
@@ -387,7 +387,7 @@ app.post("/playerStats", async (req, res) => {
                 kills,
             },
             include: {
-                party: true,
+                party: true, // include party data
                 player: true, // include player data
             },
         });
@@ -407,7 +407,7 @@ app.post("/gameResults", async (req, res) => {
         for (const game of games) {
             const { id, ...gameData } = game; // extract the id from the game data
             const updatedGame = await prisma.playerStats.update({
-                where: { id: id },
+                where: { id: id }, // find the game with the given id
                 data: gameData, // update the game with the rest of the game data
             });
             updatedGames.push(updatedGame);
@@ -553,7 +553,7 @@ app.use((err, req, res, next) => {
         .json({ error: err.message || "Internal Server Error" });
 });
 const port = process.env.PORT || 3000;
-const server = app.listen(port, () => console.log(`Server is running on http://192.168.0.24 :${port}`));
+const server = app.listen(port, () => console.log(`Server is running on http://http://bourlypokertour.fr :${port}`));
 process.on("SIGINT", () => {
     server.close(() => {
         prisma.$disconnect();

@@ -8,12 +8,12 @@ const prisma = new PrismaClient();
 const app = express();
 
 app.options("*", cors());
-app.use(cors({ origin: process.env.CORS_ORIGIN || "http://192.168.0.24:5173" }));
+app.use(cors({ origin: process.env.CORS_ORIGIN || "http://bourlypokertour.fr" }));
 
 app.use(express.json());
 
 app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "http://192.168.0.24:5173");
+  res.header("Access-Control-Allow-Origin", "http://bourlypokertour.fr");
   res.header(
     "Access-Control-Allow-Headers",
     "Origin, X-Requested-With, Content-Type, Accept"
@@ -655,7 +655,7 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
 
 const port = process.env.PORT || 3000;
 const server = app.listen(port, () =>
-  console.log(`Server is running on http://192.168.0.24 :${port}`)
+  console.log(`Server is running on http://http://bourlypokertour.fr :${port}`)
 );
 
 process.on("SIGINT", () => {

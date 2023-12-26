@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Navbar, Link, NavbarBrand, NavbarContent, NavbarItem } from "@nextui-org/react";
 import api from "./api";
-import { useRoutes, Routes, Route } from "react-router-dom";
+import { useRoutes, Routes, Route,useNavigate } from "react-router-dom";
 import { PlayerRanking } from "./components/PLayerRanking";
 import PartyResults from "./components/PartyResults";
 import StartGame from "./components/StartGame";
@@ -27,6 +27,8 @@ import {
 import AddPlayer from "./components/AddPlayer";
 import axios from "axios";
 
+
+
 console.log(import.meta.env.VITE_REACT_APP_CLERK_PUBLISHABLE_KEY);
 
 if (!import.meta.env.VITE_REACT_APP_CLERK_PUBLISHABLE_KEY) {
@@ -46,7 +48,7 @@ export default function App() {
    useEffect(() => {
     const fetchChampionnat = async () => {
   try {
-    const response = await axios.get("http://192.168.0.24:3000/tournaments");
+    const response = await axios.get("http://api.bourlypokertour.fr/tournaments");
     // Si vous souhaitez stocker tous les tournois dans le tableau:
     setChampionnat(response.data.map((t: { id: any; year: any; createdAt: string | number | Date; }) => ({
       id: t.id,

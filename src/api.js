@@ -3,7 +3,7 @@ import axios from 'axios';
 // This should be the URL where your backend server is running.
 // For local development, this is typically http://localhost:3000
 const api = axios.create({
-    baseURL: 'http://192.168.0.24:3000',
+    baseURL: 'http://api.bourlypokertour.fr',
 });
 // api.defaults.withCredentials = true;
 export default api;
