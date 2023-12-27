@@ -48,7 +48,7 @@ export default function App() {
    useEffect(() => {
     const fetchChampionnat = async () => {
   try {
-    const response = await axios.get("http://api.bourlypokertour.fr/tournaments");
+    const response = await axios.get("https://api.bourlypokertour.fr/tournaments");
     // Si vous souhaitez stocker tous les tournois dans le tableau:
     setChampionnat(response.data.map((t: { id: any; year: any; createdAt: string | number | Date; }) => ({
       id: t.id,

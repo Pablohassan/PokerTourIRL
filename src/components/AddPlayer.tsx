@@ -34,7 +34,7 @@ function AddPlayer() {
   useEffect(() => {
     const fetchPlayers = async () => {
       try {
-        const response = await axios.get("http://api.bourlypokertour.fr/player");
+        const response = await axios.get("https://api.bourlypokertour.fr/player");
         setPlayers(response.data);
       } catch (error) {
         console.error(error);
@@ -62,7 +62,7 @@ function AddPlayer() {
   
     try {
       // Fetch all players
-      const response = await axios.get("http://api.bourlypokertour.fr/player");
+      const response = await axios.get("https://api.bourlypokertour.fr/player");
       const players = response.data;
   
       // Check if a player with the given name already exists

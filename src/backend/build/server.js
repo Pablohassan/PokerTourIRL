@@ -6,10 +6,10 @@ import { fetchGamesForPlayer } from "./services/fetsh-game-for-player.js";
 const prisma = new PrismaClient();
 const app = express();
 app.options("*", cors());
-app.use(cors({ origin: process.env.CORS_ORIGIN || "http://bourlypokertour.fr" }));
+app.use(cors({ origin: process.env.CORS_ORIGIN || "https://bourlypokertour.fr" }));
 app.use(express.json());
 app.use((req, res, next) => {
-    res.header("Access-Control-Allow-Origin", "http://bourlypokertour.fr");
+    res.header("Access-Control-Allow-Origin", "https://bourlypokertour.fr");
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
     next();
 });
@@ -553,7 +553,7 @@ app.use((err, req, res, next) => {
         .json({ error: err.message || "Internal Server Error" });
 });
 const port = process.env.PORT || 3000;
-const server = app.listen(port, () => console.log(`Server is running on http://http://bourlypokertour.fr :${port}`));
+const server = app.listen(port, () => console.log(`Server is running on https://bourlypokertour.fr :${port}`));
 process.on("SIGINT", () => {
     server.close(() => {
         prisma.$disconnect();

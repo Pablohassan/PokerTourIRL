@@ -55,10 +55,10 @@ var fetsh_game_for_player_js_1 = require("./services/fetsh-game-for-player.js");
 var prisma = new client_1.PrismaClient();
 var app = (0, express_1.default)();
 app.options("*", (0, cors_1.default)());
-app.use((0, cors_1.default)({ origin: process.env.CORS_ORIGIN || "http://bourlypokertour.fr" }));
+app.use((0, cors_1.default)({ origin: process.env.CORS_ORIGIN || "https://bourlypokertour.fr" }));
 app.use(express_1.default.json());
 app.use(function (req, res, next) {
-    res.header("Access-Control-Allow-Origin", "http://bourlypokertour.fr");
+    res.header("Access-Control-Allow-Origin", "https://bourlypokertour.fr");
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
     next();
 });
@@ -890,7 +890,7 @@ app.use(function (err, req, res, next) {
 });
 var port = process.env.PORT || 3000;
 var server = app.listen(port, function () {
-    return console.log("Server is running on http://bourlypokertour.fr :".concat(port));
+    return console.log("Server is running on https://bourlypokertour.fr :".concat(port));
 });
 process.on("SIGINT", function () {
     server.close(function () {
