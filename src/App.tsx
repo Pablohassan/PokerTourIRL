@@ -7,6 +7,7 @@ import PartyResults from "./components/PartyResults";
 import StartGame from "./components/StartGame";
 import PartyPage from "./components/PartyPage";
 import PokerLogo from"./components/PokerLogo";
+import bourlyimage from"./assets/bourlypoker3.webp"
 
 // import Ak from "./components/PokerLogo";
 import {
@@ -110,7 +111,13 @@ export default function App() {
     {
       path: "/",
       element: (
+        <div>
+
         <h1 className="bg-blue-500 text-white p-4">Welcome to the App</h1>
+<img src={bourlyimage} height={500} alt="joueursdepoker illustration" />
+
+
+</div>
 
       ),
     },
