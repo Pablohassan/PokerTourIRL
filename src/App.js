@@ -8,6 +8,7 @@ import PartyResults from "./components/PartyResults";
 import StartGame from "./components/StartGame";
 import PartyPage from "./components/PartyPage";
 import PokerLogo from "./components/PokerLogo";
+import bourlyimage from "./assets/bourlypoker3.webp";
 // import Ak from "./components/PokerLogo";
 import { ClerkProvider, SignedIn, SignedOut, SignOutButton, RedirectToSignIn, SignIn, SignUp, } from "@clerk/clerk-react";
 import AddPlayer from "./components/AddPlayer";
@@ -42,12 +43,6 @@ export default function App() {
         };
         fetchChampionnat();
     }, []);
-    useEffect(() => {
-        console.log("champi", championnat);
-    }, [championnat]);
-    useEffect(() => {
-        fetchPlayersAndParties();
-    }, []);
     const fetchPlayersAndParties = async () => {
         // Fetch players and parties from the server
         // and set the state with the received data
@@ -64,6 +59,9 @@ export default function App() {
         }
         setIsLoading(false);
     };
+    useEffect(() => {
+        fetchPlayersAndParties();
+    }, []);
     const handlePlayerSelect = (playerId) => {
         const player = players.find((player) => player.id === playerId);
         if (player) {
@@ -78,7 +76,7 @@ export default function App() {
     let element = useRoutes([
         {
             path: "/",
-            element: (_jsx("h1", { className: "bg-blue-500 text-white p-4", children: "Welcome to the App" })),
+            element: (_jsxs("div", { children: [_jsx("h1", { className: "bg-blue-500 text-white p-4", children: "Welcome to the App" }), _jsx("img", { src: bourlyimage, height: 500, alt: "joueursdepoker illustration" })] })),
         },
         {
             path: "/partypage",
@@ -101,6 +99,9 @@ export default function App() {
             element: (_jsx(StartGame, { selectedPlayers: selectedPlayers, players: players, setParties: setParties, updateAfterGameEnd: fetchPlayersAndParties, handlePlayerSelect: handlePlayerSelect, championnat: championnat, setSelectedPLayers: setSelectedPlayers })),
         },
     ]);
+    if (isLoading) {
+        return _jsx("div", { children: "Loading..." }); // Or any other loading indicator
+    }
     return (_jsxs("div", { children: [_jsxs(ClerkProvider, { publishableKey: clerkPubKey, children: [_jsx(SignedIn, { children: isLoading ? (_jsx("div", { children: "Loading..." })) : (_jsxs(Navbar, { position: "static", className: "", children: [_jsx(NavbarBrand, { children: _jsx(PokerLogo, {}) }), _jsxs(NavbarContent, { className: "sm:flex gap-4", justify: "center", children: [_jsx(NavbarItem, { children: _jsx(Link, { color: "foreground", href: "/ranking", children: "Ranking" }) }), _jsx(NavbarItem, { children: _jsx(Link, { color: "foreground", href: "/startGame", children: "Start Partie" }) }), _jsx(Link, { href: "/results", children: "Results" }), _jsx(Link, { href: "/addplayer", children: "Add player" }), _jsx(Link, { href: "/partypage", children: "All Parties" })] }), _jsx(SignOutButton, {})] })) }), _jsxs(SignedOut, { children: [_jsxs(Navbar, { shouldHideOnScroll: true, children: [_jsx(NavbarBrand, {}), _jsxs(NavbarContent, { children: [_jsx(NavbarItem, { children: _jsx(Link, { href: "/sign-up/*", children: "Sign Up" }) }), _jsx(Link, { href: "/sign-in/*", children: "Sign in" })] }), _jsxs(NavbarContent, { children: [_jsx(Link, { href: "/ranking", children: "Ranking" }), _jsx(NavbarItem, { children: _jsx(SignedOut, {}) })] }), _jsx(SignOutButton, {})] }), _jsxs(Routes, { children: [_jsx(Route, { path: "/sign-in/*", element: _jsx(SignIn, {}) }), _jsx(Route, { path: "/sign-up/*", element: _jsx(SignUp, {}) }), _jsx(Route, { path: "/*", element: _jsx(RedirectToSignIn, {}) })] }), ";"] })] }), element] }));
 }
 //# sourceMappingURL=App.js.map

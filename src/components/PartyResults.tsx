@@ -25,66 +25,109 @@ const PartyResults: React.FC<PartyResultsProps> = ({
   
   const tableConfigs: PlayerTableProps["config"][] = [
     {
-      title: "Points",
-    filterFunction: (playerStat: PlayerStats[]) => {
-      const result = playerStat.some((game) => game.points > 1);
-      console.log("Points Filter result for games", playerStat, "is", result);
-      return result;
-    },
-    rankFunction: (playerStat: PlayerStats[]) =>
-    playerStat.reduce((total, game) => total + game.points, 0),
-  },
-     
-
-  {
-    title: "Gains",
-    filterFunction: (playerStat: PlayerStats[]) => {
-      const gains = calculateGains(playerStat);
-      return gains > 0;
-    },
-    rankFunction: (playerStat: PlayerStats[]) => calculateGains(playerStat),
-  },
-    {
-      title: "Recave",
-    filterFunction: (playerStat: PlayerStats[]) => {
-      const result = playerStat.some((stat) => stat.rebuys > 1);
-      console.log("Recave Filter result for stats", playerStat, "is", result);
-      return result;
-    },
-      rankFunction: (playerStat: PlayerStats[]) =>
-      playerStat.reduce((total, stat) => total + stat.rebuys, 0),
-    },
-    {
-      title: "Moneydown",
-      filterFunction: (playerStat: PlayerStats[]) =>
-      playerStat.some((stat) => stat.totalCost > 5),
-      rankFunction: (playerStat: PlayerStats[]) =>
-      playerStat.reduce((total, stat) => total + stat.totalCost, 0),
-    },
-    {
-      title: "Killer",
+      title: "Points 2023",
       filterFunction: (playerStat: PlayerStats[]) => {
-        const result = playerStat.some((stat) => stat.kills > 2);
-        console.log("Killer Filter result for stats", playerStat, "is", result);
+        // Filter out stats not from 2023
+        const filteredStats = playerStat.filter(stat => {
+          const year = new Date(stat.createdAt).getFullYear();
+          return year === 2023;
+        });
+        // Check if there are any games with points greater than 1 in 2023
+        const result = filteredStats.some(game => game.points > 1);
+        console.log("Points Filter result for games in 2023", filteredStats, "is", result);
         return result;
       },
-        rankFunction: (playerStat: PlayerStats[]) =>
-        playerStat.reduce((total, stat) => total + stat.kills, 0),
+      rankFunction: (playerStat: PlayerStats[]) => {
+        // Sum points only for games in 2023
+        return playerStat.filter(stat => new Date(stat.createdAt).getFullYear() === 2023)
+                         .reduce((total, game) => total + game.points, 0);
       },
-      {
-        title: "Bule",
-        filterFunction: (playerStat: PlayerStats[]) => {
-          const result = playerStat.some((stat) => stat.position == 4);
-          console.log("Bulman Filter result for stats", playerStat, "is", result);
-          return result;
-        },
-          rankFunction: (playerStat: PlayerStats[]) =>
-          playerStat.reduce((total, stat) => total + stat.position, 0),
-        },
-    
-    // Add more configs as needed
-  ];
-
+    },
+    {
+      title: "Points 2024",
+      filterFunction: (playerStat: PlayerStats[]) => {
+        // Filter out stats not from 2024
+        const filteredStats = playerStat.filter(stat => {
+          const year = new Date(stat.createdAt).getFullYear();
+          return year === 2024;
+        });
+        // Check if there are any games with points greater than 1 in 2024
+        const result = filteredStats.some(game => game.points > 1);
+        console.log("Points Filter result for games in 2024", filteredStats, "is", result);
+        return result;
+      },
+      rankFunction: (playerStat: PlayerStats[]) => {
+        // Sum points only for games in 2024
+        return playerStat.filter(stat => new Date(stat.createdAt).getFullYear() === 2024)
+                         .reduce((total, game) => total + game.points, 0);
+      },
+    },
+  
+    {
+      title: "Gains 2023",
+      filterFunction: (playerStat: PlayerStats[]) => {
+        const filteredStats = playerStat.filter(stat => new Date(stat.createdAt).getFullYear() === 2023);
+        return calculateGains(filteredStats) > 0;
+      },
+      rankFunction: (playerStat: PlayerStats[]) => calculateGains(playerStat.filter(stat => new Date(stat.createdAt).getFullYear() === 2023)),
+    },
+    {
+      title: "Gains 2024",
+      filterFunction: (playerStat: PlayerStats[]) => {
+        const filteredStats = playerStat.filter(stat => new Date(stat.createdAt).getFullYear() === 2024);
+        return calculateGains(filteredStats) > 0;
+      },
+      rankFunction: (playerStat: PlayerStats[]) => calculateGains(playerStat.filter(stat => new Date(stat.createdAt).getFullYear() === 2024)),
+    },
+    {
+      title: "Recave 2023",
+      filterFunction: (playerStat: PlayerStats[]) => {
+        const filteredStats = playerStat.filter(stat => new Date(stat.createdAt).getFullYear() === 2023);
+        return filteredStats.some(stat => stat.rebuys > 1);
+      },
+      rankFunction: (playerStat: PlayerStats[]) => playerStat.filter(stat => new Date(stat.createdAt).getFullYear() === 2023).reduce((total, stat) => total + stat.rebuys, 0),
+    },
+    {
+      title: "Recave 2024",
+      filterFunction: (playerStat: PlayerStats[]) => {
+        const filteredStats = playerStat.filter(stat => new Date(stat.createdAt).getFullYear() === 2024);
+        return filteredStats.some(stat => stat.rebuys > 1);
+      },
+      rankFunction: (playerStat: PlayerStats[]) => playerStat.filter(stat => new Date(stat.createdAt).getFullYear() === 2024).reduce((total, stat) => total + stat.rebuys, 0),
+    },
+    {
+      title: "Moneydown 2023",
+      filterFunction: (playerStat: PlayerStats[]) => playerStat.filter(stat => new Date(stat.createdAt).getFullYear() === 2023).some(stat => stat.totalCost > 5),
+      rankFunction: (playerStat: PlayerStats[]) => playerStat.filter(stat => new Date(stat.createdAt).getFullYear() === 2023).reduce((total, stat) => total + stat.totalCost, 0),
+    },
+    {
+      title: "Moneydown 2024",
+      filterFunction: (playerStat: PlayerStats[]) => playerStat.filter(stat => new Date(stat.createdAt).getFullYear() === 2024).some(stat => stat.totalCost > 5),
+      rankFunction: (playerStat: PlayerStats[]) => playerStat.filter(stat => new Date(stat.createdAt).getFullYear() === 2024).reduce((total, stat) => total + stat.totalCost, 0),
+    },
+    {
+      title: "Killer 2023",
+      filterFunction: (playerStat: PlayerStats[]) => playerStat.filter(stat => new Date(stat.createdAt).getFullYear() === 2023).some(stat => stat.kills > 2),
+      rankFunction: (playerStat: PlayerStats[]) => playerStat.filter(stat => new Date(stat.createdAt).getFullYear() === 2023).reduce((total, stat) => total + stat.kills, 0),
+    },
+    {
+      title: "Killer 2024",
+      filterFunction: (playerStat: PlayerStats[]) => playerStat.filter(stat => new Date(stat.createdAt).getFullYear() === 2024).some(stat => stat.kills > 2),
+      rankFunction: (playerStat: PlayerStats[]) => playerStat.filter(stat => new Date(stat.createdAt).getFullYear() === 2024).reduce((total, stat) => total + stat.kills, 0),
+    },
+    {
+      title: "Bule 2023",
+      filterFunction: (playerStat: PlayerStats[]) => playerStat.filter(stat => new Date(stat.createdAt).getFullYear() === 2023).some(stat => stat.position == 4),
+      rankFunction: (playerStat: PlayerStats[]) => playerStat.filter(stat => new Date(stat.createdAt).getFullYear() === 2023).reduce((total, stat) => total + stat.position, 0),
+    },
+    {
+      title: "Bule 2024",
+      filterFunction: (playerStat: PlayerStats[]) => playerStat.filter(stat => new Date(stat.createdAt).getFullYear() === 2024).some(stat => stat.position == 4),
+      rankFunction: (playerStat: PlayerStats[]) => playerStat.filter(stat => new Date(stat.createdAt).getFullYear() === 2024).reduce((total, stat) => total + stat.position, 0),
+    },
+      
+      // Add more configs as needed
+    ];
   
 
  

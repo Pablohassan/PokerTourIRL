@@ -187,7 +187,7 @@ app.get(
     try {
       const tournament = await prisma.tournament.findFirst({
         where: {
-          year: year || 2023,
+          year
         },
       });
 
@@ -330,18 +330,20 @@ app.get("/parties/:partyId/stats", async (req, res) => {
 
 app.post("/tournaments", async (req: Request, res: Response) => {
   const { year } = req.body;
-  const tournaments = await prisma.tournament.create({
+  const existingTournament = await prisma.tournament.findFirst({
+    where: { year },
+  });
+  if (existingTournament) {
+    return res.status(400).json({ error: "Tournament for this year already exists" });
+  }
+
+  const newTournament = await prisma.tournament.create({
     data: { year },
   });
-  res.json(tournaments);
+
+  res.json(newTournament);
 });
-app.post("/tournaments", async (req: Request, res: Response) => {
-  const { year } = req.body;
-  const tournaments = await prisma.tournament.create({
-    data: { year },
-  });
-  res.json(tournaments);
-});
+
 
 app.post("/parties", async (req: Request, res: Response) => {
   const { date, tournamentId } = req.body;
@@ -378,42 +380,30 @@ app.post("/players", async (req: Request, res: Response) => {
 });
 
 app.post("/playerStats/start", async (req: Request, res: Response) => {
-  const { players, tournamentId } = req.body;
+  const { players } = req.body;
 
   if (!players || !Array.isArray(players) || players.length < 4) {
     return res.status(400).json({ error: "At least 4 players are required" });
   }
-
+  let currentYear = new Date().getFullYear();
   let currentYearTournament = await prisma.tournament.findFirst({
-    where: {
-      year: new Date().getFullYear(),
-    },
+    where: { year: currentYear },
   });
 
   if (!currentYearTournament) {
     currentYearTournament = await prisma.tournament.create({
-      data: {
-        year: new Date().getFullYear(),
-      },
+      data: { year: currentYear },
     });
   }
-  const actualTournamentId = currentYearTournament.id;
-  const tournament = await prisma.tournament.findUnique({
-    where: { id: actualTournamentId },
-  });
-  if (!tournament) {
-    return res
-      .status(400)
-      .json({ error: "The specified tournament does not exist" });
-  }
 
-  // Create a new party
   const newParty = await prisma.party.create({
     data: {
       date: new Date(),
-      tournamentId: actualTournamentId,
+      tournamentId: currentYearTournament.id,
     },
   });
+
+
 
   const newPlayerStats:Prisma.PromiseReturnType<typeof prisma.playerStats.create>[] = [];
 

@@ -65,13 +65,8 @@ export default function App() {
     
   }, []);
 
-  useEffect(() => {
-    console.log("champi", championnat);
-  }, [championnat]);
 
-  useEffect(() => {
-    fetchPlayersAndParties();
-  }, []);
+
 
   const fetchPlayersAndParties = async () => {
     // Fetch players and parties from the server
@@ -89,6 +84,10 @@ export default function App() {
     }
     setIsLoading(false);
   };
+
+  useEffect(() => {
+    fetchPlayersAndParties();
+  }, []);
 
   const handlePlayerSelect = (playerId: number) => {
     const player = players.find((player) => player.id === playerId);
@@ -163,6 +162,10 @@ element:( <PartyPage
       ),
     },
   ]);
+
+  if (isLoading) {
+    return <div>Loading...</div>; // Or any other loading indicator
+  }
 
   return (
 
