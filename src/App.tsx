@@ -112,9 +112,8 @@ export default function App() {
       element: (
         <div>
 
-        <h1 className="bg-blue-500 text-white p-4">Welcome to the App</h1>
-<img src={bourlyimage} height={500} alt="joueursdepoker illustration" />
-
+<h1 style={{ textAlign: 'center', fontSize:"20px" }} className=" text-black p-4">Welcome to the BoulyPokerTour, this app in alpha version so be nice please </h1>
+<img src={bourlyimage} alt="pokercouv" className="w-1/2" style={{ display: 'block', marginLeft: 'auto', marginRight: 'auto' }} />
 
 </div>
 

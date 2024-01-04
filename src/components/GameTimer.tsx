@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {Button} from '@nextui-org/react'; // Replace with the actual path to your Button component
 
 interface GameTimerProps {
@@ -27,6 +27,21 @@ const GameTimer: React.FC<GameTimerProps> = ({
   ante
 }) => {
 
+  const handleKeyDown = (event: KeyboardEvent) => {
+    if (event.code === 'Space') { // Using 'code' is more reliable than 'keyCode'
+      event.preventDefault(); // Prevent the default spacebar action
+      setIsPaused(!isPaused);
+    }
+  };
+
+  useEffect(() => {
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isPaused]);
+ 
  
   return (
     <div style={{

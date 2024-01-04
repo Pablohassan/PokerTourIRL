@@ -161,6 +161,15 @@ const StartGame: React.FC<StartGameProps> = ({
     }
   }, [totalStack, selectedPlayers.length]);
 
+  useEffect(() => {
+    // Recalculate middle stack whenever the total stack or player count changes
+    const remainingPlayers = selectedPlayers.length;
+    if (remainingPlayers > 0) { // Avoid division by zero
+      const newMiddleStack = totalStack / remainingPlayers;
+      const roundedMiddleStack = Math.round(newMiddleStack);
+      setMiddleStack(roundedMiddleStack);
+    }
+  }, [totalStack, selectedPlayers.length]);
 
 
   const navigate = useNavigate();
@@ -394,39 +403,38 @@ const StartGame: React.FC<StartGameProps> = ({
   };
 
   const handleGameEnd = async () => {
-    if (currentlyPlayingPlayers.length > 1) {
-      alert("There should be at most one player left to end the game.");
-      return;
-    }
-    if (window.confirm("Are you sure you want to stop the game?")) {
+    // Automatically end the game if only one player is left
+    if (currentlyPlayingPlayers.length === 1) {
+      // Proceed with ending the game
       let updatedGames = [...games];
-      if (currentlyPlayingPlayers.length === 1) {
-
-        const position = initialPlayerCount - outPlayers.length;
-        const points = calculatePoints(position);
-        const winningPlayerId = currentlyPlayingPlayers[0]?.id;
-        const outAt = new Date();
-
-        updatedGames = updatedGames.map((game) =>
-          game.playerId === winningPlayerId
-            ? { ...game, points: points, outAt: outAt, position: position }
-            : game
-        );
-        setGames(updatedGames);
-      }
+      const position = initialPlayerCount - outPlayers.length;
+      const points = calculatePoints(position);
+      const winningPlayerId = currentlyPlayingPlayers[0]?.id;
+      const outAt = new Date();
+  
+      updatedGames = updatedGames.map((game) =>
+        game.playerId === winningPlayerId
+          ? { ...game, points: points, outAt: outAt, position: position }
+          : game
+      );
+  
       try {
         const res = await api.post("/gameResults", updatedGames);
         updateAfterGameEnd(updatedGames);
-
       } catch (error) {
         console.error("Error:", error);
       }
+  
       setGameStarted(false);
-      setPartyId(false)
+      setPartyId(false);
       localStorage.removeItem('gameState');
       navigate("/results");
+    } else {
+      // If more than one player is left, show a message or handle accordingly
+      alert("The game cannot be ended yet as more than one player is still playing.");
     }
   };
+  
 
 
 
