@@ -61,7 +61,10 @@ export const CardPlayer: React.FC<CardPlayerProps> = ({
                 size="sm"
                 variant="bordered"
                 color="secondary"
-                onPress={rebuy}
+                onClick={(e) => {
+                  rebuy();
+                  e.currentTarget.blur(); // Add this line to blur the button
+                }}
               >
                 <div 
                 className="p-1"
@@ -81,7 +84,10 @@ export const CardPlayer: React.FC<CardPlayerProps> = ({
                 size="sm"
                 variant="bordered"
                 color="secondary"
-                onPress={outOfGame}
+                onClick={(e) => {
+                  outOfGame();
+                  e.currentTarget.blur(); // Add this line to blur the button
+                }}
               >
                 <div
                   style={{

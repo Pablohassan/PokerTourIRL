@@ -30,7 +30,14 @@ const GameTimer: React.FC<GameTimerProps> = ({
   const handleKeyDown = (event: KeyboardEvent) => {
     if (event.code === 'Space') { // Using 'code' is more reliable than 'keyCode'
       event.preventDefault(); // Prevent the default spacebar action
+      event.stopPropagation();
+     
+
+      const target = event.target as HTMLElement;
+       // Only toggle the timer if the space key is not pressed on interactive elements
+    if (!['INPUT', 'BUTTON', 'SELECT', 'TEXTAREA'].includes(target.tagName)) {
       setIsPaused(!isPaused);
+      }
     }
   };
 

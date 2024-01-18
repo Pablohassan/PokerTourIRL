@@ -48,7 +48,7 @@ function AddPlayer() {
                 return;
             }
             // If the player doesn't exist, proceed to create a new player
-            const postResponse = await axios.post("http:/api.bourlypokertour.fr/players", { name, phoneNumber });
+            const postResponse = await axios.post("https:/api.bourlypokertour.fr/players", { name, phoneNumber });
             // If the player is successfully created, show a success toast
             if (postResponse.data) {
                 notify('success', `Player ${name} has been added successfully`);

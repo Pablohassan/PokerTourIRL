@@ -7,12 +7,18 @@ export const CardPlayer = ({ playername, recave, kill, rebuy, outOfGame, }) => {
                     borderTop: "$borderWeights$light solid rgba(255, 255, 255, 0.2)",
                     bottom: 0,
                     zIndex: 1,
-                }, children: _jsxs("div", { children: [_jsxs("div", { children: [_jsxs("div", { className: "text-lg", color: "#000", children: ["Recaves:", recave] }), _jsxs("div", { className: "text-lg", color: "#000", children: ["Kills:", kill] })] }), _jsxs("div", { children: [_jsx("div", { children: _jsx(Button, { size: "sm", variant: "bordered", color: "secondary", onPress: rebuy, children: _jsx("div", { className: "p-1", style: {
+                }, children: _jsxs("div", { children: [_jsxs("div", { children: [_jsxs("div", { className: "text-lg", color: "#000", children: ["Recaves:", recave] }), _jsxs("div", { className: "text-lg", color: "#000", children: ["Kills:", kill] })] }), _jsxs("div", { children: [_jsx("div", { children: _jsx(Button, { size: "sm", variant: "bordered", color: "secondary", onClick: (e) => {
+                                            rebuy();
+                                            e.currentTarget.blur(); // Add this line to blur the button
+                                        }, children: _jsx("div", { className: "p-1", style: {
                                                 color: "inherit",
                                                 fontSize: 12,
                                                 fontWeight: "bold",
                                                 textTransform: "capitalize",
-                                            }, children: "recave" }) }) }), _jsx("div", { className: "p1", children: _jsx(Button, { size: "sm", variant: "bordered", color: "secondary", onPress: outOfGame, children: _jsx("div", { style: {
+                                            }, children: "recave" }) }) }), _jsx("div", { className: "p1", children: _jsx(Button, { size: "sm", variant: "bordered", color: "secondary", onClick: (e) => {
+                                            outOfGame();
+                                            e.currentTarget.blur(); // Add this line to blur the button
+                                        }, children: _jsx("div", { style: {
                                                 color: "inherit",
                                                 fontSize: 12,
                                                 fontWeight: "bold",

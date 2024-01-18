@@ -468,7 +468,10 @@ const StartGame: React.FC<StartGameProps> = ({
                           color="warning"
                           className="text-lg p-2 m-1"
                           key={player.id}
-                          onClick={() => handlePlayerKillSelection(player.id, game.partyId)}
+                          onClick={(e) => {
+                            handlePlayerKillSelection(player.id, game.partyId);
+                            e.currentTarget.blur();
+                          }}
                         >
                           {player.name}
                         </Button>

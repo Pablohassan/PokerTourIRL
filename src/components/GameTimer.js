@@ -1,7 +1,24 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Button } from '@nextui-org/react'; // Replace with the actual path to your Button component
 const GameTimer = ({ middleStack, totalPot, formatTime, timeLeft, smallBlind, bigBlind, handleGameEnd, isPaused, setIsPaused, ante }) => {
+    const handleKeyDown = (event) => {
+        if (event.code === 'Space') { // Using 'code' is more reliable than 'keyCode'
+            event.preventDefault(); // Prevent the default spacebar action
+            event.stopPropagation();
+            const target = event.target;
+            // Only toggle the timer if the space key is not pressed on interactive elements
+            if (!['INPUT', 'BUTTON', 'SELECT', 'TEXTAREA'].includes(target.tagName)) {
+                setIsPaused(!isPaused);
+            }
+        }
+    };
+    useEffect(() => {
+        window.addEventListener('keydown', handleKeyDown);
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [isPaused]);
     return (_jsxs("div", { style: {
             display: 'grid',
             gridTemplateRows: '3fr 1fr',
