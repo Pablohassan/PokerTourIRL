@@ -534,6 +534,38 @@ app.put("/updateMultipleGamesResults", async (req: Request, res: Response) => {
     res.status(500).json({ error: "An error occurred while updating the game results" });
   }
 });
+
+
+app.put("/parties/:id", async (req, res) => {
+  
+  let { date } = req.body; // Extract the new date from the request body
+  const partyId = parseInt(req.params.id, 10); // Convert the id to a number
+  date = new Date(date);
+ 
+  // Validate the party ID
+  if (isNaN(partyId)) {
+    return res.status(400).json({ error: "Invalid party ID" });
+  }
+
+  // Validate the date format or any other necessary validation
+  // This step is optional and depends on your requirements
+
+  try {
+   
+    const updatedParty = await prisma.party.update({
+      where: { id: partyId },
+      data: { date }
+      
+    });
+    console.log("Updating party date to:", date);
+    res.json(updatedParty);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "An error occurred while updating the party date" });
+  }
+});
+
+
 // sais pas comment ça fonctionne
 app.put("/playerStats/eliminate", async (req: Request, res: Response) => {
   console.log("Request received at /playerStats/eliminate");

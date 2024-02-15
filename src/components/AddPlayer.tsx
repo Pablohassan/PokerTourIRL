@@ -1,6 +1,6 @@
 import React, { FormEvent, useContext, useEffect, useState } from "react";
 import axios, { AxiosError } from "axios";
-import api from "../api";
+
 
 import {UIContext} from '../components/UiProvider'
 import { Button, Card,  Table, Spacer, Input, TableHeader, TableColumn, TableBody, TableRow, TableCell} from "@nextui-org/react";
@@ -76,7 +76,7 @@ function AddPlayer() {
       }
   
       // If the player doesn't exist, proceed to create a new player
-      const postResponse = await api.post("/players", { name, phoneNumber });
+      const postResponse = await axios.post("https://api.bourlypokertour.fr/players", { name, phoneNumber });
       
       // If the player is successfully created, show a success toast
       if (postResponse.data) {
