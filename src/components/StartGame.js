@@ -340,19 +340,16 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, handlePla
                                         }, onTimeChange: (time) => {
                                             // Handle time change here
                                             setTimeLeft(time);
-                                        } }), gameStarted && (_jsxs("div", { children: [_jsx(GameTimer, { formatTime: formatTime, timeLeft: timeLeft, smallBlind: smallBlind, bigBlind: bigBlind, ante: ante, handleGameEnd: handleGameEnd, isPaused: isPaused, setIsPaused: setIsPaused, totalPot: pot, middleStack: middleStack }), _jsx("div", { style: { fontSize: "20px" } })] })), _jsxs("div", { style: {
+                                        } }), gameStarted && (_jsxs("div", { children: [_jsx(GameTimer, { formatTime: formatTime, timeLeft: timeLeft, smallBlind: smallBlind, bigBlind: bigBlind, ante: ante, handleGameEnd: handleGameEnd, isPaused: isPaused, setIsPaused: setIsPaused, totalPot: pot, middleStack: middleStack }), _jsx("div", { style: { fontSize: "20px" } })] })), _jsx("div", { style: {
                                             display: "flex",
                                             flexDirection: "row",
                                             flexWrap: "wrap",
-                                        }, children: [currentlyPlayingPlayers.map((player) => {
-                                                // Trouver le jeu correspondant au joueur actuel
-                                                const gameForPlayer = games.find((game) => game.playerId === player?.id);
-                                                // Si le jeu existe pour ce joueur, affichez les détails, sinon affichez une erreur
-                                                return (_jsx("div", { style: { display: "flex", flexDirection: "column", }, children: gameForPlayer ? (_jsx("div", { className: "p-1", children: _jsx(CardPlayer, { playername: player?.name ?? " none", recave: gameForPlayer.rebuys, kill: gameForPlayer.kills, rebuy: () => handleRebuy(gameForPlayer.playerId), outOfGame: () => handleOutOfGame(gameForPlayer.partyId, gameForPlayer.playerId, gameForPlayer.eliminatedById) }) })) : (_jsxs("div", { children: ["Erreur: Pas de jeu pour ", player?.name] })) }, player?.id));
-                                            }), _jsxs("div", { style: {
-                                                    position: 'absolute', // or 'fixed' if you want it to stay in the same place even when scrolling
-                                                    right: '10%', marginLeft: "20px", marginTop: "10px", border: "solid 2px", borderRadius: "5%"
-                                                }, children: [_jsx("div", { style: { margin: "20px", fontSize: "1.5em" }, children: "Joueurs Sortis" }), _jsx("div", { style: { width: "100%", marginTop: "10px", height: "2px", border: "solid" } }), _jsxs("div", { children: ["  ", renderOutOfGamePlayers()] })] })] })] }) })] }) }))] }));
+                                        }, children: currentlyPlayingPlayers.map((player) => {
+                                            // Trouver le jeu correspondant au joueur actuel
+                                            const gameForPlayer = games.find((game) => game.playerId === player?.id);
+                                            // Si le jeu existe pour ce joueur, affichez les détails, sinon affichez une erreur
+                                            return (_jsx("div", { style: { display: "flex", flexDirection: "column", }, children: gameForPlayer ? (_jsx("div", { className: "p-1", children: _jsx(CardPlayer, { playername: player?.name ?? " none", recave: gameForPlayer.rebuys, kill: gameForPlayer.kills, rebuy: () => handleRebuy(gameForPlayer.playerId), outOfGame: () => handleOutOfGame(gameForPlayer.partyId, gameForPlayer.playerId, gameForPlayer.eliminatedById) }) })) : (_jsxs("div", { children: ["Erreur: Pas de jeu pour ", player?.name] })) }, player?.id));
+                                        }) })] }) })] }) }))] }));
 };
 export default StartGame;
 //# sourceMappingURL=StartGame.js.map

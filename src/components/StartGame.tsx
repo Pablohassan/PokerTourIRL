@@ -604,7 +604,7 @@ const StartGame: React.FC<StartGameProps> = ({
                         </div>
                       );
                     })}
-                    <div style={{
+                    {/* <div style={{
                       position: 'absolute', // or 'fixed' if you want it to stay in the same place even when scrolling
                       right: '10%', marginLeft: "20px", marginTop: "10px", border: "solid 2px", borderRadius: "5%"
                     }}>
@@ -612,7 +612,7 @@ const StartGame: React.FC<StartGameProps> = ({
                       <div style={{ margin: "20px", fontSize: "1.5em" }}>Joueurs Sortis</div>
                       <div style={{ width: "100%", marginTop: "10px", height: "2px", border: "solid" }}></div>
                       <div >  {renderOutOfGamePlayers()}</div>
-                    </div>
+                    </div> */}
                   </div>
                 </div>
 

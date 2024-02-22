@@ -23,10 +23,11 @@ export const CardPlayer: React.FC<CardPlayerProps> = ({
   outOfGame,
 }) => {
   return (
-    <Card style={{ width: "130px", height: "180px" }}>
+    <Card style={{ width: "100px", height: "180px" }}>
       <CardHeader style={{ position: "absolute", zIndex: 1, top: 5 }}>
       
-          <div className="text-lg" >{playername}</div>
+          <div style={{fontSize:12,fontWeight: "bold",
+                    textTransform: "capitalize" }} >{playername}</div>
       
       </CardHeader>
      
@@ -60,6 +61,7 @@ export const CardPlayer: React.FC<CardPlayerProps> = ({
               <Button
                 size="sm"
                 variant="bordered"
+                fullWidth={true}
                 color="secondary"
                 onClick={(e) => {
                   rebuy();
@@ -67,12 +69,13 @@ export const CardPlayer: React.FC<CardPlayerProps> = ({
                 }}
               >
                 <div 
-                className="p-1"
+               
                   style={{
                     color: "inherit",
-                    fontSize: 12,
+                    textAlign:"center",
+                    fontSize: 13,
                     fontWeight: "bold",
-                    textTransform: "capitalize",
+                 
                   }}
                 >
                   recave
@@ -81,8 +84,10 @@ export const CardPlayer: React.FC<CardPlayerProps> = ({
             </div>
             <div className="p1">
               <Button
+               style={{marginTop:"2px"}}
                 size="sm"
                 variant="bordered"
+                fullWidth={true}
                 color="secondary"
                 onClick={(e) => {
                   outOfGame();
@@ -92,9 +97,10 @@ export const CardPlayer: React.FC<CardPlayerProps> = ({
                 <div
                   style={{
                     color: "inherit",
-                    fontSize: 12,
+                    fontSize: 13,
                     fontWeight: "bold",
                     textTransform: "capitalize",
+                  
                   }}
                 >
                   Eliminé
