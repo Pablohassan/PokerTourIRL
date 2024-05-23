@@ -16,7 +16,7 @@ import { Player, PlayerStats, Parties } from './interfaces';
 import { CardPlayer } from "./CardPlayer";
 import BlindTimer from "./BlindTimer";
 import GameTimer from "./GameTimer";
-import DSdigital from "../assets/fonts/DS-DIGI.ttf";
+
 
 import toast from "react-hot-toast";
 interface Tournaments {
@@ -328,8 +328,13 @@ const StartGame: React.FC<StartGameProps> = ({
     playerId: number,
     eliminatedById: number | null
   ) => {
-    console.log("Player ID clicked for Out of Game:", playerId);
-
+    
+    const recaveConfirmation = window.confirm("We are still in the recaves, are you sure you want to remove a player?");
+  
+    if (!recaveConfirmation) {
+      // If the user does not confirm, exit the function
+      return;
+    }
     if (eliminatedById !== null || window.confirm(`Is ${playerId} out of the game?`)) {
 
       setKiller(true);
