@@ -22,15 +22,14 @@ export default defineConfig({
   //     '@': resolve(__dirname, 'src'),
   //   },
   // },
-  css: {
-    postcss: {
-      plugins: [
-        (postcssImport() as any),
-        tailwindcss,
-        autoprefixer
-      ],
-    },
-  },
+  // css: {
+  //   postcss: {
+  //     plugins: [
+  //       (postcssImport() as any),
+  //       tailwindcss,
+  //       autoprefixer
+  //     ],
+  //   },
+  // },
  
 });
-
