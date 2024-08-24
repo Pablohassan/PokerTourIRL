@@ -22,6 +22,7 @@ export interface Player {
     position: number;
     gains: number;
     outAt: Date | null;
+    year: number;
   }
   
   export interface Parties {

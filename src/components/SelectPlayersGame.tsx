@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Modal, Checkbox, Button, ModalHeader, useDisclosure, ModalContent, ModalBody, ModalFooter, Input, Switch, Table, TableHeader, TableBody, TableCell, TableColumn, TableRow, Select, SelectItem } from '@nextui-org/react';
+import { Modal, Button, ModalHeader, useDisclosure, ModalContent, ModalBody, ModalFooter,  Switch, Table, TableHeader, TableBody, TableCell, TableColumn, TableRow } from '@nextui-org/react';
 import { Player, Tournaments } from './interfaces';
-import toast, { Toaster } from 'react-hot-toast';
+import toast from 'react-hot-toast';
 
 interface CurrentGame {
   players: number[]; // Liste des ID des joueurs sélectionnés

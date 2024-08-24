@@ -1,4 +1,4 @@
-import React from 'react'
+
 import ak from "../assets/pokerlogobourly.jpeg"
 
 

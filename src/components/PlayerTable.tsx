@@ -4,7 +4,6 @@ import { PlayerTableProps } from "./interfaces";
 const PlayerTable: React.FC<PlayerTableProps> = ({
   config,
   players,
-  style,
 }) => {
   console.log("players in PlayerTable:", players);
 

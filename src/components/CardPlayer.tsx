@@ -3,7 +3,6 @@ import {
   Button,
   CardHeader,
   Image,
-  CardBody,
   CardFooter,
 } from "@nextui-org/react";
 

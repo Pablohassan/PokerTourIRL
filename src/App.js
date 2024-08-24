@@ -76,7 +76,7 @@ export default function App() {
     let element = useRoutes([
         {
             path: "/",
-            element: (_jsxs("div", { children: [_jsx("h1", { style: { textAlign: 'center', fontSize: "20px" }, className: " text-black p-4", children: "Welcome to the BoulyPokerTour, this app in alpha version so be nice please " }), _jsx("img", { src: bourlyimage, alt: "pokercouv", className: "w-1/2", style: { display: 'block', marginLeft: 'auto', marginRight: 'auto' } })] })),
+            element: (_jsxs("div", { children: [_jsx("div", { className: "m-10 text-red-200 p-2 mt-10", children: "Welcome to the BoulyPokerTour, this app in alpha version so be nice please " }), _jsx("img", { src: bourlyimage, alt: "pokercouv", className: "w-1/2", style: { display: 'block', marginLeft: 'auto', marginRight: 'auto' } })] })),
         },
         {
             path: "/partypage",

@@ -3,8 +3,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter as Router } from 'react-router-dom';
 import App from './App';
-import '../index.css';
-import 'tailwindcss/tailwind.css';
-import { UIProvider } from './components/UiProvider';
-ReactDOM.createRoot(document.getElementById('root')).render(_jsx(React.StrictMode, { children: _jsx(Router, { children: _jsx(UIProvider, { children: _jsx(App, {}) }) }) }));
+import { NextUIProvider } from '@nextui-org/react';
+import './index.css';
+ReactDOM.createRoot(document.getElementById('root')).render(_jsx(React.StrictMode, { children: _jsx(NextUIProvider, { children: _jsx(Router, { children: _jsx(App, {}) }) }) }));
 //# sourceMappingURL=main.js.map

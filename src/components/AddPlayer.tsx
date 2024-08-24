@@ -1,4 +1,4 @@
-import React, { FormEvent, useContext, useEffect, useState } from "react";
+import { FormEvent, useContext, useEffect, useState } from "react";
 import axios, { AxiosError } from "axios";
 
 
@@ -12,9 +12,9 @@ interface Player {
 }
 
 
-interface UIContextProps {
-  notify: (type: string, content: string, options?: {}, promiseOptions?: {}) => void;
-}
+// interface UIContextProps {
+//   notify: (type: string, content: string, options?: {}, promiseOptions?: {}) => void;
+// }
 
 function AddPlayer() {
   const [name, setName] = useState("");

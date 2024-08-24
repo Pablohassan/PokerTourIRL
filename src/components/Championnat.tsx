@@ -14,7 +14,7 @@ interface Championnat {
   
 
 
-const ChampionnatComponent = ({ selectedChampionnat, setSelectedChampionnat }: ChampionnatComponentProps)  => {
+const ChampionnatComponent = ({ setSelectedChampionnat }: ChampionnatComponentProps)  => {
   const [championnats, setChampionnats] = useState<Championnat[]>([]);;
 
   const [isLoading, setIsLoading] = useState(true);
@@ -34,29 +34,29 @@ const ChampionnatComponent = ({ selectedChampionnat, setSelectedChampionnat }: C
     setSelectedChampionnat(id);
   };
 
-  const createChampionnat = async (championnatData: []) => {
-    const response = await fetch('/api/championnats', {
-      method: "POST",
-      body: JSON.stringify(championnatData),
-    });
-    if (response.ok) {
-      fetchChampionnats();
-    } else {
-      console.error("Error creating championnat");
-    }
-  };
+  // const createChampionnat = async (championnatData: []) => {
+  //   const response = await fetch('/api/championnats', {
+  //     method: "POST",
+  //     body: JSON.stringify(championnatData),
+  //   });
+  //   if (response.ok) {
+  //     fetchChampionnats();
+  //   } else {
+  //     console.error("Error creating championnat");
+  //   }
+  // };
 
-  const updateChampionnat = async (id :number, championnatData: []) => {
-    const response = await fetch(`/api/championnats/${id}`, {
-      method: "PUT",
-      body: JSON.stringify(championnatData),
-    });
-    if (response.ok) {
-      fetchChampionnats();
-    } else {
-      console.error("Error updating championnat");
-    }
-  };
+  // const updateChampionnat = async (id :number, championnatData: []) => {
+  //   const response = await fetch(`/api/championnats/${id}`, {
+  //     method: "PUT",
+  //     body: JSON.stringify(championnatData),
+  //   });
+  //   if (response.ok) {
+  //     fetchChampionnats();
+  //   } else {
+  //     console.error("Error updating championnat");
+  //   }
+  // };
 
   const deleteChampionnat = async (id: number) => {
     const response = await fetch(`/api/championnats/${id}`, {

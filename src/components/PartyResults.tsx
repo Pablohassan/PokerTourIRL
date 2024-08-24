@@ -1,4 +1,3 @@
-import { useMemo, useState, useEffect } from "react";
 import PlayerTable from "./PlayerTable";
 import{ PlayerStats, PlayerTableProps,PartyResultsProps, } from "./interfaces.js"
 
@@ -18,7 +17,7 @@ function calculateGains(playerStats: PlayerStats[]): number {
 
 const PartyResults: React.FC<PartyResultsProps> = ({
   players,
-  playerStats
+
 }) => {
 ;
 

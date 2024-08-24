@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect} from 'react';
 import {Button} from '@nextui-org/react'; // Replace with the actual path to your Button component
 
 interface GameTimerProps {

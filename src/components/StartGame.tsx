@@ -1,633 +1,469 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api";
-import SelectPlayersGame from "./SelectPlayersGame";
-import { Content } from './Content'
-import ReviewSelectedPlayers from "../components/ReviewSelectedPlayers"
-import {
-  Modal,
-  Button,
-  ModalHeader,
-  ModalBody,
-  ModalContent,
-  ButtonGroup,
-} from "@nextui-org/react";
-import { Player, PlayerStats, Parties } from './interfaces';
-import { CardPlayer } from "./CardPlayer";
-import BlindTimer from "./BlindTimer";
-import GameTimer from "./GameTimer";
-
-
+import GameConfiguration from './GameConfiguration'; // Corriger le nom du fichier
+import { Content } from "./Content";
+import ReviewSelectedPlayers from "../components/ReviewSelectedPlayers";
+import GameControls from "./GameControls";
+import PlayerList from "./PlayerList";
+import KillerSelectionModal from "./KillerSelectionModal";
+import useGameState from "./useGameState";
+import { Player, PlayerStats, Tournaments } from "./interfaces";
 import toast from "react-hot-toast";
-interface Tournaments {
-  id: number;
-  year: number;
-  createdAt: Date;
-}
+import { Modal, ModalBody, ModalHeader } from "@nextui-org/react";
 
+interface PlayerWithPosition extends Player {
+  position: number;
+  points: number;  // Ajoutez cette ligne
+}
 interface StartGameProps {
   players: Player[];
   handlePlayerSelect: (playerId: number) => void;
   selectedPlayers: Player[];
   setSelectedPLayers: React.Dispatch<React.SetStateAction<Player[]>>;
-  updateAfterGameEnd: (results: any) => void; // Changed the prop function name to 'updateAfterGameEnd'
+  updateAfterGameEnd: (results: PlayerStats[]) => void;
   setParties: (parties: any) => void;
   championnat: Tournaments[];
+  blindIndex: number;
+  setBlindIndex: React.Dispatch<React.SetStateAction<number>>;
 }
 
 const StartGame: React.FC<StartGameProps> = ({
   championnat,
   selectedPlayers,
   setSelectedPLayers,
-  handlePlayerSelect,
   players,
   updateAfterGameEnd,
+  blindIndex,
+  setBlindIndex
 }) => {
   const [gameStarted, setGameStarted] = useState(false);
   const [showReview, setShowReview] = useState(false);
-  const [pot, setPot] = useState(0)
-  const [games, setGames] = useState<PlayerStats[]>([]);
-  const [timeLeft, setTimeLeft] = useState(20 * 60); // 20 minutes in seconds
-  const [smallBlind, setSmallBlind] = useState(10);
-  const [bigBlind, setBigBlind] = useState(20);
-  const [ante, setAnte] = useState(0)
-  const [outPlayers, setOutPlayers] = useState<Player[]>([]);
-  const [initialPlayerCount, setInitialPlayerCount] = useState<number>(0);
+  const [showConfig, setShowConfig] = useState(true);
+  // const [outPlayers, setOutPlayers] = useState<Player[]>([]);
+
   const [isPaused, setIsPaused] = useState(false);
-  const [selectedTournamentId, setSelectedTournamentId] = useState<number | null>(null);
+  const [selectedTournament, setSelectedTournament] = useState<Tournaments | null>(null);
+  const [blindDuration, setBlindDuration] = useState<number>(20);
   const [playerOutGame, setPlayerOutGame] = useState<number | null>(null);
-  const [killer, setKiller] = useState(false);
-  const [isSelectPlayersModalOpen, setIsSelectPlayersModalOpen] = useState(true);
-  const [rebuyPlayerId, setRebuyPlayerId] = useState<number | null>(null);
-  const [partyStarted, setPartyStarted] = useState(null);
-  const [currentParty, setCurrentParty] = useState(null);
-  const [partyId, setPartyId] = useState(false);
-  const [partyEnded, setPartyEnded] = useState(null);
-  const [middleStack, setMiddleStack] = useState(5350);
-  const [totalStack, setTotalStack] = useState(0);
+  const [partyId, setPartyId] = useState<number | null>(null);
+  // const [lastUsedPosition, setLastUsedPosition] = useState(0);
+  const initialTimeLeft = blindDuration * 60;
 
-  console.log("pot", pot)
-
-  useEffect(() => {
-    const restoreState = async () => {
-      if (!gameStarted) {
-        // Fetch data from your API or localStorageh
-        const savedState = localStorage.getItem('gameState');
-        if (savedState) {
-          const {
-            timeLeft,
-            smallBlind,
-            bigBlind,
-            killer,
-            rebuyPlayerId,
-            games,
-            outPlayers,
-            initialPlayerCount,
-            selectedTournamentId,
-            partyStarted,
-            showReview,
-            selectedPlayers
-
-          } = JSON.parse(savedState);
-          setTimeLeft(timeLeft);
-          setSmallBlind(smallBlind);
-          setBigBlind(bigBlind);
-          setGames(games);
-          setKiller(killer);
-          setRebuyPlayerId(rebuyPlayerId);
-          setOutPlayers(outPlayers);
-          setInitialPlayerCount(initialPlayerCount);
-          setSelectedTournamentId(selectedTournamentId);
-          setPartyStarted(partyStarted);
-          setSelectedPLayers(selectedPlayers)
-          setGameStarted(true);  // Now, the game is restored
-          setShowReview(showReview)
-
-        }
-        console.log(selectedPlayers)
-      }
-    };
-
-    restoreState();
-  }, []);
-
-
-  useEffect(() => {
-    if (partyId !== false) {
-      // Replace `partyId` with the actual party ID you want to check
-      const fetchPartyState = async () => {
-        try {
-          const response = await api.get(`/parties/state/${partyId}`);
-          const { partyStarted, partyEnded } = response.data;
-          setPartyStarted(partyStarted);
-          setPartyEnded(partyEnded);
-        } catch (error) {
-          console.error('Failed to fetch party state:', error);
-        }
-      };
-
-      fetchPartyState();
-    }
-  }, [partyId]);
-
-
-  useEffect(() => {
-    if (!gameStarted) {
-      console.log('Initializing totalStack based on selectedPlayers.length:', selectedPlayers.length);
-      setTotalStack(selectedPlayers.length * 5350);
-      // Mark the game as initialized
-    }
-  }, [selectedPlayers.length, gameStarted]);
-
-
-  useEffect(() => {
-    if (gameStarted && initialPlayerCount > 0 && pot === 0) {
-      const initialPot = initialPlayerCount * 5;
-      setPot(initialPot);
-
-    }
-
-  }, [gameStarted, initialPlayerCount, pot]);
-
-
-
-  useEffect(() => {
-    // Recalculate middle stack whenever the total stack or player count changes
-    const remainingPlayers = selectedPlayers.length;
-    if (remainingPlayers > 0) { // Avoid division by zero
-      const newMiddleStack = totalStack / remainingPlayers;
-      const roundedMiddleStack = Math.round(newMiddleStack);
-      setMiddleStack(roundedMiddleStack);
-    }
-  }, [totalStack, selectedPlayers.length]);
-
-  useEffect(() => {
-    // Recalculate middle stack whenever the total stack or player count changes
-    const remainingPlayers = selectedPlayers.length;
-    if (remainingPlayers > 0) { // Avoid division by zero
-      const newMiddleStack = totalStack / remainingPlayers;
-      const roundedMiddleStack = Math.round(newMiddleStack);
-      setMiddleStack(roundedMiddleStack);
-    }
-  }, [totalStack, selectedPlayers.length]);
-
+  const {
+    timeLeft,
+    setTimeLeft,
+    smallBlind,
+    setSmallBlind,
+    bigBlind,
+    setBigBlind,
+    ante,
+    setAnte,
+    games,
+    setGames,
+    pot,
+    setPot,
+    middleStack,
+    setSavedTotalStack,
+    totalStack,
+    setTotalStack,
+    saveGameState,
+    resetGameState,
+    rebuyPlayerId,
+    setRebuyPlayerId,
+    killer,
+    setKiller,
+    stateRestored,
+    postInitialGameState,
+    loading,
+    error,
+    setPositions,
+    outPlayers, // Ajoutez cette ligne
+   setOutPlayers ,// Ajoutez cette ligne
+    setLastUsedPosition,
+    initialPlayerCount,  // Récupérer initialPlayerCount ici
+    setInitialPlayerCount,
+   
+   
+  } = useGameState(gameStarted, setGameStarted, selectedPlayers, setSelectedPLayers, blindIndex, setBlindIndex, initialTimeLeft);
 
   const navigate = useNavigate();
 
-  const onStartGameReview = () => {
-    setShowReview(true);
-  };
+  useEffect(() => {
+    console.log("StartGame loaded, timeLeft:", timeLeft);
+  }, [timeLeft]);
 
-  const confirmAndStartGame = async () => {
-    setShowReview(false); // Hide the review
-    await onStartGame();  // Now, start the game
-
-  };
-
-  const renderOutOfGamePlayers = () => {
-    return outPlayers.map((player, index) => {
-      const gameForPlayer = games.find(game => game.playerId === player.id);
-      const position = gameForPlayer?.position ?? 'N/A';  // If position is undefined, fallback to 'N/A'
-
-      return (
-        <div key={player.id} className="out-player">
-          <div style={{ display: 'inline-block', margin: "20px", fontSize: "1.5em" }}>{player.name} : <div style={{ display: 'inline-block', marginRight: "10px" }}>Position {position}</div> </div>
-
-        </div>
+  
+  useEffect(() => {
+    if (stateRestored) {
+      setGameStarted(true);
+      setShowConfig(false);
+  
+      const totalPlayers = initialPlayerCount;  // Utilisez initialPlayerCount restauré ici
+  
+      const sortedOutPlayers = games
+        .filter((game) => game.outAt)
+        .sort((a, b) => {
+          const dateA = typeof a.outAt === 'string' ? new Date(a.outAt) : a.outAt;
+          const dateB = typeof b.outAt === 'string' ? new Date(b.outAt) : b.outAt;
+          return dateA!.getTime() - dateB!.getTime();
+        });
+  
+      sortedOutPlayers.forEach((game, index) => {
+        const position = totalPlayers - index;
+        game.position = position;
+        game.points = index + 1;
+      });
+  
+      setGames((prevGames) =>
+        prevGames.map((game) => {
+          const updatedGame = sortedOutPlayers.find((g) => g.playerId === game.playerId);
+          return updatedGame || game;
+        })
       );
-    });
-  };
-
-
-  const noTournaments = championnat.length === 0;
-
-  const saveGameState = () => {
-    const gameState = {
-      timeLeft,
-      smallBlind,
-      bigBlind,
-      killer,
-      rebuyPlayerId,
-      games,
-      outPlayers,
-      initialPlayerCount,
-      selectedTournamentId,
-      partyStarted,
-      showReview,
-      selectedPlayers
-
-    };
-    localStorage.setItem('gameState', JSON.stringify(gameState));
-  }
-
-  const currentlyPlayingPlayers = games
-    .filter((game) => !game.outAt)
-    .map((game) => {
-      return players.find((player) => player.id === game.playerId);
-    });
-
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
-  };
+  
+      const restoredOutPlayers = sortedOutPlayers.map(game => {
+        const player = players.find(player => player.id === game.playerId)!;
+        return {
+          ...player,
+          position: game.position,
+          points: game.points 
+        };
+      });
+  
+      setOutPlayers(restoredOutPlayers);
+      setLastUsedPosition(sortedOutPlayers.length);
+  
+      setPositions((prevPositions) => {
+        const updatedPositions = { ...prevPositions };
+        restoredOutPlayers.forEach((player) => {
+          updatedPositions[player.id] = player.position;
+        });
+        return updatedPositions;
+      });
+    }
+  }, [stateRestored]);
+  
+  
+  
+  
 
   const onStartGame = async () => {
     if (gameStarted) {
-      // If a game is already started, don't start a new game.
-      alert('A game is already in progress.');
+      alert("A game is already in progress.");
       return;
     }
-    const actualTournamentId = noTournaments ? null : selectedTournamentId;
-
-
+    resetGameState();
     try {
       const response = await api.post("/playerStats/start", {
         date: new Date(),
         players: selectedPlayers.map((player) => player.id),
-        tournamentId: actualTournamentId, // Utilisez cette variable ici
-
+        tournamentId: selectedTournament ? selectedTournament.id : null,
       });
 
       if (response.data && response.data.message) {
         toast(response.data.message);
         setGameStarted(true);
-
-        if (
-          response.data.playerStats &&
-          Array.isArray(response.data.playerStats)
-        ) {
-          setGames(response.data.playerStats);
+        if (Array.isArray(response.data.playerStats)) {
+          const playerStats = response.data.playerStats;
+          setGames(playerStats);
+          setSelectedPLayers(selectedPlayers);
+          if (response.data.partyId) {
+            setPartyId(response.data.partyId);
+            postInitialGameState();
+          } else {
+            console.error('No partyId received in API response');
+          }
+        } else {
+          console.error("Invalid playerStats format in API response:", response.data.playerStats);
         }
-
-
+      } else {
+        console.error("Invalid API response:", response.data);
       }
-    } catch (err: any) {
-      console.error("Server response:", err.response?.data);
-      console.error(err);
-      toast("Failed to start new game");
+    } catch (err) {
+      if (err instanceof Error) {
+        console.error("Server response:", err.message);
+        toast("Failed to start new game: " + err.message);
+      } else {
+        console.error("Unexpected error:", err);
+        toast("An unexpected error occurred");
+      }
     }
     setInitialPlayerCount(selectedPlayers.length);
-
-
-    saveGameState()
-    // setSelectPlayersModalOpen(false);
   };
 
+  useEffect(() => {
+    if (gameStarted) {
+      saveGameState(timeLeft);
+    }
+  }, [gameStarted, outPlayers]);
+
+  const confirmAndStartGame = async () => {
+    setShowReview(false);
+    await onStartGame();
+    if (partyId) {
+      navigate("/game");
+    }
+  };
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
+
+  // const onStartGameReview = () => {
+  //   setShowReview(true);
+  // };
 
   const handleRebuy = (playerId: number) => {
-    if (window.confirm("Is this player payed the rebuy?")) {
+    if (window.confirm("Is this player paid the rebuy?")) {
       setRebuyPlayerId(playerId);
       setKiller(true);
       setGames((prevGames) =>
         prevGames.map((game) =>
           game.playerId === playerId
             ? {
-              ...game,
-              rebuys: game.rebuys + 1,
-              totalCost: (game.totalCost ?? 0) + 5,
-            }
+                ...game,
+                rebuys: game.rebuys + 1,
+                totalCost: (game.totalCost ?? 0) + 5,
+              }
             : game
         )
       );
+      setTotalStack((prevTotalStack) => prevTotalStack + 5350);
+      setPot((prevPot) => prevPot + 4);
+      saveGameState(timeLeft);
     }
-    setTotalStack((prevTotalStack) => prevTotalStack + 5350);
-    setPot(prevPot => prevPot + 4);
-    saveGameState();
-  };
-  const calculatePoints = (position: number, isWinner: boolean = false) => {
-    if (isWinner) {
-      return initialPlayerCount;  // Maximum points for the winner
-    }
-    return initialPlayerCount - position + 1;
+    setSavedTotalStack(totalStack);
   };
 
-  const points = calculatePoints(outPlayers.length);
-  console.log("Calculated Points:", points);
-
-  const updateKiller = async (killerPlayerId: number, partyId: number) => {
-    setGames((prevGames) =>
-      prevGames.map((game) =>
-        game.playerId === killerPlayerId
-          ? { ...game, kills: game.kills + 1 }
-          : game
-      )
-    );
-    setKiller(false); // Close the modal for selecting the killer
-    setRebuyPlayerId(null);
-    // Any other logic that you need to add for the killer
-  };
-
-  const handlePlayerKillSelection = async (killerPlayerId: number, partyId: number) => {
-    if (window.confirm("Do you want to select this player as the killer?")) {
-      await updateKiller(killerPlayerId, partyId);
-    }
-  };
-  const handleOutOfGame = async (
-    partyId: number,
-    playerId: number,
-    eliminatedById: number | null
-  ) => {
-    
-    const recaveConfirmation = window.confirm("We are still in the recaves, are you sure you want to remove a player?");
-  
-    if (!recaveConfirmation) {
-      // If the user does not confirm, exit the function
-      return;
-    }
-    if (eliminatedById !== null || window.confirm(`Is ${playerId} out of the game?`)) {
-
+  const handleOutOfGame = async (partyId: number, playerId: number, eliminatedById: number | null) => {
+    if (window.confirm(`Is ${playerId} out of the game?`)) {
       setKiller(true);
       setPlayerOutGame(playerId);
-      const position = initialPlayerCount - outPlayers.length; // Calculate the position
+  
       const gameIndex = games.findIndex((game) => game.playerId === playerId);
-
+  
       if (gameIndex !== -1) {
         const game = games[gameIndex];
         const outAt = new Date();
-        const points = calculatePoints(position);
-        const updatedGameForApi = {
-          ...game,
-          points: points,
-          outAt: outAt.toISOString(),
-          position: position
-        };
+  
         try {
-          await api.put(`/gamesResults/${game.id}`, updatedGameForApi);
-          await api.put("/playerStats/eliminate", {
-            partyId: partyId, // Remplacez par l'ID de la partie en cours
-            playerId: playerId,
-            eliminatedById: eliminatedById,
-            points: points,
-            position: position
+          const updatedGames = [...games];
+          updatedGames[gameIndex] = { ...game, outAt: outAt };
+  
+          const sortedGames = updatedGames
+            .filter((g) => g.outAt)
+            .sort((a, b) => new Date(a.outAt!).getTime() - new Date(b.outAt!).getTime());
+  
+          // Assurez-vous que gameIndex est valide et que sortedGames[gameIndex] existe
+          sortedGames.forEach((g, idx) => {
+            g.position = initialPlayerCount - idx;
+            g.points = idx + 1;
           });
-
-          setGames((prevGames) => {
-            const newGames = [...prevGames];
-            newGames[gameIndex] = {
-              ...game,
-              points: points,
-              outAt: outAt,
-              position: position,
-            };
-            return newGames;
-          });
-
+  
+          setGames(updatedGames);
+  
           setOutPlayers((prevOutPlayers) => {
-            const player = selectedPlayers.find(
-              (player) => player.id === playerId
-            );
+            const player = selectedPlayers.find((player) => player.id === playerId);
             if (player) {
-              return [...prevOutPlayers, player];
-            } else {
-              return prevOutPlayers;
+              const playerWithPosition: PlayerWithPosition = {
+                ...player,
+                position: initialPlayerCount - sortedGames.length + 1,
+                points: sortedGames[gameIndex]?.points || 0 // Utilisez un fallback pour points
+              };
+              return [...prevOutPlayers, playerWithPosition];
             }
+            return prevOutPlayers;
           });
-
-          setSelectedPLayers((prevSelectedPlayers) => {
-            return prevSelectedPlayers.filter(
-              (player) => player.id !== playerId
-            );
+  
+          setSelectedPLayers((prevSelectedPlayers) => prevSelectedPlayers.filter((player) => player.id !== playerId));
+          setPositions((prevPositions) => ({ ...prevPositions, [playerId]: initialPlayerCount - sortedGames.length + 1 }));
+  
+          saveGameState(timeLeft);
+  
+          await api.put(`/gamesResults/${game.id}`, {
+            ...game,
+            points: sortedGames[gameIndex]?.points || 0, // Utilisez un fallback pour points
+            outAt: outAt.toISOString(),
+            position: initialPlayerCount - sortedGames.length + 1,
           });
-          saveGameState();
-        } catch (error: any) {
-          console.error("An error occurred while updating player stats:");
-          console.error("Error object:", error);
-          if (error.response) {
-            console.error("Server responded with:", error.response.data);
-          }
-          if (error.request) {
-            console.error(
-              "The request was made but no response was received:",
-              error.request
-            );
-          }
+  
+          await api.put("/playerStats/eliminate", {
+            partyId,
+            playerId,
+            eliminatedById,
+            points: sortedGames[gameIndex]?.points || 0, // Utilisez un fallback pour points
+            position: initialPlayerCount - sortedGames.length + 1,
+          });
+  
+        } catch (error) {
+          console.error("An error occurred while updating player stats:", error);
         }
       }
     }
   };
-
-  const handleGameEnd = async () => {
-    // Automatically end the game if only one player is left
-    if (currentlyPlayingPlayers.length === 1) {
-      // Proceed with ending the game
-      let updatedGames = [...games];
-      const position = initialPlayerCount - outPlayers.length;
-      const points = calculatePoints(position);
-      const winningPlayerId = currentlyPlayingPlayers[0]?.id;
-      const outAt = new Date();
   
-      updatedGames = updatedGames.map((game) =>
+       
+  const handleGameEnd = async () => {
+    if (games.filter((game) => !game.outAt).length === 1) {
+      const winningPlayerId = games.find((game) => !game.outAt)?.playerId;
+      const updatedGames = games.map((game) =>
         game.playerId === winningPlayerId
-          ? { ...game, points: points, outAt: outAt, position: position }
+          ? { ...game, points: initialPlayerCount, outAt: new Date(), position: 1 }
           : game
       );
   
       try {
-        const res = await api.post("/gameResults", updatedGames);
+        // Enregistrer les résultats finaux
+        await api.post("/gameResults", updatedGames);
         updateAfterGameEnd(updatedGames);
+  
+        // Supprimer l'état du jeu sur le serveur
+        const response = await fetch('http://localhost:3000/gameState', {
+          method: 'DELETE',
+        });
+  
+        if (!response.ok) {
+          throw new Error("Failed to delete game state on server");
+        }
+        
+        console.log('Game state deleted successfully from server');
+        
+        resetGameState(); // Réinitialiser l'état local
+        setGameStarted(false);
+        setPartyId(null);
+        navigate("/results");
+        
       } catch (error) {
         console.error("Error:", error);
+        alert("Failed to end the game properly. Please try again.");
       }
-  
-      setGameStarted(false);
-      setPartyId(false);
-      localStorage.removeItem('gameState');
-      navigate("/results");
     } else {
-      // If more than one player is left, show a message or handle accordingly
       alert("The game cannot be ended yet as more than one player is still playing.");
     }
   };
   
 
-
+  const handleStartGameConfiguration = (selectedTournament: Tournaments | null, blindDuration: number, selectedPlayers: Player[]) => {
+    setSelectedTournament(selectedTournament);
+    setBlindDuration(blindDuration);
+    setSelectedPLayers(selectedPlayers);
+    setShowConfig(false);
+    setShowReview(true);
+  };
 
   return (
-    <div style={{
-      maxWidth: '90%',
-      maxHeight: '90vh',
-      margin: 'auto',
-      overflow: 'auto'
-    }}>
-
-      <Modal isOpen={killer} >
-        <ModalContent>
-          <ModalHeader className="with-full height-full">
-            Select a Killer
-          </ModalHeader>
-
-          <ModalBody>
-            <div color="danger">
-              {games &&
-                games.map((game) => {
-                  const player = currentlyPlayingPlayers.find(
-                    (p) => p?.id === game.playerId
-                  );
-
-                  if (player && !game.outAt && player.id !== rebuyPlayerId && player.id !== playerOutGame) {
-                    return (
-                      <ButtonGroup style={{ padding: "2px" }}>
-                        <Button
-                          variant="bordered"
-                          color="warning"
-                          className="text-lg p-2 m-1"
-                          key={player.id}
-                          onClick={(e) => {
-                            handlePlayerKillSelection(player.id, game.partyId);
-                            e.currentTarget.blur();
-                          }}
-                        >
-                          {player.name}
-                        </Button>
-                      </ButtonGroup>
-                    );
-                  } else {
-                    return null; // Si le joueur n'est pas trouvé ou est "out", ne rien retourner
-                  }
-                })}
-            </div>
-          </ModalBody>
-
-        </ModalContent>
-      </Modal>
-      <Modal isOpen={!gameStarted && !currentParty}>
-        <ModalHeader>Select Players and Game Details</ModalHeader>
+    <div style={{ maxWidth: "90%", maxHeight: "80vh", margin: "auto", overflow: "auto" }}>
+      <KillerSelectionModal
+        killer={killer}
+        games={games}
+        currentlyPlayingPlayers={selectedPlayers.filter((p) => !games.find((g) => g.playerId === p.id && g.outAt))}
+        rebuyPlayerId={rebuyPlayerId}
+        playerOutGame={playerOutGame}
+        handlePlayerKillSelection={(killerPlayerId: number) => {
+          if (window.confirm("Do you want to select this player as the killer?")) {
+            setGames((prevGames) =>
+              prevGames.map((game) =>
+                game.playerId === killerPlayerId ? { ...game, kills: game.kills + 1 } : game
+              )
+            );
+            setKiller(false);
+            setRebuyPlayerId(null);
+            saveGameState(timeLeft);
+          }
+        }}
+      />
+      {showConfig && (
+        <GameConfiguration
+          championnat={championnat}
+          players={players}
+          onStartGameConfiguration={handleStartGameConfiguration}
+        />
+      )}
+      {/* <Modal isOpen={!gameStarted && !partyId && !showConfig}>
+        <ModalHeader className="with-full height-full">Select Players and Game Details</ModalHeader>
         <ModalBody>
-          <Modal isOpen={isSelectPlayersModalOpen} >
-            <SelectPlayersGame
-              players={players}
-              selectedPlayers={selectedPlayers}
-              handlePlayerSelect={handlePlayerSelect}
-              onStartGame={onStartGameReview}
-              championnat={championnat}
-              selectedTournamentId={selectedTournamentId}
-              setSelectedTournamentId={setSelectedTournamentId}
-
-            />
-
-          </Modal>
+          <SelectPlayersGame
+            players={players}
+            selectedPlayers={selectedPlayers}
+            handlePlayerSelect={handlePlayerSelect}
+            onStartGame={onStartGameReview}
+            championnat={championnat}
+            selectedTournamentId={selectedTournament?.id || null}
+            setSelectedTournamentId={setSelectedTournament}
+          />
         </ModalBody>
-      </Modal>
-      {
-        showReview && !partyId ? (
-          <ReviewSelectedPlayers selectedPlayers={selectedPlayers} onConfirm={confirmAndStartGame} />
-        ) : (
-
-          <div >
-
-            <Modal isOpen={gameStarted} onClose={handleGameEnd}>
-              <ModalHeader className="text-xl bg-color-red">Game in Progress</ModalHeader>
-              <Content championnat={championnat} />
-              <ModalBody>
-
-                <div
+      </Modal> */}
+      {showReview && !partyId ? (
+        <ReviewSelectedPlayers selectedPlayers={selectedPlayers}  selectedTournament={selectedTournament} onConfirm={confirmAndStartGame}/>
+      ) : (
+        <div style={{ maxHeight: "90%" }}>
+          <Modal style={{ height: "800px" }} isOpen={gameStarted} onClose={handleGameEnd}>
+            <div style={{ display: "flex", alignContent: "flex-end" }}>
+              {!isPaused ? (
+                <ModalHeader
                   style={{
-                    margin: "10 auto",
-                    height: '200px'
-
+                    fontSize: "28px",
+                    fontWeight: "bolder",
+                    color: "green",
                   }}
                 >
-                  <BlindTimer
-                    gameStarted={gameStarted}
-                    isPaused={isPaused}
-                    // Handle the blind change here
-                    onBlindChange={(small, big, ante) => {
-                      setSmallBlind(small);
-                      setBigBlind(big);
-                      setAnte(ante)
-                    }}
-                    onTimeChange={(time) => {
-                      // Handle time change here
-                      setTimeLeft(time);
-                    }} />
-
-
-                  {gameStarted && (
-                    <div >
-                      <GameTimer
-                        formatTime={formatTime}
-                        timeLeft={timeLeft}
-                        smallBlind={smallBlind}
-                        bigBlind={bigBlind}
-                        ante={ante}
-                        handleGameEnd={handleGameEnd}
-                        isPaused={isPaused}
-                        setIsPaused={setIsPaused}
-                        totalPot={pot}
-                        middleStack={middleStack}
-                      />
-
-                      <div style={{ fontSize: "20px" }}>
-
-
-                      </div>
-
-                    </div>
-                  )}
-
-                  <div
-                    style={{
-                      display: "flex",
-                      flexDirection: "row",
-                      flexWrap: "wrap",
-                    }}
-                  >
-                    {currentlyPlayingPlayers.map((player) => {
-                      // Trouver le jeu correspondant au joueur actuel
-                      const gameForPlayer = games.find(
-                        (game) => game.playerId === player?.id
-                      );
-                      // Si le jeu existe pour ce joueur, affichez les détails, sinon affichez une erreur
-                      return (
-
-                        <div
-                          key={player?.id}
-                          style={{ display: "flex", flexDirection: "column", }}
-                        >
-
-                          {gameForPlayer ? (
-                            <div className="p-1" >
-                              <CardPlayer
-                                playername={player?.name ?? " none"}
-                                recave={gameForPlayer.rebuys}
-                                kill={gameForPlayer.kills}
-                                rebuy={() => handleRebuy(gameForPlayer.playerId)}
-                                outOfGame={() =>
-                                  handleOutOfGame(
-                                    gameForPlayer.partyId,
-                                    gameForPlayer.playerId,
-                                    gameForPlayer.eliminatedById
-                                  )
-                                }
-                              />
-                            </div>
-                          ) : (
-                            <div>Erreur: Pas de jeu pour {player?.name}</div>
-                          )}
-
-                        </div>
-                      );
-                    })}
-                    {/* <div style={{
-                      position: 'absolute', // or 'fixed' if you want it to stay in the same place even when scrolling
-                      right: '10%', marginLeft: "20px", marginTop: "10px", border: "solid 2px", borderRadius: "5%"
-                    }}>
-
-                      <div style={{ margin: "20px", fontSize: "1.5em" }}>Joueurs Sortis</div>
-                      <div style={{ width: "100%", marginTop: "10px", height: "2px", border: "solid" }}></div>
-                      <div >  {renderOutOfGamePlayers()}</div>
-                    </div> */}
-                  </div>
-                </div>
-
-              </ModalBody>
-
-            </Modal>
-          </div>
-        )}
+                  Game in Progress
+                </ModalHeader>
+              ) : (
+                <ModalHeader
+                  style={{
+                    fontSize: "28px",
+                    fontWeight: "bold",
+                    color: "red",
+                  }}
+                >
+                  Game Paused
+                </ModalHeader>
+              )}
+              <Content selectedTournament={selectedTournament}  />
+            </div>
+            <ModalBody>
+              <GameControls
+                gameStarted={gameStarted}
+                isPaused={isPaused}
+                timeLeft={timeLeft}
+                smallBlind={smallBlind}
+                bigBlind={bigBlind}
+                ante={ante}
+                handleGameEnd={handleGameEnd}
+                setIsPaused={setIsPaused}
+                pot={pot}
+                middleStack={middleStack}
+                setSmallBlind={setSmallBlind}
+                setBigBlind={setBigBlind}
+                setAnte={setAnte}
+                setTimeLeft={setTimeLeft}
+                blindIndex={blindIndex}
+                setBlindIndex={setBlindIndex}
+                initialTimeLeft={timeLeft || initialTimeLeft}
+              />
+              {selectedPlayers.length > 0 && games.length > 0 ? (
+                <PlayerList
+                  players={selectedPlayers}
+                  games={games}
+                  handleRebuy={handleRebuy}
+                  handleOutOfGame={handleOutOfGame}
+                />
+              ) : (
+                <div>Loading player data...</div>
+              )}
+            </ModalBody>
+          </Modal>
+        </div>
+      )}
     </div>
   );
 };
 
 export default StartGame;
+

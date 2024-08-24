@@ -1,21 +1,18 @@
-import React, { useState, useEffect } from "react";
-import { Navbar, Link, NavbarBrand, NavbarContent, NavbarItem } from "@nextui-org/react";
+import { useState, useEffect } from "react";
 import api from "./api";
-import { useRoutes, Routes, Route,useNavigate } from "react-router-dom";
+import { useRoutes } from "react-router-dom";
 import { PlayerRanking } from "./components/PLayerRanking";
 import PartyResults from "./components/PartyResults";
 import StartGame from "./components/StartGame";
 import PartyPage from "./components/PartyPage";
-import PokerLogo from"./components/PokerLogo";
 import bourlyimage from"./assets/bourlypoker3.webp"
 
 // import Ak from "./components/PokerLogo";
 import {
-  useUser,
   ClerkProvider,
   SignedIn,
   SignedOut,
-  SignOutButton,
+
   RedirectToSignIn,
   SignIn,
   SignUp,
@@ -30,8 +27,6 @@ import axios from "axios";
 
 
 
-console.log(import.meta.env.VITE_REACT_APP_CLERK_PUBLISHABLE_KEY);
-
 if (!import.meta.env.VITE_REACT_APP_CLERK_PUBLISHABLE_KEY) {
   throw new Error("Missing Publishable Key");
 }
@@ -43,27 +38,30 @@ export default function App() {
   const [parties, setParties] = useState<Parties[]>([]);
   const [stats, setStats] = useState<PlayerStats[]>([]);
   const [championnat, setChampionnat] = useState<Tournaments[]>([]);
-  const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+  // const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [blindIndex, setBlindIndex] = useState(0);
 
    useEffect(() => {
     const fetchChampionnat = async () => {
   try {
     const response = await axios.get("https://api.bourlypokertour.fr/tournaments");
     // Si vous souhaitez stocker tous les tournois dans le tableau:
-    setChampionnat(response.data.map((t: { id: any; year: any; createdAt: string | number | Date; }) => ({
+    const formattedChampionnat = response.data.map((t: any) => ({
       id: t.id,
       year: t.year,
       createdAt: new Date(t.createdAt)
-    })));
+    }));
+    setChampionnat(formattedChampionnat);
   } catch (error) {
     console.error("Error fetching championnat: ", error);
+    // Optionally, handle the error in the UI
   }
 };
 
-    fetchChampionnat();
-    
-  }, []);
+fetchChampionnat();
+}, []); // Runs only on the first render
+
 
 
 
@@ -110,9 +108,9 @@ export default function App() {
     {
       path: "/",
       element: (
-        <div>
+        <div >
 
-<h1 style={{ textAlign: 'center', fontSize:"20px" }} className=" text-black p-4">Welcome to the BoulyPokerTour, this app in alpha version so be nice please </h1>
+<div  className=" text-red-200 ">Welcome to the BoulyPokerTour, this app in alpha version so be nice please </div>
 <img src={bourlyimage} alt="pokercouv" className="w-1/2" style={{ display: 'block', marginLeft: 'auto', marginRight: 'auto' }} />
 
 </div>
@@ -157,7 +155,13 @@ element:( <PartyPage
           setParties={setParties}
           updateAfterGameEnd={fetchPlayersAndParties}
           handlePlayerSelect={handlePlayerSelect}
-          championnat={championnat} setSelectedPLayers={setSelectedPlayers}        />
+          championnat={championnat} 
+          setSelectedPLayers={setSelectedPlayers}    
+          blindIndex={blindIndex}  
+          setBlindIndex={setBlindIndex}
+          
+
+           />
       ),
     },
   ]);
@@ -167,76 +171,19 @@ element:( <PartyPage
   }
 
   return (
-
-    
-    <div >
+    <div>
       <ClerkProvider publishableKey={clerkPubKey}>
-        <SignedIn>
-        {isLoading ? (
-      <div>Loading...</div>
-    ) : (
-          
-            <Navbar position="static" className="" >
-              <NavbarBrand>
-          <PokerLogo/>
-              </NavbarBrand>
-              <NavbarContent className="sm:flex gap-4" justify="center">
-              <NavbarItem>
-                
-                <Link color="foreground" href="/ranking">Ranking</Link>
-                </NavbarItem>
-                <NavbarItem>
-                <Link color="foreground"   href="/startGame">Start Partie</Link>
-                </NavbarItem>
-                <Link  href="/results">
-                  Results
-                </Link>
-                <Link  href="/addplayer">Add player</Link>
-                <Link  href="/partypage">All Parties</Link>
-              </NavbarContent>
-              
-               
-                {/* <Navbar.Item>
-                <SignedOut></SignedOut>
-              </Navbar.Item> */}
-               <SignOutButton />
-             
-             
-            </Navbar>
-        
-          )}
-        </SignedIn>
-
-        <SignedOut>
-         
-            <Navbar shouldHideOnScroll>
-              <NavbarBrand>
-              
-              </NavbarBrand>
-              <NavbarContent >
-              <NavbarItem>
-                <Link href="/sign-up/*">Sign Up</Link>
-                </NavbarItem>
-                <Link href="/sign-in/*">Sign in</Link>
-              </NavbarContent>
-              <NavbarContent>
-                <Link href="/ranking">Ranking</Link>
-                <NavbarItem>
-                  <SignedOut></SignedOut>
-                </NavbarItem>
-              </NavbarContent>
-              <SignOutButton />
-            </Navbar>
-         
-          <Routes>
-            <Route path="/sign-in/*" element={<SignIn />} />
-            <Route path="/sign-up/*" element={<SignUp />} />
-            <Route path="/*" element={<RedirectToSignIn />} />
-          </Routes>
-          ;
-        </SignedOut>
+        {element}
+      <SignedIn>
+       
+    
+      </SignedIn>
+      <SignedOut>
+        <RedirectToSignIn />
+        <SignIn />
+        <SignUp />
+      </SignedOut>
       </ClerkProvider>
-      {element}
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import {FC, ReactNode, createContext} from 'react';
 import {NextUIProvider} from '@nextui-org/react';
 import toast, {Toaster} from 'react-hot-toast';
-import React from 'react';
+
 // import { useMediaQuery } from "react-responsive";
 interface UIContextProps {
   notify: (type: string, content: string, options?: {}, promiseOptions?: {}) => void;

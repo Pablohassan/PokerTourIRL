@@ -1,15 +1,15 @@
-import { useEffect, useState, useCallback } from 'react';
-import { Table, TableBody, TableCell, TableColumn, TableHeader, TableRow, Button, Modal } from '@nextui-org/react';
+import { useEffect, useState, useCallback, useRef } from 'react';
+import { Table, TableBody, TableCell, TableColumn, TableHeader, TableRow, Button } from '@nextui-org/react';
 import api from '../api'; // replace with your actual API import
 import { PlayerStats } from './interfaces';
 import React from 'react';
 import ReactDOM from 'react-dom';
 import axios from 'axios';
 
-interface Player {
-  id: number;
-  name: string;
-}
+// interface Player {
+//   id: number;
+//   name: string;
+// }
 
 interface Party {
   id: number;
@@ -21,26 +21,44 @@ export const PartyPage = () => {
   const [parties, setParties] = useState<Party[]>([]);
   const [isModalOpen, setModalOpen] = useState(false);
   const [selectedParty, setSelectedParty] = useState<Party | null>(null);
+  const [page, setPage] = useState(1); // Page actuelle
+  const [hasMore, setHasMore] = useState(true); // Indique s'il y a plus de données à charger
+  // const observer = useRef<IntersectionObserver | null>(null);
+  const limit = 15; // Limite d'éléments par page
+  
 
   useEffect(() => {
     const fetchParties = async () => {
-      const response = await api.get("/parties");
-      const allParties = response.data;
+      try {
+        const response = await api.get(`/parties?page=${page}&limit=${limit}`);
+        const fetchedParties = response.data;
 
-      // Fetch detailed stats for each party
-      const partiesWithStats = await Promise.all(allParties.map(async (party: Party) => {
-        const statsResponse = await api.get(`/parties/${party.id}/stats`);
-        return {
-          ...party,
-          playerStats: statsResponse.data,
-        };
-      }));
+        const partiesWithStats = await Promise.all(fetchedParties.map(async (party: Party) => {
+          const statsResponse = await api.get(`/parties/${party.id}/stats`);
+          return {
+            ...party,
+            playerStats: statsResponse.data,
+          };
+        }));
 
-      setParties(partiesWithStats);
+        setParties(prevParties => [...prevParties, ...partiesWithStats]);
+        setHasMore(fetchedParties.length === limit);
+      } catch (error) {
+        console.error('Erreur lors du chargement des parties:', error);
+      }
     };
 
     fetchParties();
-  }, []);
+  }, [page]);
+  // const lastPartyElementRef = useCallback((node: HTMLDivElement) => {
+  //   if (observer.current) observer.current.disconnect();
+  //   observer.current = new IntersectionObserver(entries => {
+  //     if (entries[0].isIntersecting && hasMore) {
+  //       setPage(prevPage => prevPage + 1);
+  //     }
+  //   });
+  //   if (node) observer.current.observe(node);
+  // }, [hasMore]);
 
   const openModal = useCallback((party: Party) => {
     setSelectedParty(party);

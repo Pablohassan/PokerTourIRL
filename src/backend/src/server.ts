@@ -1,11 +1,16 @@
 import express, { Request, Response, NextFunction } from "express";
+import bodyParser from 'body-parser';
 import _ from "lodash";
 import cors from "cors";
+import dotenv from 'dotenv';
+dotenv.config();
 import { Prisma, PrismaClient } from "@prisma/client";
 import { fetchGamesForPlayer } from "./services/fetsh-game-for-player.js";
 
 const prisma = new PrismaClient();
 const app = express();
+
+app.use(bodyParser.json({ limit: '10mb' }));
 
 app.options("*", cors());
 app.use(cors({ origin: process.env.CORS_ORIGIN || "https://bourlypokertour.fr" }));
@@ -328,6 +333,23 @@ app.get("/parties/:partyId/stats", async (req, res) => {
   }
 });
 
+app.get('/gameState', async (req, res) => {
+  try { 
+      console.log(`Fetching game state`);
+      const gameState = await prisma.gameState.findFirst(); // Find the first (and only) game state
+      if (gameState) {
+        console.log('Game state found:', gameState);
+        res.json(gameState);
+      } else {
+        console.log('Game state not found');
+        res.status(404).json({ error: 'Game state not found' });
+      }
+  } catch (error) {
+    console.error('Error fetching game state:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 app.post("/tournaments", async (req: Request, res: Response) => {
   const { year } = req.body;
   const existingTournament = await prisma.tournament.findFirst({
@@ -344,14 +366,29 @@ app.post("/tournaments", async (req: Request, res: Response) => {
   res.json(newTournament);
 });
 
-
+// modifié 
 app.post("/parties", async (req: Request, res: Response) => {
   const { date, tournamentId } = req.body;
+  
+  if (!tournamentId) {
+    return res.status(400).json({ error: "Un ID de tournoi est requis." });
+  }
+
+  // Vérifier si le tournoi existe
+  const tournament = await prisma.tournament.findUnique({
+    where: { id: tournamentId },
+  });
+
+  if (!tournament) {
+    return res.status(400).json({ error: "Le tournoi spécifié n'existe pas." });
+  }
+
   const parties = await prisma.party.create({
     data: { date, tournamentId },
   });
   res.json(parties);
 });
+
 
 app.post("/players", async (req: Request, res: Response) => {
   try {
@@ -488,6 +525,27 @@ app.post("/gameResults", async (req: Request, res: Response) => {
     return res
       .status(500)
       .json({ error: "An error occurred while saving the game results" });
+  }
+});
+
+app.post('/gameState', async (req, res) => {
+  const { state } = req.body;
+  try {
+      const existingGameState = await prisma.gameState.findFirst();
+      if (existingGameState) {
+          const updatedGameState = await prisma.gameState.update({
+              where: { id: existingGameState.id },
+              data: { state }
+          });
+          res.json(updatedGameState);
+      } else {
+          const newGameState = await prisma.gameState.create({
+              data: { state }
+          });
+          res.json(newGameState);
+      }
+  } catch (error) {
+      res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -664,6 +722,16 @@ app.delete("/parties/:id", async (req: Request, res: Response, next: NextFunctio
   } catch (err) {
     // Pass the error to the error-handling middleware
     next(err);
+  }
+});
+
+app.delete("/gameState", async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const deleteGameState = await prisma.gameState.deleteMany({});
+    res.json({ message: "Game state deleted", count: deleteGameState.count });
+  } catch (error) {
+    console.error("Error deleting game state:", error);
+    next(error);
   }
 });
 
