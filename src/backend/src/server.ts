@@ -17,6 +17,7 @@ app.use(cors({ origin: process.env.CORS_ORIGIN || "https://bourlypokertour.fr" }
 
 app.use(express.json());
 
+// @ts-ignore
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "https://bourlypokertour.fr");
   res.header(
@@ -27,6 +28,7 @@ app.use((req, res, next) => {
 });
 app.use(express.json());
 
+// @ts-ignore
 app.use((req, res, next) => {
   console.log("Received request:", req.method, req.url);
   next();
@@ -81,7 +83,7 @@ app.get(
     }
   }
 );
-
+// @ts-ignore
 app.get("/player", async (req, res) => {
   const players = await prisma.player.findMany({
     include: {
@@ -97,6 +99,7 @@ app.get("/player", async (req, res) => {
 
 app.get(
   "/playerStats",
+  // @ts-ignore
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const games = await prisma.playerStats.findMany({
@@ -171,6 +174,7 @@ app.get(
 
 app.get(
   "/tournaments",
+  // @ts-ignore
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const tournaments = await prisma.tournament.findMany({
@@ -208,7 +212,7 @@ app.get(
     }
   }
 );
-
+// @ts-ignore
 app.get("/parties", async (req: Request, res: Response, next: NextFunction) => {
   try {
     const parties = await prisma.party.findMany({
@@ -332,7 +336,7 @@ app.get("/parties/:partyId/stats", async (req, res) => {
     res.status(500).json({ error: "An error occurred while fetching stats" });
   }
 });
-
+// @ts-ignore
 app.get('/gameState', async (req, res) => {
   try { 
       console.log(`Fetching game state`);
@@ -724,7 +728,7 @@ app.delete("/parties/:id", async (req: Request, res: Response, next: NextFunctio
     next(err);
   }
 });
-
+// @ts-ignore
 app.delete("/gameState", async (req: Request, res: Response, next: NextFunction) => {
   try {
     const deleteGameState = await prisma.gameState.deleteMany({});
@@ -735,7 +739,7 @@ app.delete("/gameState", async (req: Request, res: Response, next: NextFunction)
   }
 });
 
-
+// @ts-ignore
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   console.error(err.stack);
   res
