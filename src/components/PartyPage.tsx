@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback} from 'react';
 import { Table, TableBody, TableCell, TableColumn, TableHeader, TableRow, Button } from '@nextui-org/react';
 import api from '../api'; // replace with your actual API import
 import { PlayerStats } from './interfaces';
@@ -21,7 +21,9 @@ export const PartyPage = () => {
   const [parties, setParties] = useState<Party[]>([]);
   const [isModalOpen, setModalOpen] = useState(false);
   const [selectedParty, setSelectedParty] = useState<Party | null>(null);
+  // @ts-ignore
   const [page, setPage] = useState(1); // Page actuelle
+  // @ts-ignore
   const [hasMore, setHasMore] = useState(true); // Indique s'il y a plus de données à charger
   // const observer = useRef<IntersectionObserver | null>(null);
   const limit = 15; // Limite d'éléments par page

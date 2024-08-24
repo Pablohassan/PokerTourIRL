@@ -20,6 +20,7 @@ interface SelectPlayersProps {
 
 const SelectPlayersGame: React.FC<SelectPlayersProps> = ({ players, selectedPlayers, handlePlayerSelect, onStartGame }) => {
   const { isOpen, onClose, onOpenChange } = useDisclosure(); // The modal is open by default
+  // @ts-ignore
   const [currentGame, setCurrentGame] = useState<CurrentGame>({
     players: selectedPlayers.map(p => p.id),
     tournamentId: null,

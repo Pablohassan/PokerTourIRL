@@ -18,7 +18,7 @@ interface UIContextProps {
   const UIContext = createContext<UIContextProps | undefined>(undefined);
 
   const UIProvider: FC<UIProviderProps> = ({ children }) => {
-  
+  // @ts-ignore
     const notify = (type: string, content:string, options?: {}, promiseOptions?: {}) => {
       const toastOptions = {...options};
   
