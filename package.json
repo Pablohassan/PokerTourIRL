@@ -13,6 +13,7 @@
   "dependencies": {
     "@clerk/clerk-react": "^4.30.2",
     "@nextui-org/react": "^2.2.9",
+    "@nextui-org/system": "^2.1.2",
     "@nextui-org/use-infinite-scroll": "^2.1.2",
     "@types/infinite-scroll": "^4.0.3",
     "@types/lodash": "^4.14.202",
