@@ -1,21 +1,18 @@
 {
   "compilerOptions": {
-    // "typeRoots" : ["./node_modules/@types", "./types"],
-    "target": "ES2020",
-    "useDefineForClassFields": true,
-    "module": "ESNext",
-    "strict": true,
+    "typeRoots" : ["./node_modules/@types", "./types"],
     "skipLibCheck": true,
+    "target": "esnext",
+    "module": "esnext",
+    "strict": true,
+    "allowJs": true,
     "jsx": "react-jsx",
     "importHelpers": true,
-    "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "noEmit": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true,
+    "moduleResolution": "node",
+    "experimentalDecorators": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "sourceMap": true,
     "baseUrl": ".",
     "types": [
       "vite/client","node"
@@ -25,10 +22,12 @@
         "src/*"
       ]
     },
-     "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "lib": [
+      "ESNext",
+      "DOM"
+    ]
   },
   "include": [
-    "src",
     "src/**/*.ts",
     "src/**/*.d.ts",
     "src/**/*.tsx",
@@ -40,6 +39,5 @@
   "exclude": [
     "node_modules",
     "src/backend/**/*"
-  ],
-  "references": [{ "path": "./tsconfig.node.json" }]
+  ]
 }
