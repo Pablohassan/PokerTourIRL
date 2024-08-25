@@ -54,7 +54,6 @@ const ReviewSelectedPlayers = ({ selectedPlayers, selectedTournament, onConfirm 
         marginBottom: '16px',
         fontFamily: 'DS-Digital'
     };
-    console.log("selectedtournament", selectedTournament);
     return (_jsx("div", { style: {
             display: 'flex',
             justifyContent: 'center',

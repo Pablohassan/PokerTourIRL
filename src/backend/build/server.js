@@ -19,11 +19,6 @@ app.use((req, res, next) => {
     next();
 });
 app.use(express.json());
-// @ts-ignore
-app.use((req, res, next) => {
-    console.log("Received request:", req.method, req.url);
-    next();
-});
 app.get("/season-points/:playerId/:tournamentId", async (req, res, next) => {
     try {
         const playerId = parseInt(req.params.playerId);
@@ -176,12 +171,20 @@ app.get("/tournament/:year", async (req, res, next) => {
 });
 // @ts-ignore
 app.get("/parties", async (req, res, next) => {
+    const { page = 1, limit = 10 } = req.query;
+    const skip = (Number(page) - 1) * Number(limit);
     try {
         const parties = await prisma.party.findMany({
-            include: {
+            skip,
+            take: Number(limit),
+            select: {
+                id: true,
+                date: true,
                 playerStats: {
-                    include: {
-                        player: true,
+                    select: {
+                        playerId: true,
+                        points: true,
+                        rebuys: true,
                     },
                 },
             },
@@ -261,13 +264,11 @@ app.get("/parties/:partyId/stats", async (req, res) => {
         return res.status(400).json({ error: "Party ID must be a number" });
     }
     try {
-        console.log(`Fetching stats for party id: ${partyId}`);
         const stats = await prisma.playerStats.findMany({
             where: { partyId: partyId },
             include: { player: true },
             take: 10, // Limit the results to 10
         });
-        console.log(`Fetched stats for party id: ${partyId} successfully`);
         // Vérifiez si des statistiques ont été trouvées
         if (!stats || stats.length === 0) {
             return res.status(404).json({ error: "No stats found for this party ID" });
@@ -282,14 +283,11 @@ app.get("/parties/:partyId/stats", async (req, res) => {
 // @ts-ignore
 app.get('/gameState', async (req, res) => {
     try {
-        console.log(`Fetching game state`);
         const gameState = await prisma.gameState.findFirst(); // Find the first (and only) game state
         if (gameState) {
-            console.log('Game state found:', gameState);
             res.json(gameState);
         }
         else {
-            console.log('Game state not found');
             res.status(404).json({ error: 'Game state not found' });
         }
     }
@@ -478,12 +476,10 @@ app.put("/gamesResults/:id", async (req, res) => {
             return res.status(400).json({ error: "Invalid game ID" });
         }
         const gameData = req.body;
-        console.log("Received game data:", req.body);
         const updatedGame = await prisma.playerStats.update({
             where: { id: gameId },
             data: gameData,
         });
-        console.log("Updated game:", updatedGame);
         res.json(updatedGame);
     }
     catch (error) {
@@ -517,14 +513,11 @@ app.put("/parties/:id", async (req, res) => {
     if (isNaN(partyId)) {
         return res.status(400).json({ error: "Invalid party ID" });
     }
-    // Validate the date format or any other necessary validation
-    // This step is optional and depends on your requirements
     try {
         const updatedParty = await prisma.party.update({
             where: { id: partyId },
             data: { date }
         });
-        console.log("Updating party date to:", date);
         res.json(updatedParty);
     }
     catch (error) {
@@ -534,7 +527,6 @@ app.put("/parties/:id", async (req, res) => {
 });
 // sais pas comment ça fonctionne
 app.put("/playerStats/eliminate", async (req, res) => {
-    console.log("Request received at /playerStats/eliminate");
     const { playerId, eliminatedById, partyId } = req.body;
     if (!playerId) {
         return res.status(400).json({ error: "Player ID is required" });

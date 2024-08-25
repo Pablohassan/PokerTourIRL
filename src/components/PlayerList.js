@@ -1,8 +1,6 @@
 import { jsxs as _jsxs, jsx as _jsx } from "react/jsx-runtime";
 import { CardPlayer } from "./CardPlayer";
 const PlayerList = ({ players, games, handleRebuy, handleOutOfGame }) => {
-    console.log('PlayerList players:', players);
-    console.log('PlayerList games:', games);
     return (_jsx("div", { style: { display: "flex", flexDirection: "row", flexWrap: "wrap" }, children: players.map((player) => {
             const gameForPlayer = games.find((game) => game.playerId === player.id);
             if (!gameForPlayer) {

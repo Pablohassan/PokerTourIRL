@@ -29,9 +29,6 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, players, 
     setInitialPlayerCount, } = useGameState(gameStarted, setGameStarted, selectedPlayers, setSelectedPLayers, blindIndex, setBlindIndex, initialTimeLeft);
     const navigate = useNavigate();
     useEffect(() => {
-        console.log("StartGame loaded, timeLeft:", timeLeft);
-    }, [timeLeft]);
-    useEffect(() => {
         if (stateRestored) {
             setGameStarted(true);
             setShowConfig(false);

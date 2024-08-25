@@ -44,12 +44,14 @@ export default function App() {
         fetchChampionnat();
     }, []); // Runs only on the first render
     const fetchPlayersAndParties = async () => {
-        // Fetch players and parties from the server
-        // and set the state with the received data
         try {
-            const resPlayers = await api.get("/player");
-            const resParties = await api.get("/parties");
-            const restStats = await api.get("/playerstats");
+            // Exécuter les appels API en parallèle
+            const [resPlayers, resParties, restStats] = await Promise.all([
+                api.get("/player"),
+                api.get("/parties"),
+                api.get("/playerstats"),
+            ]);
+            // Une fois toutes les requêtes terminées, mettre à jour l'état avec les données
             setPlayers(resPlayers.data);
             setParties(resParties.data);
             setStats(restStats.data);
@@ -57,7 +59,10 @@ export default function App() {
         catch (error) {
             console.log("error fetching players or parties:", error);
         }
-        setIsLoading(false);
+        finally {
+            // S'assurer que l'état de chargement est mis à jour quelle que soit l'issue des requêtes
+            setIsLoading(false);
+        }
     };
     useEffect(() => {
         fetchPlayersAndParties();

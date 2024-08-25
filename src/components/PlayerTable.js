@@ -1,7 +1,6 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { Table, TableBody, TableCell, TableColumn, TableHeader, TableRow } from "@nextui-org/react";
 const PlayerTable = ({ config, players, }) => {
-    console.log("players in PlayerTable:", players);
     return (_jsx("div", { style: { width: "100%", minWidth: "300px", maxWidth: "340px", margin: "5px", fontWeight: "bold" }, children: _jsxs(Table, { style: { width: "100%" }, children: [_jsxs(TableHeader, { children: [_jsx(TableColumn, { style: { fontWeight: "bold", fontSize: "0.9rem", color: "$blue900" }, children: "Position" }), _jsx(TableColumn, { style: { fontWeight: "bold", fontSize: "0.9rem", color: "$blue900" }, children: "Joueur" }), _jsx(TableColumn, { style: { fontWeight: "bold", fontSize: "0.9rem", color: "$blue900" }, children: config.title })] }), _jsx(TableBody, { children: players
                         .filter((player) => {
                         const result = typeof config.filterFunction === "function"

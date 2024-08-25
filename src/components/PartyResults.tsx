@@ -52,7 +52,6 @@ const PartyResults: React.FC<PartyResultsProps> = ({
         });
         // Check if there are any games with points greater than 1 in 2024
         const result = filteredStats.some(game => game.points > 1);
-        console.log("Points Filter result for games in 2024", filteredStats, "is", result);
         return result;
       },
       rankFunction: (playerStat: PlayerStats[]) => {
