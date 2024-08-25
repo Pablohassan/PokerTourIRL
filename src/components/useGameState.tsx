@@ -83,7 +83,7 @@ const useGameState = (
   
     
       try {
-        const response = await fetch('http://localhost:3000/gameState', {
+        const response = await fetch('https://api.bourlypokertour.fr/gameState', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -126,7 +126,7 @@ const useGameState = (
       console.log("Posting initial game state:", gameState);
   
       try {
-        const response = await fetch('http://localhost:3000/gameState', {
+        const response = await fetch('https://api.bourlypokertour.fr/gameState', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -149,7 +149,7 @@ const useGameState = (
 
     const restoreState = async () => {
       try {
-        const response = await fetch(`http://localhost:3000/gameState`);
+        const response = await fetch(`https://api.bourlypokertour.fr/gameState`);
     
         if (!response.ok) {
           if (response.status === 404) {
