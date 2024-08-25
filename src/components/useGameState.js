@@ -155,7 +155,7 @@ const useGameState = (gameStarted, setGameStarted, selectedPlayers, setSelectedP
             setInitialPlayerCount(state.initialPlayerCount);
         }
         catch (error) {
-            console.error('Error restoring game state:', error);
+            console.error('Error restoring game state deux:', error);
             setError('Error restoring game state');
             setGameStarted(false);
             onStateNotFound();
