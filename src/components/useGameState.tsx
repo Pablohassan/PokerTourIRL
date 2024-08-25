@@ -8,7 +8,8 @@ const useGameState = (
   setSelectedPlayers: React.Dispatch<React.SetStateAction<Player[]>>,
   blindIndex: number,
   setBlindIndex: React.Dispatch<React.SetStateAction<number>>,
-  initialTimeLeft: number
+  initialTimeLeft: number,
+  onStateNotFound: () => void 
 
 ) => {
   const [timeLeft, setTimeLeft] = useState<number>(initialTimeLeft);
@@ -151,7 +152,10 @@ const useGameState = (
         if (!response.ok) {
           if (response.status === 404) {
             console.log('No game state found (404).');
-            setLoading(false);
+          setGameStarted(false);
+          onStateNotFound();
+        setLoading(false);
+        return;
             return; // Aucun état de jeu 
           }
           throw new Error('Failed to fetch game state');
@@ -193,6 +197,8 @@ const useGameState = (
       } catch (error) {
         console.error('Error restoring game state:', error);
         setError('Error restoring game state');
+        setGameStarted(false);
+        onStateNotFound();
       } finally {
         setLoading(false);
       }

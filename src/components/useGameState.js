@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-const useGameState = (gameStarted, setGameStarted, selectedPlayers, setSelectedPlayers, blindIndex, setBlindIndex, initialTimeLeft) => {
+const useGameState = (gameStarted, setGameStarted, selectedPlayers, setSelectedPlayers, blindIndex, setBlindIndex, initialTimeLeft, onStateNotFound) => {
     const [timeLeft, setTimeLeft] = useState(initialTimeLeft);
     const [smallBlind, setSmallBlind] = useState(10);
     const [bigBlind, setBigBlind] = useState(20);
@@ -119,7 +119,10 @@ const useGameState = (gameStarted, setGameStarted, selectedPlayers, setSelectedP
             if (!response.ok) {
                 if (response.status === 404) {
                     console.log('No game state found (404).');
+                    setGameStarted(false);
+                    onStateNotFound();
                     setLoading(false);
+                    return;
                     return; // Aucun état de jeu 
                 }
                 throw new Error('Failed to fetch game state');
@@ -154,6 +157,8 @@ const useGameState = (gameStarted, setGameStarted, selectedPlayers, setSelectedP
         catch (error) {
             console.error('Error restoring game state:', error);
             setError('Error restoring game state');
+            setGameStarted(false);
+            onStateNotFound();
         }
         finally {
             setLoading(false);

@@ -50,6 +50,13 @@ const StartGame: React.FC<StartGameProps> = ({
   // const [lastUsedPosition, setLastUsedPosition] = useState(0);
   const initialTimeLeft = blindDuration * 60;
 
+
+  const handleStateNotFound = () => {
+    // Réinitialisez les états liés à la configuration de la partie ici
+    setShowConfig(true);
+    setGameStarted(false);
+  };
+
   const {
     timeLeft,
     setTimeLeft,
@@ -85,7 +92,7 @@ const StartGame: React.FC<StartGameProps> = ({
     setInitialPlayerCount,
    
    
-  } = useGameState(gameStarted, setGameStarted, selectedPlayers, setSelectedPLayers, blindIndex, setBlindIndex, initialTimeLeft);
+  } = useGameState(gameStarted, setGameStarted, selectedPlayers, setSelectedPLayers, blindIndex, setBlindIndex, initialTimeLeft, handleStateNotFound);
 
   const navigate = useNavigate();
 
@@ -146,7 +153,7 @@ const StartGame: React.FC<StartGameProps> = ({
   
 
   const onStartGame = async () => {
-    if (gameStarted) {
+    if (gameStarted || stateRestored) {
       alert("A game is already in progress.");
       return;
     }
