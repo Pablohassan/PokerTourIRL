@@ -156,7 +156,7 @@ const useGameState = (
           onStateNotFound();
         setLoading(false);
         return;
-            return; // Aucun état de jeu 
+     
           }
           throw new Error('Failed to fetch game state');
         }
@@ -195,7 +195,7 @@ const useGameState = (
         setInitialPlayerCount(state.initialPlayerCount);
     
       } catch (error) {
-        console.error('Error restoring game state deux:', error);
+        console.error('Error restoring game state', error);
         setError('Error restoring game state');
         setGameStarted(false);
         onStateNotFound();

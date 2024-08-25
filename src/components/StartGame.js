@@ -13,7 +13,7 @@ import toast from "react-hot-toast";
 import { Modal, ModalBody, ModalHeader } from "@nextui-org/react";
 const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, players, updateAfterGameEnd, blindIndex, setBlindIndex }) => {
     const [gameStarted, setGameStarted] = useState(false);
-    const [showReview, setShowReview] = useState(false);
+    const [showReview, setShowReview] = useState(true);
     const [showConfig, setShowConfig] = useState(true);
     // const [outPlayers, setOutPlayers] = useState<Player[]>([]);
     const [isPaused, setIsPaused] = useState(false);

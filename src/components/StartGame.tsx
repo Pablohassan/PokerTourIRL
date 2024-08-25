@@ -38,7 +38,7 @@ const StartGame: React.FC<StartGameProps> = ({
   setBlindIndex
 }) => {
   const [gameStarted, setGameStarted] = useState(false);
-  const [showReview, setShowReview] = useState(false);
+  const [showReview, setShowReview] = useState(true);
   const [showConfig, setShowConfig] = useState(true);
   // const [outPlayers, setOutPlayers] = useState<Player[]>([]);
 
@@ -47,6 +47,7 @@ const StartGame: React.FC<StartGameProps> = ({
   const [blindDuration, setBlindDuration] = useState<number>(20);
   const [playerOutGame, setPlayerOutGame] = useState<number | null>(null);
   const [partyId, setPartyId] = useState<number | null>(null);
+  
   // const [lastUsedPosition, setLastUsedPosition] = useState(0);
   const initialTimeLeft = blindDuration * 60;
 
