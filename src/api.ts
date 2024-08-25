@@ -5,7 +5,8 @@ import axios from 'axios';
 // For local development, this is typically http://localhost:3000
 const api = axios.create({
   
-  baseURL: 'http://localhost:3000',
+  // baseURL: 'http://localhost:3000',
+  baseURL:  'https://api.bourlypokertour.fr',
 
 });
 // api.defaults.withCredentials = true;
