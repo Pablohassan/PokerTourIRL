@@ -89,9 +89,6 @@ const StartGame: React.FC<StartGameProps> = ({
 
   const navigate = useNavigate();
 
-  useEffect(() => {
-    console.log("StartGame loaded, timeLeft:", timeLeft);
-  }, [timeLeft]);
 
   
   useEffect(() => {

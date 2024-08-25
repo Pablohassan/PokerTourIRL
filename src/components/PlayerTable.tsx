@@ -5,7 +5,6 @@ const PlayerTable: React.FC<PlayerTableProps> = ({
   config,
   players,
 }) => {
-  console.log("players in PlayerTable:", players);
 
   return (
     <div style={{ width: "100%", minWidth:"300px", maxWidth:"340px", margin: "5px", fontWeight: "bold" }}>

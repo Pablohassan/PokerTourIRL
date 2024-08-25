@@ -77,9 +77,7 @@ const useGameState = (
     };
   
     const gameStateString = JSON.stringify({ state: gameState });
-    const gameStateSize = new Blob([gameStateString]).size;
-    console.log("Attempting to save game state:", gameState);
-    console.log(`Size of gameState payload: ${gameStateSize} bytes`);
+ 
   
     
       try {
@@ -95,9 +93,8 @@ const useGameState = (
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
-  
-        const result = await response.json();
-        console.log('Saved game state:', result);
+
+       
       } catch (error) {
         console.error('Error saving game state:', error);
       }
@@ -138,8 +135,8 @@ const useGameState = (
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
   
-        const result = await response.json();
-        console.log('Posted initial game state:', result);
+
+
         setInitialGameStatePosted(true); // Mark the initial POST as done
       } catch (error) {
         console.error('Error posting initial game state:', error);
@@ -149,10 +146,7 @@ const useGameState = (
 
     const restoreState = async () => {
       try {
-        console.log('Attempting to fetch game state...');
         const response = await fetch(`https://api.bourlypokertour.fr/gameState`);
-    
-        console.log('Response status:', response.status);
     
         if (!response.ok) {
           if (response.status === 404) {
@@ -164,7 +158,7 @@ const useGameState = (
         }
     
         const gameState = await response.json();
-        console.log('Game state retrieved from server:', gameState);
+       
     
         if (!gameState.state) {
           console.error('No state found in the game state response');
@@ -173,7 +167,6 @@ const useGameState = (
     
         const { state } = gameState;
     
-        console.log('Restoring state:', state);
        
         const elapsedTime = (Date.now() - state.lastSavedTime) / 1000;
         const adjustedTimeLeft = Math.max(0, state.timeLeft - elapsedTime);
@@ -197,7 +190,6 @@ const useGameState = (
         setInitialGameStatePosted(true);
         setInitialPlayerCount(state.initialPlayerCount);
     
-        console.log('State restored successfully');
       } catch (error) {
         console.error('Error restoring game state:', error);
         setError('Error restoring game state');

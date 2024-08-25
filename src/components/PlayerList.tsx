@@ -10,8 +10,6 @@ interface PlayerListProps {
 }
 
 const PlayerList: React.FC<PlayerListProps> = ({ players, games, handleRebuy, handleOutOfGame }) => {
-  console.log('PlayerList players:', players);
-  console.log('PlayerList games:', games);
 
   return (
     <div style={{ display: "flex", flexDirection: "row", flexWrap: "wrap" }}>

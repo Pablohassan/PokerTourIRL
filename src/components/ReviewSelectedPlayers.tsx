@@ -70,7 +70,6 @@ const ReviewSelectedPlayers: React.FC<ReviewSelectedPlayersProps> = ({ selectedP
 
   };
 
-  console.log( "selectedtournament",selectedTournament)
 
   return (
     <div style={{

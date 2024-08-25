@@ -28,12 +28,6 @@ app.use((req, res, next) => {
 });
 app.use(express.json());
 
-// @ts-ignore
-app.use((req, res, next) => {
-  console.log("Received request:", req.method, req.url);
-  next();
-});
-
 app.get(
   "/season-points/:playerId/:tournamentId",
   async (req: Request, res: Response, next: NextFunction) => {
@@ -316,13 +310,11 @@ app.get("/parties/:partyId/stats", async (req, res) => {
   }
 
   try {
-    console.log(`Fetching stats for party id: ${partyId}`);
     const stats = await prisma.playerStats.findMany({
       where: { partyId: partyId },
       include: { player: true },
       take: 10, // Limit the results to 10
     });
-    console.log(`Fetched stats for party id: ${partyId} successfully`);
 
     // Vérifiez si des statistiques ont été trouvées
     if (!stats || stats.length === 0) {
@@ -339,13 +331,10 @@ app.get("/parties/:partyId/stats", async (req, res) => {
 // @ts-ignore
 app.get('/gameState', async (req, res) => {
   try { 
-      console.log(`Fetching game state`);
       const gameState = await prisma.gameState.findFirst(); // Find the first (and only) game state
       if (gameState) {
-        console.log('Game state found:', gameState);
         res.json(gameState);
       } else {
-        console.log('Game state not found');
         res.status(404).json({ error: 'Game state not found' });
       }
   } catch (error) {
@@ -562,12 +551,10 @@ app.put("/gamesResults/:id", async (req: Request, res: Response) => {
     }
 
     const gameData = req.body;
-    console.log("Received game data:", req.body);
     const updatedGame = await prisma.playerStats.update({
       where: { id: gameId },
       data: gameData,
     });
-    console.log("Updated game:", updatedGame);
     res.json(updatedGame);
   } catch (error) {
     console.error(error);
@@ -603,23 +590,17 @@ app.put("/parties/:id", async (req, res) => {
   let { date } = req.body; // Extract the new date from the request body
   const partyId = parseInt(req.params.id, 10); // Convert the id to a number
   date = new Date(date);
- 
   // Validate the party ID
   if (isNaN(partyId)) {
     return res.status(400).json({ error: "Invalid party ID" });
   }
-
-  // Validate the date format or any other necessary validation
-  // This step is optional and depends on your requirements
-
+  
   try {
-   
     const updatedParty = await prisma.party.update({
       where: { id: partyId },
       data: { date }
       
     });
-    console.log("Updating party date to:", date);
     res.json(updatedParty);
   } catch (error) {
     console.error(error);
@@ -630,9 +611,7 @@ app.put("/parties/:id", async (req, res) => {
 
 // sais pas comment ça fonctionne
 app.put("/playerStats/eliminate", async (req: Request, res: Response) => {
-  console.log("Request received at /playerStats/eliminate");
   const { playerId, eliminatedById, partyId } = req.body;
-
   if (!playerId) {
     return res.status(400).json({ error: "Player ID is required" });
   }
