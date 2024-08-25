@@ -323,7 +323,7 @@ const StartGame: React.FC<StartGameProps> = ({
         updateAfterGameEnd(updatedGames);
   
         // Supprimer l'état du jeu sur le serveur
-        const response = await fetch('http://localhost:3000/gameState', {
+        const response = await fetch('https://api.bourlypokertour.fr/gameState', {
           method: 'DELETE',
         });
   

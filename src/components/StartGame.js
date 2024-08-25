@@ -222,7 +222,7 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, players, 
                 await api.post("/gameResults", updatedGames);
                 updateAfterGameEnd(updatedGames);
                 // Supprimer l'état du jeu sur le serveur
-                const response = await fetch('http://localhost:3000/gameState', {
+                const response = await fetch('https://api.bourlypokertour.fr/gameState', {
                     method: 'DELETE',
                 });
                 if (!response.ok) {

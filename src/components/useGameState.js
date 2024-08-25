@@ -122,9 +122,12 @@ const useGameState = (gameStarted, setGameStarted, selectedPlayers, setSelectedP
     };
     const restoreState = async () => {
         try {
+            console.log('Attempting to fetch game state...');
             const response = await fetch(`https://api.bourlypokertour.fr/gameState`);
+            console.log('Response status:', response.status);
             if (!response.ok) {
                 if (response.status === 404) {
+                    console.log('No game state found (404).');
                     setLoading(false);
                     return; // Aucun état de jeu 
                 }
@@ -133,9 +136,11 @@ const useGameState = (gameStarted, setGameStarted, selectedPlayers, setSelectedP
             const gameState = await response.json();
             console.log('Game state retrieved from server:', gameState);
             if (!gameState.state) {
+                console.error('No state found in the game state response');
                 throw new Error('No state found in the game state response');
             }
             const { state } = gameState;
+            console.log('Restoring state:', state);
             const elapsedTime = (Date.now() - state.lastSavedTime) / 1000;
             const adjustedTimeLeft = Math.max(0, state.timeLeft - elapsedTime);
             setTimeLeft(Math.floor(adjustedTimeLeft));
@@ -150,12 +155,13 @@ const useGameState = (gameStarted, setGameStarted, selectedPlayers, setSelectedP
             setMiddleStack(state.middleStack);
             setBlindIndex(state.blindIndex);
             setPositions(state.positions);
-            setOutPlayers(state.outPlayers); // Ajoutez cette ligne
-            setLastUsedPosition(Math.max(...Object.values(state.positions), 0)); // Restaurer la dernière position utilisée
+            setOutPlayers(state.outPlayers);
+            setLastUsedPosition(Math.max(...Object.values(state.positions), 0));
             setGameStarted(true);
             setStateRestored(true);
             setInitialGameStatePosted(true);
             setInitialPlayerCount(state.initialPlayerCount);
+            console.log('State restored successfully');
         }
         catch (error) {
             console.error('Error restoring game state:', error);

@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback} from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { Table, TableBody, TableCell, TableColumn, TableHeader, TableRow, Button } from '@nextui-org/react';
 import api from '../api'; // replace with your actual API import
 import { PlayerStats } from './interfaces';
@@ -21,13 +21,10 @@ export const PartyPage = () => {
   const [parties, setParties] = useState<Party[]>([]);
   const [isModalOpen, setModalOpen] = useState(false);
   const [selectedParty, setSelectedParty] = useState<Party | null>(null);
-  // @ts-ignore
   const [page, setPage] = useState(1); // Page actuelle
-  // @ts-ignore
   const [hasMore, setHasMore] = useState(true); // Indique s'il y a plus de données à charger
-  // const observer = useRef<IntersectionObserver | null>(null);
+  const observer = useRef<IntersectionObserver | null>(null);
   const limit = 15; // Limite d'éléments par page
-  
 
   useEffect(() => {
     const fetchParties = async () => {
@@ -52,19 +49,21 @@ export const PartyPage = () => {
 
     fetchParties();
   }, [page]);
-  // const lastPartyElementRef = useCallback((node: HTMLDivElement) => {
-  //   if (observer.current) observer.current.disconnect();
-  //   observer.current = new IntersectionObserver(entries => {
-  //     if (entries[0].isIntersecting && hasMore) {
-  //       setPage(prevPage => prevPage + 1);
-  //     }
-  //   });
-  //   if (node) observer.current.observe(node);
-  // }, [hasMore]);
+
+  const lastPartyElementRef = useCallback((node: HTMLDivElement) => {
+    if (observer.current) observer.current.disconnect();
+    observer.current = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && hasMore) {
+        setPage(prevPage => prevPage + 1);
+      }
+    });
+    if (node) observer.current.observe(node);
+  }, [hasMore]);
 
   const openModal = useCallback((party: Party) => {
     setSelectedParty(party);
     setModalOpen(true);
+    
   }, []);
 
   const closeModal = () => {
@@ -74,23 +73,13 @@ export const PartyPage = () => {
 
   const updatePartyDate = async () => {
     if (!selectedParty) return;
-    console.log("Sending date to update:", selectedParty.date);
     try {
-      console.log("Sending date to update:", selectedParty.date);
-      // Make the API call to update the party date
       await api.put(`/parties/${selectedParty.id}`, {
         date: new Date(selectedParty.date).toISOString(),
       });
-
-      // Optionally, refetch parties list to reflect the updated date
-      // fetchParties(); // Uncomment or implement this if you've set it up
-
-      // Close the modal after update
       closeModal();
     } catch (error: unknown) {
-      // First, we check if this is an AxiosError, which has a response property
       if (axios.isAxiosError(error)) {
-        // Now TypeScript knows this is an Axios error, so `error.response` is accessible
         if (error.response) {
           console.log(error.response.data);
           console.log(error.response.status);
@@ -101,10 +90,8 @@ export const PartyPage = () => {
           console.log('Error', error.message);
         }
       } else if (error instanceof Error) {
-        // This is a generic error object
         console.log('Error', error.message);
       } else {
-        // This is for any other types of errors (unlikely, but safe fallback)
         console.log('An unexpected error occurred');
       }
     }
@@ -114,31 +101,26 @@ export const PartyPage = () => {
     if (!selectedParty) return;
 
     try {
-      // Prepare the data for the API call
       const updates = selectedParty.playerStats.map((stat) => ({
-        id: stat.id, // Assuming each playerStat has an 'id' field
+        id: stat.id,
         data: {
           position: stat.position,
           points: stat.points,
           rebuys: stat.rebuys,
-          // Add any other fields you want to update
         },
       }));
 
-      // Make the API call to update all player stats for this party
       await api.put("/updateMultipleGamesResults", updates);
 
-      // Close the modal and maybe refetch the party data
       closeModal();
     } catch (error) {
       console.error("An error occurred while updating the player stats:", error);
-      // Handle the error accordingly
     }
   };
 
   const handleSaveChanges = async () => {
-    await updateAllPlayerStats(); // Update player stats
-    await updatePartyDate(); // Update party date
+    await updateAllPlayerStats();
+    await updatePartyDate();
   };
 
   const editStat = (playerIndex: number, field: keyof PlayerStats, value: any) => {
@@ -154,62 +136,105 @@ export const PartyPage = () => {
   const deleteParty = async (partyId: number) => {
     if (window.confirm(`Supprimer la partie ${partyId}?`))
       try {
-        // Send a DELETE request to the API
         await api.delete(`/parties/${partyId}`);
-
-        // Remove the deleted party from local state
         const updatedParties = parties.filter((party) => party.id !== partyId);
         setParties(updatedParties);
       } catch (error) {
         console.error("Error deleting the party:", error);
-        // Handle error accordingly
       }
   };
 
   return (
     <div>
-      {parties.map((party, i) => (
-        <div key={i} className="mb-20">
-          <div className="p-2 ml-10">
-            {new Date(party.date).toLocaleDateString()}
-            <Button
-              style={{ marginLeft: "10px" }}
-              size="sm"
-              color="danger"
-              onClick={() => deleteParty(party.id)}
-            >
-              Delete
-            </Button>
-          </div>
-          <Table aria-label="tableau general" style={{ padding: 10, width: '100%' }}>
-            <TableHeader>
-              <TableColumn>Player</TableColumn>
-              <TableColumn>Position</TableColumn>
-              <TableColumn>Points</TableColumn>
-              <TableColumn>Rebuys</TableColumn>
-              <TableColumn>Sortie</TableColumn>
-              <TableColumn>Gains</TableColumn>
-            </TableHeader>
-            <TableBody>
-              {party.playerStats.map((stat, i) => (
-                <TableRow key={i}>
-                  <TableCell>{stat.player.name}</TableCell>
-                  <TableCell>{stat.position}</TableCell>
-                  <TableCell>{stat.points}</TableCell>
-                  <TableCell>{stat.rebuys}</TableCell>
-                  <TableCell>{stat.outAt
-                    ? `${new Date(stat.outAt).getHours().toString().padStart(2, '0')}:${new Date(stat.outAt).getMinutes().toString().padStart(2, '0')}:${new Date(stat.outAt).getSeconds().toString().padStart(2, '0')}`
-                    : 'N/A'}</TableCell>
-                  <TableCell>{stat.gains}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          <Button size="sm" color="primary" onClick={() => openModal(party)}>
-            Edit
-          </Button>
-        </div>
-      ))}
+      {parties.map((party, i) => {
+        if (parties.length === i + 1) {
+          return (
+            <div ref={lastPartyElementRef} key={i} className="mb-20">
+              <div className="p-2 ml-10">
+                {new Date(party.date).toLocaleDateString()}
+                <Button
+                  style={{ marginLeft: "10px" }}
+                  size="sm"
+                  color="danger"
+                  onClick={() => deleteParty(party.id)}
+                >
+                  Delete
+                </Button>
+              </div>
+              <Table aria-label="tableau general" style={{ padding: 10, width: '100%' }}>
+                <TableHeader>
+                  <TableColumn>Player</TableColumn>
+                  <TableColumn>Position</TableColumn>
+                  <TableColumn>Points</TableColumn>
+                  <TableColumn>Rebuys</TableColumn>
+                  <TableColumn>Sortie</TableColumn>
+                  <TableColumn>Gains</TableColumn>
+                </TableHeader>
+                <TableBody>
+                  {party.playerStats.map((stat, i) => (
+                    <TableRow key={i}>
+                      <TableCell>{stat.player.name}</TableCell>
+                      <TableCell>{stat.position}</TableCell>
+                      <TableCell>{stat.points}</TableCell>
+                      <TableCell>{stat.rebuys}</TableCell>
+                      <TableCell>{stat.outAt
+                        ? `${new Date(stat.outAt).getHours().toString().padStart(2, '0')}:${new Date(stat.outAt).getMinutes().toString().padStart(2, '0')}:${new Date(stat.outAt).getSeconds().toString().padStart(2, '0')}`
+                        : 'N/A'}</TableCell>
+                      <TableCell>{stat.gains}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              <Button size="sm" color="primary" onClick={() => openModal(party)}>
+                Edit
+              </Button>
+            </div>
+          );
+        } else {
+          return (
+            <div key={i} className="mb-20">
+              <div className="p-2 ml-10">
+                {new Date(party.date).toLocaleDateString()}
+                <Button
+                  style={{ marginLeft: "10px" }}
+                  size="sm"
+                  color="danger"
+                  onClick={() => deleteParty(party.id)}
+                >
+                  Delete
+                </Button>
+              </div>
+              <Table aria-label="tableau general" style={{ padding: 10, width: '100%' }}>
+                <TableHeader>
+                  <TableColumn>Player</TableColumn>
+                  <TableColumn>Position</TableColumn>
+                  <TableColumn>Points</TableColumn>
+                  <TableColumn>Rebuys</TableColumn>
+                  <TableColumn>Sortie</TableColumn>
+                  <TableColumn>Gains</TableColumn>
+                </TableHeader>
+                <TableBody>
+                  {party.playerStats.map((stat, i) => (
+                    <TableRow key={i}>
+                      <TableCell>{stat.player.name}</TableCell>
+                      <TableCell>{stat.position}</TableCell>
+                      <TableCell>{stat.points}</TableCell>
+                      <TableCell>{stat.rebuys}</TableCell>
+                      <TableCell>{stat.outAt
+                        ? `${new Date(stat.outAt).getHours().toString().padStart(2, '0')}:${new Date(stat.outAt).getMinutes().toString().padStart(2, '0')}:${new Date(stat.outAt).getSeconds().toString().padStart(2, '0')}`
+                        : 'N/A'}</TableCell>
+                      <TableCell>{stat.gains}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              <Button size="sm" color="primary" onClick={() => openModal(party)}>
+                Edit
+              </Button>
+            </div>
+          );
+        }
+      })}
 
       {isModalOpen && selectedParty && ReactDOM.createPortal(
         <div 
@@ -305,3 +330,4 @@ export const PartyPage = () => {
 };
 
 export default PartyPage;
+
