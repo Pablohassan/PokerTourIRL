@@ -2,9 +2,8 @@ import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-run
 import { Modal, ModalBody, ModalHeader } from '@nextui-org/react';
 import { useState, useEffect } from 'react';
 import alerteSon from '../assets/alarmpok.mp3';
-const BlindTimer = ({ gameStarted, isPaused, onBlindChange, onTimeChange }) => {
-    const [timeLeft, setTimeLeft] = useState(20 * 60); // Initial time in seconds
-    const [blindIndex, setBlindIndex] = useState(0);
+const BlindTimer = ({ gameStarted, isPaused, onBlindChange, onTimeChange, blindIndex, setBlindIndex, initialTimeLeft }) => {
+    const [timeLeft, setTimeLeft] = useState(initialTimeLeft);
     const [playAlert, setPlayAlert] = useState(false);
     const [showModal, setShowModal] = useState(false);
     const blinds = [
@@ -23,7 +22,10 @@ const BlindTimer = ({ gameStarted, isPaused, onBlindChange, onTimeChange }) => {
         { small: 800, big: 1600, ante: 100 },
         { small: 900, big: 1800, ante: 200 },
         { small: 1000, big: 2000, ante: 200 },
-        { small: 1500, big: 3000, ante: 300 }
+        { small: 1200, big: 2400, ante: 300 },
+        { small: 1400, big: 2800, ante: 300 },
+        { small: 1600, big: 3200, ante: 400 },
+        { small: 1800, big: 3600, ante: 400 },
     ];
     useEffect(() => {
         if (!gameStarted) {
@@ -43,32 +45,38 @@ const BlindTimer = ({ gameStarted, isPaused, onBlindChange, onTimeChange }) => {
                         setBlindIndex(newBlindIndex);
                     }
                     onBlindChange(blinds[newBlindIndex].small, blinds[newBlindIndex].big, blinds[newBlindIndex].ante);
-                    // onAnteChange(blinds[newBlindIndex].ante);
-                    return 20 * 60; // reset time
+                    return initialTimeLeft;
+                    ; // reset time
                 }
                 else {
-                    return time - 1;
+                    return Math.floor(time - 1);
                 }
             });
         }, 1000);
         return () => clearInterval(timer);
-    }, [gameStarted, isPaused, blindIndex, onBlindChange, blinds]);
+    }, [gameStarted, isPaused, blindIndex, onBlindChange, blinds, setBlindIndex, initialTimeLeft]);
     useEffect(() => {
         if (showModal) {
             const timer = setTimeout(() => {
                 setShowModal(false);
-                setPlayAlert(false); // Also stop the sound effect
-            }, 5000); // 10 seconds
+                setPlayAlert(false);
+            }, 5000); // 5 seconds
             return () => clearTimeout(timer); // Cleanup
         }
     }, [showModal]);
     useEffect(() => {
-        onTimeChange(timeLeft);
+        if (timeLeft !== 0) {
+            onTimeChange(timeLeft);
+        }
     }, [timeLeft, onTimeChange]);
     const handleCloseModal = () => {
         setShowModal(false);
     };
-    return (_jsxs(_Fragment, { children: [playAlert && _jsx("audio", { src: alerteSon, autoPlay: true }), _jsx(Modal, { isOpen: showModal, className: "fixed inset-0 flex items-center justify-center z-50", onClick: handleCloseModal, children: _jsxs("div", { className: "relative w-4/5 h-4/5 bg-white shadow-lg overflow-auto rounded-lg p-4", onClick: (e) => e.stopPropagation(), children: [_jsx(ModalHeader, { className: "text-center text-lg font-bold", children: "New Blind Level" }), _jsxs(ModalBody, { className: "text-center text-base", children: ["Small: ", blinds[blindIndex].small, " / Big: ", blinds[blindIndex].big, " Ante: ", blinds[blindIndex].ante] })] }) })] }));
+    // const formatTime = (time: number): string => {
+    //   const minutes = Math.floor(time / 60);
+    //   const seconds = Math.floor(time % 60);
+    //   return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+    // };
+    return (_jsxs(_Fragment, { children: [playAlert && _jsx("audio", { src: alerteSon, autoPlay: true }), _jsx(Modal, { isOpen: showModal, className: "fixed min-w-fit inset-0 flex items-center justify-center z-50", onClick: handleCloseModal, children: _jsxs("div", { className: "relative w-4/5 h-4/5 bg-white shadow-lg overflow-auto rounded-lg p-4", onClick: (e) => e.stopPropagation(), children: [_jsx(ModalHeader, { className: "text-center text-lg font-bold", children: "New Blind Level" }), _jsxs(ModalBody, { className: "text-center text-base", children: ["Small: ", blinds[blindIndex].small, " / Big: ", blinds[blindIndex].big, " Ante: ", blinds[blindIndex].ante] })] }) })] }));
 };
 export default BlindTimer;
-//# sourceMappingURL=BlindTimer.js.map

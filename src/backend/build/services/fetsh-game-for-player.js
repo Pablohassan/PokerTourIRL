@@ -10,4 +10,3 @@ export async function fetchGamesForPlayer(playerId, tournamentId) {
         },
     });
 }
-//# sourceMappingURL=fetsh-game-for-player.js.map

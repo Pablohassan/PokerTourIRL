@@ -77,4 +77,3 @@ const GameTimer = ({ middleStack, totalPot, formatTime, timeLeft, smallBlind, bi
                 }, children: [_jsx("div", { children: _jsx(Button, { color: "danger", size: 'lg', className: "text-white", onClick: handleGameEnd, children: _jsx("div", { style: { fontSize: "20px" }, children: "Stop Partie" }) }) }), _jsx("div", { children: _jsx(Button, { color: "warning", className: "text-black", size: 'lg', onClick: () => setIsPaused(!isPaused), children: _jsx("div", { style: { fontSize: "2Opx" }, children: isPaused ? 'Resume' : 'Pause' }) }) })] })] }));
 };
 export default React.memo(GameTimer);
-//# sourceMappingURL=GameTimer.js.map

@@ -12,7 +12,7 @@ function calculateGains(playerStats) {
         return sum + Math.round(gain);
     }, 0);
 }
-const PartyResults = ({ players, playerStats }) => {
+const PartyResults = ({ players, }) => {
     ;
     const tableConfigs = [
         {
@@ -144,4 +144,3 @@ const PartyResults = ({ players, playerStats }) => {
         }, children: tableConfigs.map((config, i) => (_jsx("div", { children: _jsx(PlayerTable, { "aria-label": "tableau des parties", config: config, players: players }) }, i))) }));
 };
 export default PartyResults;
-//# sourceMappingURL=PartyResults.js.map

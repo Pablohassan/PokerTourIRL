@@ -26,4 +26,3 @@ export const CardPlayer = ({ playername, recave, kill, rebuy, outOfGame, }) => {
                                                 textTransform: "capitalize",
                                             }, children: "Elimin\u00E9" }) }) })] })] }) })] }));
 };
-//# sourceMappingURL=CardPlayer.js.map

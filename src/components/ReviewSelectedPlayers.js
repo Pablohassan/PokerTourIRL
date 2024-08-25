@@ -1,4 +1,4 @@
-import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+import { jsxs as _jsxs, jsx as _jsx } from "react/jsx-runtime";
 import { Button, Table, TableBody, TableColumn, TableHeader, TableRow, TableCell, Card, Spacer, getKeyValue } from '@nextui-org/react';
 import bgReview from '../assets/reviewpoker.png';
 import { useNavigate } from 'react-router-dom';
@@ -38,19 +38,23 @@ const columns = [
         label: "Duration",
     },
 ];
-const ReviewSelectedPlayers = ({ selectedPlayers, onConfirm }) => {
+const ReviewSelectedPlayers = ({ selectedPlayers, selectedTournament, onConfirm }) => {
     const navigate = useNavigate();
     const cardStyle = {
         maxWidth: '1400px',
         margin: '0 5px',
+        fontFamily: 'DS-Digital'
     };
     const sectionStyle = {
         padding: '10px',
+        fontFamily: 'DS-Digital'
     };
     const headerStyle = {
         fontSize: '24px',
         marginBottom: '16px',
+        fontFamily: 'DS-Digital'
     };
+    console.log("selectedtournament", selectedTournament);
     return (_jsx("div", { style: {
             display: 'flex',
             justifyContent: 'center',
@@ -60,12 +64,13 @@ const ReviewSelectedPlayers = ({ selectedPlayers, onConfirm }) => {
             marginTop: "30px",
             backgroundImage: `url(${bgReview})`,
             backgroundSize: 'cover'
-        }, children: _jsx(Card, { style: cardStyle, children: _jsxs("div", { style: { display: 'flex' }, children: [_jsxs("div", { style: sectionStyle, children: [_jsx("h3", { style: headerStyle, children: "Joueurs inscrits" }), _jsx(Spacer, { y: 1 }), _jsx("ul", { style: { listStyleType: 'none', padding: 0 }, children: selectedPlayers.map((player, index) => (_jsx("li", { style: {
+        }, children: _jsx(Card, { style: cardStyle, children: _jsxs("div", { style: { display: 'flex' }, children: [_jsxs("div", { style: sectionStyle, children: [selectedTournament && (_jsxs("div", { style: { marginTop: '20px', color: 'black', fontSize: '2em', fontFamily: 'DS-Digital' }, children: ["Validation Tournoi : ", selectedTournament.year] })), _jsx("h3", { style: headerStyle, children: "Validation Joueurs  " }), _jsx(Spacer, { y: 1 }), _jsx("ul", { style: { listStyleType: 'none', padding: 0 }, children: selectedPlayers.map((player, index) => (_jsx("li", { style: {
                                         backgroundColor: index % 2 === 0 ? 'black' : 'gray',
+                                        borderRadius: '5px',
                                         color: 'white',
                                         fontSize: '2em',
-                                        padding: '8px'
-                                    }, children: player.name }, player.id))) }), _jsx(Spacer, { y: 1 }), _jsxs("div", { style: { display: 'flex', justifyContent: 'flex-end', margin: "5px" }, children: [_jsx(Button, { color: "primary", onClick: onConfirm, children: "Confirm and Start Game" }), _jsx(Spacer, { x: 1 }), _jsx(Button, { color: "primary", onClick: () => navigate("/partypage"), children: "Back" })] })] }), _jsxs("div", { style: sectionStyle, children: [_jsx("h3", { style: headerStyle, children: "Blinds Structure" }), _jsx(Spacer, { y: 1 }), _jsxs(Table, { "aria-label": "Blinds Structure", children: [_jsx(TableHeader, { columns: columns, children: (column) => _jsx(TableColumn, { children: column.label }, column.key) }), _jsx(TableBody, { items: blindLevels, children: (item) => (_jsx(TableRow, { children: (columnKey) => _jsx(TableCell, { style: { fontSize: "1em" }, children: getKeyValue(item, columnKey) }) }, item.small)) })] })] })] }) }) }));
+                                        padding: '8px',
+                                        fontFamily: 'DS-Digital'
+                                    }, children: player.name }, player.id))) }), _jsx(Spacer, { y: 1 }), _jsxs("div", { style: { display: 'flex', justifyContent: 'flex-end', margin: "5px" }, children: [_jsx(Button, { size: "lg", color: "primary", onClick: onConfirm, children: "Confirm and Start Game" }), _jsx(Spacer, { x: 2 }), _jsx(Button, { size: "lg", color: "danger", onFocus: focus, onClick: () => navigate("/partypage"), children: "Back" })] })] }), _jsxs("div", { style: sectionStyle, children: [_jsx("h3", { style: headerStyle, children: "Blinds Structure" }), _jsx(Spacer, { y: 1 }), _jsxs(Table, { "aria-label": "Blinds Structure", children: [_jsx(TableHeader, { columns: columns, children: (column) => _jsx(TableColumn, { children: column.label }, column.key) }), _jsx(TableBody, { items: blindLevels, children: (item) => (_jsx(TableRow, { children: (columnKey) => _jsx(TableCell, { style: { fontSize: "1em" }, children: getKeyValue(item, columnKey) }) }, item.small)) })] })] })] }) }) }));
 };
 export default ReviewSelectedPlayers;
-//# sourceMappingURL=ReviewSelectedPlayers.js.map

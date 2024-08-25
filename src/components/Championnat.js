@@ -1,7 +1,7 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { useState, useEffect } from "react";
 import api from "../api";
-const ChampionnatComponent = ({ selectedChampionnat, setSelectedChampionnat }) => {
+const ChampionnatComponent = ({ setSelectedChampionnat }) => {
     const [championnats, setChampionnats] = useState([]);
     ;
     const [isLoading, setIsLoading] = useState(true);
@@ -17,30 +17,28 @@ const ChampionnatComponent = ({ selectedChampionnat, setSelectedChampionnat }) =
     const handleChampionnatSelect = (id) => {
         setSelectedChampionnat(id);
     };
-    const createChampionnat = async (championnatData) => {
-        const response = await fetch('/api/championnats', {
-            method: "POST",
-            body: JSON.stringify(championnatData),
-        });
-        if (response.ok) {
-            fetchChampionnats();
-        }
-        else {
-            console.error("Error creating championnat");
-        }
-    };
-    const updateChampionnat = async (id, championnatData) => {
-        const response = await fetch(`/api/championnats/${id}`, {
-            method: "PUT",
-            body: JSON.stringify(championnatData),
-        });
-        if (response.ok) {
-            fetchChampionnats();
-        }
-        else {
-            console.error("Error updating championnat");
-        }
-    };
+    // const createChampionnat = async (championnatData: []) => {
+    //   const response = await fetch('/api/championnats', {
+    //     method: "POST",
+    //     body: JSON.stringify(championnatData),
+    //   });
+    //   if (response.ok) {
+    //     fetchChampionnats();
+    //   } else {
+    //     console.error("Error creating championnat");
+    //   }
+    // };
+    // const updateChampionnat = async (id :number, championnatData: []) => {
+    //   const response = await fetch(`/api/championnats/${id}`, {
+    //     method: "PUT",
+    //     body: JSON.stringify(championnatData),
+    //   });
+    //   if (response.ok) {
+    //     fetchChampionnats();
+    //   } else {
+    //     console.error("Error updating championnat");
+    //   }
+    // };
     const deleteChampionnat = async (id) => {
         const response = await fetch(`/api/championnats/${id}`, {
             method: "DELETE",
@@ -58,4 +56,3 @@ const ChampionnatComponent = ({ selectedChampionnat, setSelectedChampionnat }) =
     return (_jsxs("div", { children: [_jsx("h2", { children: "Championnats" }), championnats.map((championnat) => (_jsxs("div", { children: [_jsx("h3", { children: championnat.saison }), _jsx("button", { onClick: () => handleChampionnatSelect(championnat.id), children: "Select" }), _jsx("button", { onClick: () => deleteChampionnat(championnat.id), children: "Delete" })] }, championnat.id)))] }));
 };
 export default ChampionnatComponent;
-//# sourceMappingURL=Championnat.js.map
