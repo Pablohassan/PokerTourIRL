@@ -23,15 +23,10 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, players, 
     const [partyId, setPartyId] = useState(null);
     // const [lastUsedPosition, setLastUsedPosition] = useState(0);
     const initialTimeLeft = blindDuration * 60;
-    const handleStateNotFound = () => {
-        // Réinitialisez les états liés à la configuration de la partie ici
-        setShowConfig(true);
-        setGameStarted(false);
-    };
     const { timeLeft, setTimeLeft, smallBlind, setSmallBlind, bigBlind, setBigBlind, ante, setAnte, games, setGames, pot, setPot, middleStack, setSavedTotalStack, totalStack, setTotalStack, saveGameState, resetGameState, rebuyPlayerId, setRebuyPlayerId, killer, setKiller, stateRestored, postInitialGameState, loading, error, setPositions, outPlayers, // Ajoutez cette ligne
     setOutPlayers, // Ajoutez cette ligne
     setLastUsedPosition, initialPlayerCount, // Récupérer initialPlayerCount ici
-    setInitialPlayerCount, } = useGameState(gameStarted, setGameStarted, selectedPlayers, setSelectedPLayers, blindIndex, setBlindIndex, initialTimeLeft, handleStateNotFound);
+    setInitialPlayerCount, } = useGameState(gameStarted, setGameStarted, selectedPlayers, setSelectedPLayers, blindIndex, setBlindIndex, initialTimeLeft);
     const navigate = useNavigate();
     useEffect(() => {
         if (stateRestored) {

@@ -52,11 +52,7 @@ const StartGame: React.FC<StartGameProps> = ({
   const initialTimeLeft = blindDuration * 60;
 
 
-  const handleStateNotFound = () => {
-    // Réinitialisez les états liés à la configuration de la partie ici
-    setShowConfig(true);
-    setGameStarted(false);
-  };
+  
 
   const {
     timeLeft,
@@ -93,7 +89,7 @@ const StartGame: React.FC<StartGameProps> = ({
     setInitialPlayerCount,
    
    
-  } = useGameState(gameStarted, setGameStarted, selectedPlayers, setSelectedPLayers, blindIndex, setBlindIndex, initialTimeLeft, handleStateNotFound);
+  } = useGameState(gameStarted, setGameStarted, selectedPlayers, setSelectedPLayers, blindIndex, setBlindIndex, initialTimeLeft);
 
   const navigate = useNavigate();
 
