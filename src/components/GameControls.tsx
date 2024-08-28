@@ -46,7 +46,6 @@ const GameControls: React.FC<GameControlsProps> = ({
   const timerRef = useRef<number | null>(null);
   
   useEffect(() => {
-    console.log("GameControls initialTimeLeft:", initialTimeLeft);
   }, [initialTimeLeft]);
   useEffect(() => {
     if (!isPaused && gameStarted && timeLeft > 0) {
