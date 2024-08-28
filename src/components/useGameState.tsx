@@ -10,7 +10,7 @@ const useGameState = (
   setBlindIndex: React.Dispatch<React.SetStateAction<number>>,
   initialTimeLeft: number
 ) => {
-  console.log("useGameState hook initialized");
+
 
   const [timeLeft, setTimeLeft] = useState<number>(initialTimeLeft);
   const [smallBlind, setSmallBlind] = useState(10);
@@ -32,29 +32,9 @@ const useGameState = (
   const [lastUsedPosition, setLastUsedPosition] = useState<number>(0);
   const [initialPlayerCount, setInitialPlayerCount] = useState(selectedPlayers.length);
 
-  console.log("Initial state set up:", {
-    timeLeft,
-    smallBlind,
-    bigBlind,
-    ante,
-    games,
-    pot,
-    middleStack,
-    totalStack,
-    rebuyPlayerId,
-    killer,
-    stateRestored,
-    initialGameStatePosted,
-    loading,
-    error,
-    positions,
-    outPlayers,
-    lastUsedPosition,
-    initialPlayerCount,
-  });
+  
 
   const resetGameState = () => {
-    console.log("Resetting game state");
     setTimeLeft(initialTimeLeft);
     setSmallBlind(10);
     setBigBlind(20);
@@ -72,10 +52,11 @@ const useGameState = (
     setOutPlayers([]);
     setLastUsedPosition(0);
     setInitialPlayerCount(0);
-    console.log("Game state reset");
+
   };
 
   const saveGameState = async (currentTimeLeft: number = timeLeft) => {
+    console.log('saveGameState called with initialGameStatePosted:', initialGameStatePosted);  // Add this line
     if (!initialGameStatePosted) return;
 
     const gameState = {
@@ -97,27 +78,27 @@ const useGameState = (
       initialPlayerCount,
     };
 
-    console.log("Saving game state:", gameState);
+    const gameStateString = JSON.stringify({ state: gameState });
 
     try {
-      const response = await fetch('https://api.bourlypokertour.fr/gameState', {
+      const response = await fetch('http://localhost//gameState', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ state: gameState }),
+        body: gameStateString,
       });
+  
 
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
 
-      console.log("Game state saved successfully");
-
+     
     } catch (error) {
       console.error('Error saving game state:', error);
     }
-  };
+  } 
 
   const postInitialGameState = async () => {
     const gameState = {
@@ -175,7 +156,6 @@ const useGameState = (
             if (response.status === 404) {
                 console.log('No game state found (404).');
                 setGameStarted(false);
-                setStateRestored(false);
                 setLoading(false);
                 return;
             }
@@ -216,26 +196,24 @@ const useGameState = (
 
         console.log("Game state restored successfully");
 
-        setStateRestored(true);  // This should be set here, after successful restoration
+        // setStateRestored(true);  // This should be set here, after successful restoration
     } catch (error) {
         console.error('Error restoring game state', error);
         setError('Error restoring game state');
         setGameStarted(false);
-        setStateRestored(false);
+        // setStateRestored(false);
     } finally {
         setLoading(false);
     }
 };
 
 useEffect(() => {
-    console.log("useEffect triggered for restoring state");
     restoreState();
 }, []);
 
   useEffect(() => {
     if (!stateRestored && selectedPlayers.length > 0 && !totalStack) {
       const calculatedTotalStack = selectedPlayers.length * 5350;
-      console.log("Setting totalStack:", calculatedTotalStack);
       setTotalStack(calculatedTotalStack);
     }
   }, [selectedPlayers.length, stateRestored]);
@@ -243,7 +221,6 @@ useEffect(() => {
   useEffect(() => {
     if (gameStarted && pot === 0 && selectedPlayers.length > 0) {
       const calculatedPot = selectedPlayers.length * 5;
-      console.log("Setting pot:", calculatedPot);
       setPot(calculatedPot);
     }
   }, [gameStarted, selectedPlayers.length, pot]);
@@ -264,17 +241,14 @@ useEffect(() => {
     console.log("Starting interval to save game state every second");
     const interval = setInterval(() => {
       if (gameStarted) {
-        console.log("Interval saving game state");
         saveGameState(timeLeft);
       }
     }, 1000); // Save state every second
     return () => {
-      console.log("Clearing interval");
       clearInterval(interval);
     };
   }, [gameStarted, timeLeft]);
 
-  console.log("Returning values from useGameState");
 
   return {
     timeLeft,

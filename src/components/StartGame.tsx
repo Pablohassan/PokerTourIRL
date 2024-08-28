@@ -38,7 +38,7 @@ const StartGame: React.FC<StartGameProps> = ({
   setBlindIndex
 }) => {
   const [gameStarted, setGameStarted] = useState(false);
-  const [showReview, setShowReview] = useState(true);
+  const [showReview, setShowReview] = useState(false);
   const [showConfig, setShowConfig] = useState(true);
   // const [outPlayers, setOutPlayers] = useState<Player[]>([]);
 
@@ -99,7 +99,7 @@ const StartGame: React.FC<StartGameProps> = ({
     if (stateRestored) {
       setGameStarted(true);
       setShowConfig(false);
-      setShowReview(false);
+      
   
       const totalPlayers = initialPlayerCount;  // Utilisez initialPlayerCount restauré ici
   
@@ -144,17 +144,18 @@ const StartGame: React.FC<StartGameProps> = ({
         return updatedPositions;
       });
     }
-  }, [stateRestored,gameStarted]);
+  }, [stateRestored]);
   
   
   
   
 
   const onStartGame = async () => {
-    if (gameStarted || stateRestored) {
+    if (gameStarted) {
       alert("A game is already in progress.");
       return;
     }
+    resetGameState();
     if (selectedPlayers.length < 4) {
       alert("You need at least 4 players to start a game.");
       return;
