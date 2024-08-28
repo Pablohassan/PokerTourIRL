@@ -174,27 +174,39 @@ const StartGame: React.FC<StartGameProps> = ({
       const response = await api.post("/playerStats/start", {
         date: new Date(),
         players: selectedPlayers.map((player) => player.id),
-        tournamentId: selectedTournament // Utilisez cette variable ici
-
+        tournamentId: selectedTournament ? selectedTournament.id : null,
       });
 
       if (response.data && response.data.message) {
         toast(response.data.message);
         setGameStarted(true);
-
-        if (
-          response.data.playerStats &&
-          Array.isArray(response.data.playerStats)
-        ) {
-          setGames(response.data.playerStats);
+        if (Array.isArray(response.data.playerStats)) {
+          const playerStats = response.data.playerStats;
+          setGames(playerStats);
+          setSelectedPLayers(selectedPlayers);
+          if (response.data.partyId) {
+            setPartyId(response.data.partyId);
+            postInitialGameState();
+          } else {
+            console.error('No partyId received in API response');
+            toast("Failed to start the game: Missing party ID.");
+          }
+        } else {
+          console.error("Invalid playerStats format in API response:", response.data.playerStats);
+          toast("Failed to start the game: Invalid player stats format.");
         }
-
-
+      } else {
+        console.error("Invalid API response:", response.data);
+         toast("Failed to start the game: Invalid response from the server.");
       }
-    } catch (err: any) {
-      console.error("Server response:", err.response?.data);
-      console.error(err);
-      toast("Failed to start new game")
+    } catch (err) {
+      if (err instanceof Error) {
+        console.error("Server response:", err.message);
+        toast("Failed to start new game: " + err.message);
+      } else {
+        console.error("Unexpected error:", err);
+        toast("An unexpected error occurred");
+      }
     }
     postInitialGameState();
     setInitialPlayerCount(selectedPlayers.length);
