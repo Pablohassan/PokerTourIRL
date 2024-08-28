@@ -24,6 +24,8 @@ const GameConfiguration: React.FC<GameConfigurationProps> = ({ championnat, play
         const response = await api.get('/parties'); // Assuming this is your endpoint
         const parties = response.data;
 
+        console.log('Fetched parties:', parties);
+
         // Find the max partyId
         const maxPartyId = parties.length > 0 ? Math.max(...parties.map((party: any) => party.id)) : 0;
         setNewPartyId(maxPartyId + 1);
@@ -57,6 +59,9 @@ const GameConfiguration: React.FC<GameConfigurationProps> = ({ championnat, play
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const selectedTournament = championnat.find(t => t.id === selectedTournamentId) || null;
+    console.log("Selected Tournament:", selectedTournament);
+    console.log("Selected Players:", selectedPlayers);
+    console.log("Generated Party ID:", newPartyId);
     if (!selectedTournament)  {
       alert("Veuillez sélectionner un tournoi valide.");
       return;
