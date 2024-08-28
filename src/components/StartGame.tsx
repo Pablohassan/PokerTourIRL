@@ -99,6 +99,7 @@ const StartGame: React.FC<StartGameProps> = ({
     if (stateRestored) {
       setGameStarted(true);
       setShowConfig(false);
+      setShowReview(false);
   
       const totalPlayers = initialPlayerCount;  // Utilisez initialPlayerCount restauré ici
   
@@ -143,7 +144,7 @@ const StartGame: React.FC<StartGameProps> = ({
         return updatedPositions;
       });
     }
-  }, [stateRestored]);
+  }, [stateRestored,gameStarted]);
   
   
   
