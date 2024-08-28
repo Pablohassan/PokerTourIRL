@@ -81,7 +81,7 @@ const useGameState = (
     const gameStateString = JSON.stringify({ state: gameState });
 
     try {
-      const response = await fetch('https://https://api.bourlypokertour.fr/gamestate', {
+      const response = await fetch('https://api.bourlypokertour.fr/gamestate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
