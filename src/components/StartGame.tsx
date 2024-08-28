@@ -179,12 +179,15 @@ const StartGame: React.FC<StartGameProps> = ({
             postInitialGameState();
           } else {
             console.error('No partyId received in API response');
+            toast("Failed to start the game: Missing party ID.");
           }
         } else {
           console.error("Invalid playerStats format in API response:", response.data.playerStats);
+          toast("Failed to start the game: Invalid player stats format.");
         }
       } else {
         console.error("Invalid API response:", response.data);
+         toast("Failed to start the game: Invalid response from the server.");
       }
     } catch (err) {
       if (err instanceof Error) {
