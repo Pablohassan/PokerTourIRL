@@ -146,8 +146,7 @@ const useGameState = (
   
 
   const restoreState = async () => {
-    console.log("Restoring game state");
-
+    
     try {
         const response = await fetch(`https://api.bourlypokertour.fr/gameState`);
         console.log("API Response:", response);
@@ -155,7 +154,7 @@ const useGameState = (
         if (!response.ok) {
             if (response.status === 404) {
                 console.log('No game state found (404).');
-                setGameStarted(false);
+                // setGameStarted(false);
                 setLoading(false);
                 return;
             }
@@ -194,9 +193,8 @@ const useGameState = (
         setInitialGameStatePosted(true);
         setInitialPlayerCount(state.initialPlayerCount);
 
-        console.log("Game state restored successfully");
-
-        // setStateRestored(true);  // This should be set here, after successful restoration
+  
+        setStateRestored(true);  // This should be set here, after successful restoration
     } catch (error) {
         console.error('Error restoring game state', error);
         setError('Error restoring game state');
@@ -238,7 +236,7 @@ useEffect(() => {
   }, [totalStack, selectedPlayers.length, timeLeft]);
 
   useEffect(() => {
-    console.log("Starting interval to save game state every second");
+  
     const interval = setInterval(() => {
       if (gameStarted) {
         saveGameState(timeLeft);
@@ -276,7 +274,7 @@ useEffect(() => {
     killer,
     setKiller,
     stateRestored,
-    restoreState,
+
     loading,
     error,
     positions,
