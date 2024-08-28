@@ -95,6 +95,8 @@ const StartGame: React.FC<StartGameProps> = ({
 
 
   
+
+  
   useEffect(() => {
     if (stateRestored) {
       setGameStarted(true);
@@ -147,6 +149,14 @@ const StartGame: React.FC<StartGameProps> = ({
   }, [stateRestored]);
   
   
+  const handleStartGameConfiguration = (selectedTournament: Tournaments | null, blindDuration: number, selectedPlayers: Player[], newPartyId: number) => {
+    setPartyId(newPartyId);
+    setSelectedTournament(selectedTournament);
+    setBlindDuration(blindDuration);
+    setSelectedPLayers(selectedPlayers);
+    setShowConfig(false);
+    setShowReview(true);
+  };
   
   
 
@@ -174,12 +184,10 @@ const StartGame: React.FC<StartGameProps> = ({
           const playerStats = response.data.playerStats;
           setGames(playerStats);
           setSelectedPLayers(selectedPlayers);
-          if (response.data.partyId) {
-            setPartyId(response.data.partyId);
-            postInitialGameState();
+          if (partyId) { // Use the partyId that was set earlier
+            postInitialGameState();  // Post the game state
           } else {
-            console.error('No partyId received in API response');
-            toast("Failed to start the game: Missing party ID.");
+            console.error('Party ID is not set.');
           }
         } else {
           console.error("Invalid playerStats format in API response:", response.data.playerStats);
@@ -187,7 +195,7 @@ const StartGame: React.FC<StartGameProps> = ({
         }
       } else {
         console.error("Invalid API response:", response.data);
-         toast("Failed to start the game: Invalid response from the server.");
+        toast("Failed to start the game: Invalid response from the server.");
       }
     } catch (err) {
       if (err instanceof Error) {
@@ -357,13 +365,6 @@ const StartGame: React.FC<StartGameProps> = ({
   };
   
 
-  const handleStartGameConfiguration = (selectedTournament: Tournaments | null, blindDuration: number, selectedPlayers: Player[]) => {
-    setSelectedTournament(selectedTournament);
-    setBlindDuration(blindDuration);
-    setSelectedPLayers(selectedPlayers);
-    setShowConfig(false);
-    setShowReview(true);
-  };
 
   return (
     <div style={{ maxWidth: "90%", maxHeight: "80vh", margin: "auto", overflow: "auto" }}>

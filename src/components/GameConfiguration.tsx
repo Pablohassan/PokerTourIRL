@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Tournaments, Player } from './interfaces';
 import api from '../api';
 import { Button, Checkbox } from '@nextui-org/react';
@@ -7,7 +7,7 @@ import { Button, Checkbox } from '@nextui-org/react';
 interface GameConfigurationProps {
   championnat: Tournaments[];
   players: Player[];
-  onStartGameConfiguration: (selectedTournament: Tournaments | null, blindDuration: number, selectedPlayers: Player[]) => void;
+  onStartGameConfiguration: (selectedTournament: Tournaments | null, blindDuration: number, selectedPlayers: Player[], newPartyId: number) => void;
 }
 
 const GameConfiguration: React.FC<GameConfigurationProps> = ({ championnat, players, onStartGameConfiguration }) => {
@@ -15,6 +15,26 @@ const GameConfiguration: React.FC<GameConfigurationProps> = ({ championnat, play
   const [blindDuration, setBlindDuration] = useState<number>(20);
   const [selectedPlayers, setSelectedPlayers] = useState<Player[]>([]);
   const [newTournamentYear, setNewTournamentYear] = useState<string>('');
+  const [newPartyId, setNewPartyId] = useState<number | null>(null);
+
+  // Fetch existing parties to determine the next partyId
+  useEffect(() => {
+    const fetchParties = async () => {
+      try {
+        const response = await api.get('/parties'); // Assuming this is your endpoint
+        const parties = response.data;
+
+        // Find the max partyId
+        const maxPartyId = parties.length > 0 ? Math.max(...parties.map((party: any) => party.id)) : 0;
+        setNewPartyId(maxPartyId + 1);
+      } catch (error) {
+        console.error('Error fetching parties:', error);
+        alert('Erreur lors de la récupération des parties.');
+      }
+    };
+
+    fetchParties();
+  }, []);
 
   
   const handleTournamentChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -45,7 +65,11 @@ const GameConfiguration: React.FC<GameConfigurationProps> = ({ championnat, play
       alert("Vous devez selectionner au moins 4 joueurs pour lancer une partie ");
       return
     }
-    onStartGameConfiguration(selectedTournament, blindDuration, selectedPlayers);
+    if (newPartyId !== null) {
+      onStartGameConfiguration(selectedTournament, blindDuration, selectedPlayers, newPartyId);
+    } else {
+      alert('Erreur lors de la génération de l\'ID de la partie.');
+    }
   };
   
 
