@@ -150,6 +150,7 @@ const StartGame: React.FC<StartGameProps> = ({
   
   
   const handleStartGameConfiguration = (selectedTournament: Tournaments | null, blindDuration: number, selectedPlayers: Player[]) => {
+   
     setSelectedTournament(selectedTournament);
     setBlindDuration(blindDuration);
     setSelectedPLayers(selectedPlayers);
@@ -170,26 +171,10 @@ const StartGame: React.FC<StartGameProps> = ({
       return;
     }
     try {
-      const partyResponse = await api.post("/parties", {
-        date: new Date(),
-        tournamentId: selectedTournament ? selectedTournament.id : null,
-      });
-  
-      const newParty = partyResponse.data;
-      const generatedPartyId = newParty.id;
-  
-      if (!generatedPartyId) {
-        throw new Error('Failed to create party or get party ID.');
-      }
-
-
-
-
       const response = await api.post("/playerStats/start", {
         date: new Date(),
         players: selectedPlayers.map((player) => player.id),
         tournamentId: selectedTournament ? selectedTournament.id : null,
-        partyId: generatedPartyId, 
       });
 
       if (response.data && response.data.message) {
@@ -199,8 +184,8 @@ const StartGame: React.FC<StartGameProps> = ({
           const playerStats = response.data.playerStats;
           setGames(playerStats);
           setSelectedPLayers(selectedPlayers);
-          setPartyId(generatedPartyId);
-         
+          if (response.data.partyId) {
+            setPartyId(response.data.partyId);
             postInitialGameState();
           } else {
             console.error('No partyId received in API response');
@@ -210,7 +195,10 @@ const StartGame: React.FC<StartGameProps> = ({
           console.error("Invalid playerStats format in API response:", response.data.playerStats);
           toast("Failed to start the game: Invalid player stats format.");
         }
-    
+      } else {
+        console.error("Invalid API response:", response.data);
+         toast("Failed to start the game: Invalid response from the server.");
+      }
     } catch (err) {
       if (err instanceof Error) {
         console.error("Server response:", err.message);

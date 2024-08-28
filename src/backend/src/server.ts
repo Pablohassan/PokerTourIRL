@@ -208,20 +208,12 @@ app.get(
 );
 // @ts-ignore
 app.get("/parties", async (req: Request, res: Response, next: NextFunction) => {
-  const { page = 1, limit = 10 } = req.query;
-  const skip = (Number(page) - 1) * Number(limit);
   try {
     const parties = await prisma.party.findMany({
-      skip,
-      take: Number(limit),
-      select: {
-        id: true,
-        date: true,
+      include: {
         playerStats: {
-          select: {
-            playerId: true,
-            points: true,
-            rebuys: true,
+          include: {
+            player: true,
           },
         },
       },
@@ -375,7 +367,6 @@ app.post("/parties", async (req: Request, res: Response) => {
     return res.status(400).json({ error: "Un ID de tournoi est requis." });
   }
 
-  
   // Vérifier si le tournoi existe
   const tournament = await prisma.tournament.findUnique({
     where: { id: tournamentId },
@@ -421,78 +412,90 @@ app.post("/players", async (req: Request, res: Response) => {
 app.post("/playerStats/start", async (req: Request, res: Response) => {
   const { players } = req.body;
 
-  // Validate that at least 4 players are provided
   if (!players || !Array.isArray(players) || players.length < 4) {
     return res.status(400).json({ error: "At least 4 players are required" });
   }
+  let currentYear = new Date().getFullYear();
+  let currentYearTournament = await prisma.tournament.findFirst({
+    where: { year: currentYear },
+  });
 
-  try {
-    let currentYear = new Date().getFullYear();
-
-    // Find or create the tournament for the current year
-    let currentYearTournament = await prisma.tournament.findFirst({
-      where: { year: currentYear },
+  if (!currentYearTournament) {
+    currentYearTournament = await prisma.tournament.create({
+      data: { year: currentYear },
     });
-
-    if (!currentYearTournament) {
-      currentYearTournament = await prisma.tournament.create({
-        data: { year: currentYear },
-      });
-    }
-
-    // Start a transaction
-    const newParty = await prisma.$transaction(async (prisma) => {
-      const createdParty = await prisma.party.create({
-        data: {
-          date: new Date(),
-          tournamentId: currentYearTournament!.id,
-        },
-      });
-
-      const newPlayerStats: Prisma.PromiseReturnType<typeof prisma.playerStats.create>[] = [];
-
-      for (const playerId of players) {
-        // Validate if the player exists
-        const playerExists = await prisma.player.findUnique({
-          where: { id: playerId },
-        });
-
-        if (!playerExists) {
-          throw new Error(`Player with ID ${playerId} does not exist.`);
-        }
-
-        // Start a new game for each player
-        const playerStat = await prisma.playerStats.create({
-          data: {
-            partyId: createdParty.id,
-            playerId,
-            points: 0,
-            buyin: 1,
-            rebuys: 0,
-            totalCost: 5,
-            position: 0,
-            outAt: null,
-          },
-        });
-        newPlayerStats.push(playerStat);
-      }
-
-      return { createdParty, newPlayerStats };
-    });
-
-    // Return the response
-    return res.json({
-      message: "New game started successfully",
-      partyId: newParty.createdParty.id,
-      playerStats: newParty.newPlayerStats,
-    });
-
-  } catch (error) {
-    console.error("Error starting new game:", error);
-    return res.status(500).json({ error: "An error occurred while starting the game" });
   }
+
+  const newParty = await prisma.party.create({
+    data: {
+      date: new Date(),
+      tournamentId: currentYearTournament.id,
+    },
+  });
+
+
+
+  const newPlayerStats:Prisma.PromiseReturnType<typeof prisma.playerStats.create>[] = [];
+
+  for (const playerId of players) {
+    // Start a new game for each player
+    const playerStat = await prisma.playerStats.create({
+      data: {
+        partyId: newParty.id,
+        playerId,
+        points: 0,
+        buyin: 1,
+        rebuys: 0,
+        totalCost: 5,
+        position: 0,
+        outAt: null,
+      },
+    });
+    newPlayerStats.push(playerStat);
+  }
+
+  return res.json({
+    message: "New game started successfully",
+    playerStats: newPlayerStats,
+  });
 });
 
+// Assume each player provides playerId, points, and rebuys
+
+app.post("/playerStats", async (req: Request, res: Response) => {
+  try {
+    const { partyId, playerId, points, rebuys, buyin, position, outAt, kills } =
+      req.body;
+
+    if (!partyId || !playerId || points === undefined || rebuys === undefined) {
+      return res.status(400).json({ error: "All fields are required" });
+    }
+    const totalCost = buyin * 1;
+    const game = await prisma.playerStats.create({
+      data: {
+        partyId,
+        playerId,
+        points,
+        rebuys,
+        buyin,
+        totalCost,
+        position,
+        outAt,
+        kills,
+      },
+      include: {
+        party: true, // include party data
+        player: true, // include player data
+      },
+    });
+    res.json(game);
+  } catch (error) {
+    console.error(error);
+    return res
+      .status(500)
+      .json({ error: "An error occurred while creating the game" });
+  }
+});
 
 app.post("/gameResults", async (req: Request, res: Response) => {
   const games = req.body;
