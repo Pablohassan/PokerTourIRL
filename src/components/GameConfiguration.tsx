@@ -27,16 +27,16 @@ const GameConfiguration: React.FC<GameConfigurationProps> = ({ championnat, play
         console.log('Fetched parties:', parties);
 
         // Find the max partyId
-        const maxPartyId = parties.length > 0 ? Math.max(...parties.map((party: any) => party.id)) : 0;
-        setNewPartyId(maxPartyId + 1);
-      } catch (error) {
-        console.error('Error fetching parties:', error);
-        alert('Erreur lors de la récupération des parties.');
-      }
-    };
+        const maxPartyId = parties.length > 0 ? parties[0].id : 0;
+      setNewPartyId(maxPartyId + 1);  // Increment the highest id to create a new unique id
+    } catch (error) {
+      console.error('Error fetching parties:', error);
+      alert('Erreur lors de la récupération des parties.');
+    }
+  };
 
-    fetchParties();
-  }, []);
+  fetchParties();
+}, []);
 
   
   const handleTournamentChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
