@@ -453,7 +453,9 @@ const StartGame: React.FC<StartGameProps> = ({
                 setBlindIndex={setBlindIndex}
                 initialTimeLeft={timeLeft || initialTimeLeft}
               />
+              <button onClick={() => saveGameState()}>Save Game State</button>
               {selectedPlayers.length > 0 && games.length > 0 ? (
+                
                 <PlayerList
                   players={selectedPlayers}
                   games={games}
