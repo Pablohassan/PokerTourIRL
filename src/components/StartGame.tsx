@@ -46,7 +46,7 @@ const StartGame: React.FC<StartGameProps> = ({
   const [selectedTournament, setSelectedTournament] = useState<Tournaments | null>(null);
   const [blindDuration, setBlindDuration] = useState<number>(20);
   const [playerOutGame, setPlayerOutGame] = useState<number | null>(null);
-  const [partyId, setPartyId] = useState<number | null>(null);
+  const [partyId, setPartyId] = useState(false);
   
   // const [lastUsedPosition, setLastUsedPosition] = useState(0);
   const initialTimeLeft = blindDuration * 60;
@@ -174,40 +174,29 @@ const StartGame: React.FC<StartGameProps> = ({
       const response = await api.post("/playerStats/start", {
         date: new Date(),
         players: selectedPlayers.map((player) => player.id),
-        tournamentId: selectedTournament ? selectedTournament.id : null,
+        tournamentId: selectedTournament // Utilisez cette variable ici
+
       });
 
       if (response.data && response.data.message) {
         toast(response.data.message);
         setGameStarted(true);
-        if (Array.isArray(response.data.playerStats)) {
-          const playerStats = response.data.playerStats;
-          setGames(playerStats);
-          setSelectedPLayers(selectedPlayers);
-          if (response.data.partyId) {
-            setPartyId(response.data.partyId);
-            postInitialGameState();
-          } else {
-            console.error('No partyId received in API response');
-            toast("Failed to start the game: Missing party ID.");
-          }
-        } else {
-          console.error("Invalid playerStats format in API response:", response.data.playerStats);
-          toast("Failed to start the game: Invalid player stats format.");
+
+        if (
+          response.data.playerStats &&
+          Array.isArray(response.data.playerStats)
+        ) {
+          setGames(response.data.playerStats);
         }
-      } else {
-        console.error("Invalid API response:", response.data);
-         toast("Failed to start the game: Invalid response from the server.");
+
+
       }
-    } catch (err) {
-      if (err instanceof Error) {
-        console.error("Server response:", err.message);
-        toast("Failed to start new game: " + err.message);
-      } else {
-        console.error("Unexpected error:", err);
-        toast("An unexpected error occurred");
-      }
+    } catch (err: any) {
+      console.error("Server response:", err.response?.data);
+      console.error(err);
+      toast("Failed to start new game")
     }
+    postInitialGameState();
     setInitialPlayerCount(selectedPlayers.length);
   };
 
@@ -354,7 +343,7 @@ const StartGame: React.FC<StartGameProps> = ({
         
         resetGameState(); // Réinitialiser l'état local
         setGameStarted(false);
-        setPartyId(null);
+        setPartyId(false);
         navigate("/results");
         
       } catch (error) {
