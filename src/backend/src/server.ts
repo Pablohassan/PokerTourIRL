@@ -375,6 +375,7 @@ app.post("/parties", async (req: Request, res: Response) => {
     return res.status(400).json({ error: "Un ID de tournoi est requis." });
   }
 
+  
   // Vérifier si le tournoi existe
   const tournament = await prisma.tournament.findUnique({
     where: { id: tournamentId },
