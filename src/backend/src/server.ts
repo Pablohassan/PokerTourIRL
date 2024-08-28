@@ -208,12 +208,20 @@ app.get(
 );
 // @ts-ignore
 app.get("/parties", async (req: Request, res: Response, next: NextFunction) => {
+  const { page = 1, limit = 10 } = req.query;
+  const skip = (Number(page) - 1) * Number(limit);
   try {
     const parties = await prisma.party.findMany({
-      include: {
+      skip,
+      take: Number(limit),
+      select: {
+        id: true,
+        date: true,
         playerStats: {
-          include: {
-            player: true,
+          select: {
+            playerId: true,
+            points: true,
+            rebuys: true,
           },
         },
       },
