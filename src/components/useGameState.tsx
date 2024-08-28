@@ -137,9 +137,9 @@ const useGameState = (
       lastSavedTime: Date.now(),
       initialPlayerCount,
     };
-
+  
     console.log("Posting initial game state:", gameState);
-
+  
     try {
       const response = await fetch('https://api.bourlypokertour.fr/gameState', {
         method: 'POST',
@@ -148,19 +148,21 @@ const useGameState = (
         },
         body: JSON.stringify({ state: gameState }),
       });
-
+  
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
-
+  
       console.log("Initial game state posted successfully");
-
+  
       setInitialGameStatePosted(true); // Mark the initial POST as done
+      console.log("initialGameStatePosted set to true");  // Add this line to verify
     } catch (error) {
       console.error('Error posting initial game state:', error);
       setError('Error posting initial game state');
     }
   };
+  
 
   const restoreState = async () => {
     console.log("Restoring game state");

@@ -155,7 +155,10 @@ const StartGame: React.FC<StartGameProps> = ({
       alert("A game is already in progress.");
       return;
     }
-    resetGameState();
+    if (selectedPlayers.length < 4) {
+      alert("You need at least 4 players to start a game.");
+      return;
+    }
     try {
       const response = await api.post("/playerStats/start", {
         date: new Date(),
