@@ -185,7 +185,7 @@ const StartGame: React.FC<StartGameProps> = ({
           setGames(playerStats);
           setSelectedPLayers(selectedPlayers);
           if (response.data.partyId) {
-            setPartyId(response.data.partyId);
+      
             postInitialGameState();
           } else {
             console.error('No partyId received in API response');
