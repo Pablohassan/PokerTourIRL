@@ -8,8 +8,7 @@ const useGameState = (
   setSelectedPlayers: React.Dispatch<React.SetStateAction<Player[]>>,
   blindIndex: number,
   setBlindIndex: React.Dispatch<React.SetStateAction<number>>,
-  initialTimeLeft: number,
-  partyId: number | null,
+  initialTimeLeft: number
 ) => {
 
 
@@ -58,7 +57,6 @@ const useGameState = (
 
   const saveGameState = async (currentTimeLeft: number = timeLeft) => {
     console.log('saveGameState called with initialGameStatePosted:', initialGameStatePosted);  // Add this line
-    console.log("Skipping saveGameState, initialGameStatePosted is false");
     if (!initialGameStatePosted) return;
 
     const gameState = {
@@ -103,11 +101,6 @@ const useGameState = (
   } 
 
   const postInitialGameState = async () => {
-    if (!partyId) {
-      console.error("Cannot post initial game state: Missing partyId");
-      return;
-    }
-    
     const gameState = {
       timeLeft,
       smallBlind,
@@ -124,7 +117,6 @@ const useGameState = (
       outPlayers,
       lastSavedTime: Date.now(),
       initialPlayerCount,
-      partyId,
     };
   
     console.log("Posting initial game state:", gameState);

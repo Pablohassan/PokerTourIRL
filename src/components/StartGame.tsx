@@ -89,7 +89,7 @@ const StartGame: React.FC<StartGameProps> = ({
     setInitialPlayerCount,
    
    
-  } = useGameState(gameStarted, setGameStarted, selectedPlayers, setSelectedPLayers, blindIndex, setBlindIndex, initialTimeLeft, partyId);
+  } = useGameState(gameStarted, setGameStarted, selectedPlayers, setSelectedPLayers, blindIndex, setBlindIndex, initialTimeLeft);
 
   const navigate = useNavigate();
 
