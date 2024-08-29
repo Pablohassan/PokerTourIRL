@@ -47,6 +47,8 @@ const StartGame: React.FC<StartGameProps> = ({
   const [blindDuration, setBlindDuration] = useState<number>(20);
   const [playerOutGame, setPlayerOutGame] = useState<number | null>(null);
   const [partyId, setPartyId] = useState(false);
+  const [isEnding, setIsEnding] = useState(false);
+
   
   // const [lastUsedPosition, setLastUsedPosition] = useState(0);
   const initialTimeLeft = blindDuration * 60;
@@ -205,10 +207,11 @@ const StartGame: React.FC<StartGameProps> = ({
   };
 
   useEffect(() => {
-    if (gameStarted) {
+    if (gameStarted && !isEnding) {
       saveGameState(timeLeft);
     }
-  }, [gameStarted, outPlayers]);
+  }, [gameStarted, timeLeft, isEnding]);
+  
 
   const confirmAndStartGame = async () => {
     setShowReview(false);
@@ -322,13 +325,14 @@ const StartGame: React.FC<StartGameProps> = ({
        
   const handleGameEnd = async () => {
     if (games.filter((game) => !game.outAt).length === 1) {
+      
       const winningPlayerId = games.find((game) => !game.outAt)?.playerId;
       const updatedGames = games.map((game) =>
         game.playerId === winningPlayerId
           ? { ...game, points: initialPlayerCount, outAt: new Date(), position: 1 }
           : game
       );
-  
+      setIsEnding(true); 
       try {
         // Enregistrer les résultats finaux
         await api.post("/gameResults", updatedGames);
@@ -357,6 +361,7 @@ const StartGame: React.FC<StartGameProps> = ({
     } else {
       alert("The game cannot be ended yet as more than one player is still playing.");
     }
+    setIsEnding(false);
   };
   
 
@@ -452,7 +457,6 @@ const StartGame: React.FC<StartGameProps> = ({
                 setBlindIndex={setBlindIndex}
                 initialTimeLeft={timeLeft || initialTimeLeft}
               />
-              <button onClick={() => saveGameState()}>Save Game State</button>
               {selectedPlayers.length > 0 && games.length > 0 ? (
                 
                 <PlayerList
