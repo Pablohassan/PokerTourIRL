@@ -325,15 +325,16 @@ const StartGame: React.FC<StartGameProps> = ({
        
   const handleGameEnd = async () => {
     if (games.filter((game) => !game.outAt).length === 1) {
-      
+      setIsEnding(true); 
       const winningPlayerId = games.find((game) => !game.outAt)?.playerId;
       const updatedGames = games.map((game) =>
         game.playerId === winningPlayerId
           ? { ...game, points: initialPlayerCount, outAt: new Date(), position: 1 }
           : game
       );
-      setIsEnding(true); 
+     
       try {
+        console.log("Saving final results...");
         // Enregistrer les résultats finaux
         await api.post("/gameResults", updatedGames);
         updateAfterGameEnd(updatedGames);
@@ -348,6 +349,7 @@ const StartGame: React.FC<StartGameProps> = ({
         }
         
         console.log('Game state deleted successfully from server');
+        toast.success("Game ended successfully!");
         
         resetGameState(); // Réinitialiser l'état local
         setGameStarted(false);
@@ -360,6 +362,29 @@ const StartGame: React.FC<StartGameProps> = ({
       }
     } else {
       alert("The game cannot be ended yet as more than one player is still playing.");
+    }
+    try {
+      const response = await fetch(`https://api.bourlypokertour.fr/gameState`);
+      console.log("API Response:", response);
+
+      if (response.ok) {
+        
+        const response = await fetch('https://api.bourlypokertour.fr/gameState', {
+          method: 'DELETE',
+        });
+  
+        if (!response.ok) {
+          throw new Error("Failed to delete game state on server");
+        }
+        
+        console.log('Game state deleted successfully from server');
+        toast.success("Game ended successfully!");
+          }
+          throw new Error('Failed to fetch game state');
+      
+    } catch (error) {
+      console.error("Error:", error);
+      alert("Failed to end the game properly. Please try again.");
     }
     setIsEnding(false);
   };
