@@ -160,44 +160,36 @@ const StartGame: React.FC<StartGameProps> = ({
   
   
 
+  
   const onStartGame = async () => {
     if (gameStarted) {
       alert("A game is already in progress.");
       return;
     }
+  
     resetGameState();
+  
     if (selectedPlayers.length < 4) {
       alert("You need at least 4 players to start a game.");
       return;
     }
+  
     try {
-      const response = await api.post("/playerStats/start", {
-        date: new Date(),
+      // Appeler directement l'API playerStats/start pour créer une nouvelle partie et les statistiques des joueurs
+      const playerStatsResponse = await api.post("/playerStats/start", {
         players: selectedPlayers.map((player) => player.id),
-        tournamentId: selectedTournament ? selectedTournament.id : null,
       });
-
-      if (response.data && response.data.message) {
-        toast(response.data.message);
+  
+      if (playerStatsResponse.data?.playerStats) {
+        const playerStats = playerStatsResponse.data.playerStats;
+        setGames(playerStats);
+        setSelectedPLayers(selectedPlayers);
         setGameStarted(true);
-        if (Array.isArray(response.data.playerStats)) {
-          const playerStats = response.data.playerStats;
-          setGames(playerStats);
-          setSelectedPLayers(selectedPlayers);
-          if (response.data.partyId) {
-            setPartyId(response.data.partyId);
-            postInitialGameState();
-          } else {
-            console.error('No partyId received in API response');
-            toast("Failed to start the game: Missing party ID.");
-          }
-        } else {
-          console.error("Invalid playerStats format in API response:", response.data.playerStats);
-          toast("Failed to start the game: Invalid player stats format.");
-        }
+  
+        postInitialGameState();  // Envoyer l'état initial du jeu
+        toast("Game started successfully!");
       } else {
-        console.error("Invalid API response:", response.data);
-         toast("Failed to start the game: Invalid response from the server.");
+        throw new Error("Invalid playerStats format in API response.");
       }
     } catch (err) {
       if (err instanceof Error) {
@@ -208,7 +200,7 @@ const StartGame: React.FC<StartGameProps> = ({
         toast("An unexpected error occurred");
       }
     }
-    postInitialGameState();
+  
     setInitialPlayerCount(selectedPlayers.length);
   };
 
