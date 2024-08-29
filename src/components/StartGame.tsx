@@ -368,7 +368,7 @@ const StartGame: React.FC<StartGameProps> = ({
       console.log("API Response:", response);
 
       if (response.ok) {
-        
+
         const response = await fetch('https://api.bourlypokertour.fr/gameState', {
           method: 'DELETE',
         });
@@ -380,11 +380,11 @@ const StartGame: React.FC<StartGameProps> = ({
         console.log('Game state deleted successfully from server');
         toast.success("Game ended successfully!");
           }
-          throw new Error('Failed to fetch game state');
+       
       
     } catch (error) {
       console.error("Error:", error);
-      alert("Failed to end the game properly. Please try again.");
+    
     }
     setIsEnding(false);
   };
@@ -392,7 +392,7 @@ const StartGame: React.FC<StartGameProps> = ({
 
 
   return (
-    <div style={{ maxWidth: "90%", maxHeight: "80vh", margin: "auto", overflow: "auto" }}>
+    <div style={{ maxWidth: "95%", maxHeight: "90vh", margin: "auto", overflow: "auto" }}>
       <KillerSelectionModal
         killer={killer}
         games={games}

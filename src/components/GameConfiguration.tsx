@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Tournaments, Player } from './interfaces';
 import api from '../api';
 import { Button, Checkbox } from '@nextui-org/react';
+import { useNavigate } from 'react-router-dom';
 
 
 interface GameConfigurationProps {
@@ -16,6 +17,7 @@ const GameConfiguration: React.FC<GameConfigurationProps> = ({ championnat, play
   const [selectedPlayers, setSelectedPlayers] = useState<Player[]>([]);
   const [newTournamentYear, setNewTournamentYear] = useState<string>('');
 
+  const navigate = useNavigate();
   
   const handleTournamentChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedTournamentId(Number(e.target.value));
@@ -84,8 +86,9 @@ const GameConfiguration: React.FC<GameConfigurationProps> = ({ championnat, play
                 placeholder="Année du tournoi"
                 className="form-modern-input"
             />
-            <Button type="button" onClick={handleCreateTournament} className="form-modern-button-secondary">Créer</Button>
+           
         </div>
+        <button type="submit" onClick={handleCreateTournament} className="form-modern-button">Cree nouveau Trournois</button>
     </div>
     <div className="form-modern-group">
         <label htmlFor="blindDuration" className="form-modern-label">Duree des blindes (minutes) :</label>
@@ -101,6 +104,8 @@ const GameConfiguration: React.FC<GameConfigurationProps> = ({ championnat, play
         ))}
     </div>
     <button type="submit" className="form-modern-button">Valider La sellection</button>
+    <Button size="lg" color="danger" onFocus={focus} onClick={() => navigate("/partypage")}>Back</Button>
+
 </form>
   );
 };

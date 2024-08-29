@@ -159,16 +159,19 @@
 }
 
 .form-modern-button {
-    padding: 12px 20px;
-    background-color: #0a3b0cdf;
-    color: white;
-    border: none;
-    border-radius: 10px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-    font-family: 'DS-DIGI', DS-DIGI ;
-    font-size: 20px;
+  align-items: center;
+  min-width: 170px;
+  padding: 12px 20px;
+  background-color: #0a3b0cdf;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  font-family: 'DS-DIGI', DS-DIGI ;
+  font-size: 20px;
 }
+
 
 .form-modern-button:hover {
     background-color: #6bb300e3;
