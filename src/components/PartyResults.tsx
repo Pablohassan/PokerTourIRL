@@ -45,21 +45,29 @@ const PartyResults: React.FC<PartyResultsProps> = ({
     {
       title: "Points 2024",
       filterFunction: (playerStat: PlayerStats[]) => {
-        // Filter out stats not from 2024
-        const filteredStats = playerStat.filter(stat => {
+        // Sort by date before filtering
+        const sortedStats = playerStat.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+        
+        // Filter out stats not from 2023
+        const filteredStats = sortedStats.filter(stat => {
           const year = new Date(stat.createdAt).getFullYear();
-          return year === 2024;
+          return year === 2023;
         });
-        // Check if there are any games with points greater than 1 in 2024
+        
+        // Check if there are any games with points greater than 1 in 2023
         const result = filteredStats.some(game => game.points > 1);
         return result;
       },
       rankFunction: (playerStat: PlayerStats[]) => {
-        // Sum points only for games in 2024
-        return playerStat.filter(stat => new Date(stat.createdAt).getFullYear() === 2024)
-                         .reduce((total, game) => total + game.points, 0);
+        // Sort by date before ranking
+        const sortedStats = playerStat.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+  
+        // Sum points only for games in 2023
+        return sortedStats.filter(stat => new Date(stat.createdAt).getFullYear() === 2023)
+                           .reduce((total, game) => total + game.points, 0);
       },
     },
+    
   
     {
       title: "Gains 2023",
