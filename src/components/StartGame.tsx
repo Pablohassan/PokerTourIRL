@@ -210,7 +210,7 @@ const StartGame: React.FC<StartGameProps> = ({
     if (gameStarted && !isEnding) {
       saveGameState(timeLeft);
     }
-  }, [gameStarted, timeLeft, isEnding]);
+  }, [gameStarted, timeLeft, isEnding, outPlayers]);
   
 
   const confirmAndStartGame = async () => {
