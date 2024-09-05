@@ -54,7 +54,7 @@ const GameTimer: React.FC<GameTimerProps> = ({
     <div style={{
       display: 'grid',
       gridTemplateRows: '3fr 1fr',
-      height: '3800px',
+      height: '390px',
       width: '970px',
       border: '4px solid black',
       borderRadius: '16px',
