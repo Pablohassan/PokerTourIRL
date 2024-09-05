@@ -1,13 +1,13 @@
-import { Spacer } from "@nextui-org/react";
+// import { Spacer } from "@nextui-org/react";
 import { Tournaments } from "./interfaces.js";
 interface ContentProps {
   selectedTournament: Tournaments | null;  // Le tournoi sélectionné est maintenant passé en prop
 }
 
-export const Content: React.FC<ContentProps> = ({ selectedTournament }) => {
+export const Content: React.FC<ContentProps> = () => {
   return (
     <div style={{ fontSize: "20px", marginTop: "8px", fontFamily: "DS-DIGI" }}>
-      <div>
+      {/* <div>
         Bourly Poker Tour: 
         {selectedTournament ? (
           <>
@@ -18,7 +18,7 @@ export const Content: React.FC<ContentProps> = ({ selectedTournament }) => {
           <div>Chargement des données...</div>
         )}
       </div>
-      <Spacer y={1} />
+      <Spacer y={1} /> */}
     </div>
   );
 };
