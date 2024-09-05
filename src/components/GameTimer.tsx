@@ -54,7 +54,7 @@ const GameTimer: React.FC<GameTimerProps> = ({
     <div style={{
       display: 'grid',
       gridTemplateRows: '3fr 1fr',
-      height: '400px',
+      height: '350px',
       width: '970px',
       border: '4px solid black',
       borderRadius: '16px',
@@ -72,7 +72,7 @@ const GameTimer: React.FC<GameTimerProps> = ({
           fontFamily:"DS-DIGI",
           alignItems:"center",
           fontSize: '2.5em',
-          height:"95%",
+          height:"75%",
           width:"40%",
           padding: '10px',
           margin:'10px',
@@ -88,7 +88,7 @@ const GameTimer: React.FC<GameTimerProps> = ({
         </div>
         <div style={{
           fontFamily:"DS-DIGI",
-          height:'95%',
+          height:'75%',
           fontSize: '3em',
           padding: '10px',
           width:'30%',
@@ -110,7 +110,7 @@ const GameTimer: React.FC<GameTimerProps> = ({
 
         <div style={{
     fontFamily:"DS-DIGI",
-    height:'95%',
+    height:'75%',
     fontSize: '2.5em',
     padding: '20px',
     width:'30%',
@@ -129,29 +129,30 @@ const GameTimer: React.FC<GameTimerProps> = ({
       </div>
       <div style={{background:"black", width:"100%", height:"2px", margin:"5px" }}>
 
-          
-</div>
-      
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-around',
-        alignItems: 'center',
-        paddingBottom: '15px',
-     
-      }}>
-        <div >
+      <div >
           <Button color="danger"  size='lg' className="text-white" onClick={handleGameEnd}>
             <div style={{fontSize:"20px"}}>Stop Partie</div>
             
           </Button>
         </div>
+
+        
         <div >
           <Button color="warning" className="text-black" size='lg' onClick={() => setIsPaused(!isPaused)}>
             <div style={{fontSize:"2Opx"}}>
             {isPaused ? 'Resume' : 'Pause'}</div>
           </Button>
-        </div>
-      </div>
+        </div>   
+</div>
+      
+      {/* <div style={{
+        display: 'flex',
+        justifyContent: 'space-around',
+        alignItems: 'center',
+        paddingBottom: '15px', }}>
+
+     
+      </div> */}
     </div>
     
   );
