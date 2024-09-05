@@ -392,7 +392,7 @@ const StartGame: React.FC<StartGameProps> = ({
 
 
   return (
-    <div style={{ maxWidth: "90%", maxHeight: "70vh", margin: "auto", overflow: "auto" }}>
+    <div style={{ maxWidth: "90%", maxHeight: "65vh", margin: "auto", overflow: "auto" }}>
       <KillerSelectionModal
         killer={killer}
         games={games}
@@ -436,8 +436,8 @@ const StartGame: React.FC<StartGameProps> = ({
       {showReview && !partyId ? (
         <ReviewSelectedPlayers selectedPlayers={selectedPlayers}  selectedTournament={selectedTournament} onConfirm={confirmAndStartGame}/>
       ) : (
-        <div style={{ maxHeight: "90%" }}>
-          <Modal style={{ height: "800px" }} isOpen={gameStarted} onClose={handleGameEnd}>
+        <div style={{ maxHeight: "80%" }}>
+          <Modal style={{ height: "700px" }} isOpen={gameStarted} onClose={handleGameEnd}>
             <div style={{ display: "flex", alignContent: "flex-end" }}>
               {!isPaused ? (
                 <ModalHeader
