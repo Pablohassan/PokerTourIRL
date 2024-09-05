@@ -392,7 +392,7 @@ const StartGame: React.FC<StartGameProps> = ({
 
 
   return (
-    <div style={{ maxWidth: "95%", maxHeight: "90vh", margin: "auto", overflow: "auto" }}>
+    <div style={{ maxWidth: "90%", maxHeight: "85vh", margin: "auto", overflow: "auto" }}>
       <KillerSelectionModal
         killer={killer}
         games={games}

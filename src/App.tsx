@@ -16,6 +16,7 @@ import {
   RedirectToSignIn,
   SignIn,
   SignUp,
+  SignInButton,
 } from "@clerk/clerk-react";
 import {
   PlayerStats,
@@ -117,6 +118,9 @@ useEffect(() => {
         <div >
 
 <div  className=" text-red-200 ">Welcome to the BoulyPokerTour, this app in alpha version so be nice please </div>
+<SignInButton>
+  Deconnexion
+</SignInButton>
 <img src={bourlyimage} alt="pokercouv" className="w-1/2" style={{ display: 'block', marginLeft: 'auto', marginRight: 'auto' }} />
 
 </div>
@@ -178,7 +182,7 @@ element:( <PartyPage
 
   return (
     <div>
-      <ClerkProvider publishableKey={clerkPubKey}>
+      <ClerkProvider publishableKey={clerkPubKey} >
         {element}
       <SignedIn>
        
