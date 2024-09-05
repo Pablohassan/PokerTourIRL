@@ -55,12 +55,14 @@ const GameTimer: React.FC<GameTimerProps> = ({
       border: '4px solid black',
       borderRadius: '16px',
       background: 'rgba(0, 0, 0, 0.2)',
-      boxShadow: '0px 4px 6px rgba(0, 0,5, 0, 0.3)'
+      boxShadow: '0px 4px 6px rgba(0, 0,5, 0, 0.3)',
+      position: 'relative',  // Ensure correct positioning
+      zIndex: 10  // Ra
     }}>
       <div style={{
         display: 'flex',
         justifyContent: 'space-around',
-        alignItems: 'center',
+        alignItems: 'flex-start',
         padding: '10px',
         borderBottom: '2px solid #D1D5DB',
       }}>
@@ -121,10 +123,13 @@ const GameTimer: React.FC<GameTimerProps> = ({
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        padding: '10px 20px',
-        background: 'rgba(0, 0, 0, 0.5)',
+        padding: '5px 25px',
+        background: 'rgba(0, 0, 0, 0.2)',
         borderTop: '2px solid #D1D5DB',
-        borderRadius: '0 0 16px 16px'
+        borderRadius: '0 0 16px 16px',
+        zIndex: 10,  // Ensure buttons are above other elements
+        position: 'relative',
+        transform: 'translateY(-60px)',
       }}>
         <Button color="danger" size='lg' className="text-white" onClick={handleGameEnd}>
           <div style={{ fontSize: "20px" }}>Stop Partie</div>
