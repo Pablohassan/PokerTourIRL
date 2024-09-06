@@ -1,9 +1,6 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.fetchGamesForPlayer = void 0;
-const client_1 = require("@prisma/client");
-const prisma = new client_1.PrismaClient();
-async function fetchGamesForPlayer(playerId, tournamentId) {
+import { PrismaClient } from "@prisma/client";
+const prisma = new PrismaClient();
+export async function fetchGamesForPlayer(playerId, tournamentId) {
     return await prisma.playerStats.findMany({
         where: {
             playerId: playerId,
@@ -13,4 +10,3 @@ async function fetchGamesForPlayer(playerId, tournamentId) {
         },
     });
 }
-exports.fetchGamesForPlayer = fetchGamesForPlayer;
