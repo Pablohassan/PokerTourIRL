@@ -1,30 +1,35 @@
-import express from "express";
-import bodyParser from 'body-parser';
-import _ from "lodash";
-import cors from "cors";
-import dotenv from 'dotenv';
-dotenv.config();
-import { PrismaClient } from "@prisma/client";
-import { fetchGamesForPlayer } from "./services/fetsh-game-for-player.js";
-const prisma = new PrismaClient();
-const app = express();
-app.use(bodyParser.json({ limit: '10mb' }));
-app.options("*", cors());
-app.use(cors({ origin: process.env.CORS_ORIGIN || "https://bourlypokertour.fr" }));
-app.use(express.json());
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = __importDefault(require("express"));
+const body_parser_1 = __importDefault(require("body-parser"));
+const lodash_1 = __importDefault(require("lodash"));
+const cors_1 = __importDefault(require("cors"));
+const dotenv_1 = __importDefault(require("dotenv"));
+dotenv_1.default.config();
+const client_1 = require("@prisma/client");
+const fetsh_game_for_player_js_1 = require("./services/fetsh-game-for-player.js");
+const prisma = new client_1.PrismaClient();
+const app = (0, express_1.default)();
+app.use(body_parser_1.default.json({ limit: '10mb' }));
+app.options("*", (0, cors_1.default)());
+app.use((0, cors_1.default)({ origin: process.env.CORS_ORIGIN || "https://bourlypokertour.fr" }));
+app.use(express_1.default.json());
 // @ts-ignore
 app.use((req, res, next) => {
     res.header("Access-Control-Allow-Origin", "https://bourlypokertour.fr");
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
     next();
 });
-app.use(express.json());
+app.use(express_1.default.json());
 app.get("/season-points/:playerId/:tournamentId", async (req, res, next) => {
     try {
         const playerId = parseInt(req.params.playerId);
         const tournamentId = parseInt(req.params.tournamentId);
-        const games = await fetchGamesForPlayer(playerId, tournamentId);
-        const totalPoints = _.sumBy(games, "points");
+        const games = await (0, fetsh_game_for_player_js_1.fetchGamesForPlayer)(playerId, tournamentId);
+        const totalPoints = lodash_1.default.sumBy(games, "points");
         res.json({ totalPoints });
     }
     catch (err) {
@@ -35,11 +40,11 @@ app.get("/player-stats/:playerId/:tournamentId", async (req, res, next) => {
     try {
         const playerId = parseInt(req.params.playerId);
         const tournamentId = parseInt(req.params.tournamentId);
-        const games = await fetchGamesForPlayer(playerId, tournamentId);
+        const games = await (0, fetsh_game_for_player_js_1.fetchGamesForPlayer)(playerId, tournamentId);
         // Calculate totalCost
-        const totalCost = _.sumBy(games, (game) => game.buyin + game.rebuys);
+        const totalCost = lodash_1.default.sumBy(games, (game) => game.buyin + game.rebuys);
         // Calculate gains
-        const gains = _.sumBy(games, (game) => {
+        const gains = lodash_1.default.sumBy(games, (game) => {
             let gain = 0;
             if (game.position === 1)
                 gain = game.totalCost * 0.6;
@@ -50,7 +55,7 @@ app.get("/player-stats/:playerId/:tournamentId", async (req, res, next) => {
             return gain;
         });
         // Calculate totalRebuys
-        const totalRebuys = _.sumBy(games, "rebuys");
+        const totalRebuys = lodash_1.default.sumBy(games, "rebuys");
         // Return the calculated metrics in a single response
         res.json({ totalCost, gains, totalRebuys });
     }
@@ -100,8 +105,8 @@ app.get("/playerStats/:playerId", async (req, res, next) => {
                 player: true,
             },
         });
-        const totalPoints = _.sumBy(stats, "points");
-        const totalKills = _.sumBy(stats, "kills");
+        const totalPoints = lodash_1.default.sumBy(stats, "points");
+        const totalKills = lodash_1.default.sumBy(stats, "kills");
         res.json({ totalPoints, totalKills, stats });
     }
     catch (err) {
