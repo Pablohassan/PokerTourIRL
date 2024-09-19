@@ -72,7 +72,7 @@ const GameControls: React.FC<GameControlsProps> = ({
   };
 
   return (
-    <div>
+    <div style={{ width: "100%", padding: "5px" }}>
       {gameStarted && (
         <div>
           <BlindTimer

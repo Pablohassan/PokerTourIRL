@@ -8,12 +8,13 @@ const useGameState = (
   setSelectedPlayers: React.Dispatch<React.SetStateAction<Player[]>>,
   blindIndex: number,
   setBlindIndex: React.Dispatch<React.SetStateAction<number>>,
-  initialTimeLeft: number
+  configBlindDuration: number,
 ) => {
 
 
-  const [timeLeft, setTimeLeft] = useState<number>(initialTimeLeft);
+  const [timeLeft, setTimeLeft] = useState<number>(configBlindDuration * 60);
   const [smallBlind, setSmallBlind] = useState(10);
+  const [currentBlindDuration, setCurrentBlindDuration] = useState<number>(configBlindDuration);
   const [bigBlind, setBigBlind] = useState(20);
   const [ante, setAnte] = useState(0);
   const [games, setGames] = useState<PlayerStats[]>([]);
@@ -35,7 +36,7 @@ const useGameState = (
   
 
   const resetGameState = () => {
-    setTimeLeft(initialTimeLeft);
+    setTimeLeft(configBlindDuration * 60);
     setSmallBlind(10);
     setBigBlind(20);
     setAnte(0);
@@ -52,6 +53,7 @@ const useGameState = (
     setOutPlayers([]);
     setLastUsedPosition(0);
     setInitialPlayerCount(0);
+    setCurrentBlindDuration(configBlindDuration );
 
   };
 
@@ -76,6 +78,7 @@ const useGameState = (
       outPlayers,
       lastSavedTime: Date.now(),
       initialPlayerCount,
+      currentBlindDuration,
     };
 
     const gameStateString = JSON.stringify({ state: gameState });
@@ -117,6 +120,7 @@ const useGameState = (
       outPlayers,
       lastSavedTime: Date.now(),
       initialPlayerCount,
+      currentBlindDuration
     };
   
     console.log("Posting initial game state:", gameState);
@@ -192,7 +196,7 @@ const useGameState = (
         setGameStarted(true);
         setInitialGameStatePosted(true);
         setInitialPlayerCount(state.initialPlayerCount);
-
+        setCurrentBlindDuration(state.currentBlindDuration);
   
         setStateRestored(true);  // This should be set here, after successful restoration
     } catch (error) {
@@ -274,7 +278,8 @@ useEffect(() => {
     killer,
     setKiller,
     stateRestored,
-
+    currentBlindDuration, // Use currentBlindDuration here
+    setCurrentBlindDuration,
     loading,
     error,
     positions,

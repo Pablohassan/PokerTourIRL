@@ -8,13 +8,14 @@ import { useNavigate } from 'react-router-dom';
 interface GameConfigurationProps {
   championnat: Tournaments[];
   players: Player[];
-  onStartGameConfiguration: (selectedTournament: Tournaments | null, blindDuration: number, selectedPlayers: Player[]) => void;
+  handleGameConfiguration: (selectedTournament: Tournaments | null, configBlindDuration: number, selectedPlayers: Player[]) => void;
 }
 
-const GameConfiguration: React.FC<GameConfigurationProps> = ({ championnat, players, onStartGameConfiguration }) => {
+const GameConfiguration: React.FC<GameConfigurationProps> = ({ championnat, players, handleGameConfiguration }) => {
   const [selectedTournamentId, setSelectedTournamentId] = useState<number | null>(null);
-  const [blindDuration, setBlindDuration] = useState<number>(20);
+ 
   const [selectedPlayers, setSelectedPlayers] = useState<Player[]>([]);
+  const [configBlindDuration, setConfigBlindDuration] = useState<number>(20); 
   const [newTournamentYear, setNewTournamentYear] = useState<string>('');
 
   const navigate = useNavigate();
@@ -24,7 +25,7 @@ const GameConfiguration: React.FC<GameConfigurationProps> = ({ championnat, play
   };
 
   const handleBlindDurationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setBlindDuration(Number(e.target.value));
+    setConfigBlindDuration(Number(e.target.value));
   };
 
   const handlePlayerSelect = (player: Player) => {
@@ -47,7 +48,7 @@ const GameConfiguration: React.FC<GameConfigurationProps> = ({ championnat, play
       alert("Vous devez selectionner au moins 4 joueurs pour lancer une partie ");
       return
     }
-    onStartGameConfiguration(selectedTournament, blindDuration, selectedPlayers);
+    handleGameConfiguration(selectedTournament, configBlindDuration, selectedPlayers);
   };
   
 
@@ -91,8 +92,8 @@ const GameConfiguration: React.FC<GameConfigurationProps> = ({ championnat, play
         <button type="submit" onClick={handleCreateTournament} className="form-modern-button">Cree nouveau Trournois</button>
     </div>
     <div className="form-modern-group">
-        <label htmlFor="blindDuration" className="form-modern-label">Duree des blindes (minutes) :</label>
-        <input type="number" id="blindDuration" value={blindDuration} onChange={handleBlindDurationChange} min="1" className="form-modern-input" />
+        <label htmlFor="configBlindDuration" className="form-modern-label">Duree des blindes (minutes) :</label>
+        <input type="number" id="configBlindDuration" value={configBlindDuration} onChange={handleBlindDurationChange} min="1" className="form-modern-input" />
     </div>
     <div className="form-modern-group">
         <label className="form-modern-label">Selection des Joueurs :</label>
