@@ -1,35 +1,35 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = __importDefault(require("express"));
-const body_parser_1 = __importDefault(require("body-parser"));
-const lodash_1 = __importDefault(require("lodash"));
-const cors_1 = __importDefault(require("cors"));
-const dotenv_1 = __importDefault(require("dotenv"));
-dotenv_1.default.config();
-const client_1 = require("@prisma/client");
-const fetsh_game_for_player_js_1 = require("./services/fetsh-game-for-player.js");
-const prisma = new client_1.PrismaClient();
-const app = (0, express_1.default)();
-app.use(body_parser_1.default.json({ limit: '10mb' }));
-app.options("*", (0, cors_1.default)());
-app.use((0, cors_1.default)({ origin: process.env.CORS_ORIGIN || "https://bourlypokertour.fr" }));
-app.use(express_1.default.json());
+import express from "express";
+import bodyParser from 'body-parser';
+import _ from "lodash";
+import cors from "cors";
+import dotenv from 'dotenv';
+dotenv.config();
+import { PrismaClient } from "@prisma/client";
+import { fetchGamesForPlayer } from "./services/fetsh-game-for-player.js";
+const prisma = new PrismaClient();
+const app = express();
+app.use(bodyParser.json({ limit: '10mb' }));
+app.options("*", cors());
+app.use(cors({ origin: process.env.CORS_ORIGIN || "https://bourlypokertour.fr" }));
+app.use(express.json());
 // @ts-ignore
 app.use((req, res, next) => {
     res.header("Access-Control-Allow-Origin", "https://bourlypokertour.fr");
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
     next();
 });
-app.use(express_1.default.json());
+app.use(express.json());
+// @ts-ignore
+app.use((req, res, next) => {
+    console.log("Received request:", req.method, req.url);
+    next();
+});
 app.get("/season-points/:playerId/:tournamentId", async (req, res, next) => {
     try {
         const playerId = parseInt(req.params.playerId);
         const tournamentId = parseInt(req.params.tournamentId);
-        const games = await (0, fetsh_game_for_player_js_1.fetchGamesForPlayer)(playerId, tournamentId);
-        const totalPoints = lodash_1.default.sumBy(games, "points");
+        const games = await fetchGamesForPlayer(playerId, tournamentId);
+        const totalPoints = _.sumBy(games, "points");
         res.json({ totalPoints });
     }
     catch (err) {
@@ -40,11 +40,11 @@ app.get("/player-stats/:playerId/:tournamentId", async (req, res, next) => {
     try {
         const playerId = parseInt(req.params.playerId);
         const tournamentId = parseInt(req.params.tournamentId);
-        const games = await (0, fetsh_game_for_player_js_1.fetchGamesForPlayer)(playerId, tournamentId);
+        const games = await fetchGamesForPlayer(playerId, tournamentId);
         // Calculate totalCost
-        const totalCost = lodash_1.default.sumBy(games, (game) => game.buyin + game.rebuys);
+        const totalCost = _.sumBy(games, (game) => game.buyin + game.rebuys);
         // Calculate gains
-        const gains = lodash_1.default.sumBy(games, (game) => {
+        const gains = _.sumBy(games, (game) => {
             let gain = 0;
             if (game.position === 1)
                 gain = game.totalCost * 0.6;
@@ -55,7 +55,7 @@ app.get("/player-stats/:playerId/:tournamentId", async (req, res, next) => {
             return gain;
         });
         // Calculate totalRebuys
-        const totalRebuys = lodash_1.default.sumBy(games, "rebuys");
+        const totalRebuys = _.sumBy(games, "rebuys");
         // Return the calculated metrics in a single response
         res.json({ totalCost, gains, totalRebuys });
     }
@@ -105,8 +105,8 @@ app.get("/playerStats/:playerId", async (req, res, next) => {
                 player: true,
             },
         });
-        const totalPoints = lodash_1.default.sumBy(stats, "points");
-        const totalKills = lodash_1.default.sumBy(stats, "kills");
+        const totalPoints = _.sumBy(stats, "points");
+        const totalKills = _.sumBy(stats, "kills");
         res.json({ totalPoints, totalKills, stats });
     }
     catch (err) {
@@ -176,20 +176,12 @@ app.get("/tournament/:year", async (req, res, next) => {
 });
 // @ts-ignore
 app.get("/parties", async (req, res, next) => {
-    const { page = 1, limit = 10 } = req.query;
-    const skip = (Number(page) - 1) * Number(limit);
     try {
         const parties = await prisma.party.findMany({
-            skip,
-            take: Number(limit),
-            select: {
-                id: true,
-                date: true,
+            include: {
                 playerStats: {
-                    select: {
-                        playerId: true,
-                        points: true,
-                        rebuys: true,
+                    include: {
+                        player: true,
                     },
                 },
             },
@@ -269,11 +261,13 @@ app.get("/parties/:partyId/stats", async (req, res) => {
         return res.status(400).json({ error: "Party ID must be a number" });
     }
     try {
+        console.log(`Fetching stats for party id: ${partyId}`);
         const stats = await prisma.playerStats.findMany({
             where: { partyId: partyId },
             include: { player: true },
             take: 10, // Limit the results to 10
         });
+        console.log(`Fetched stats for party id: ${partyId} successfully`);
         // Vérifiez si des statistiques ont été trouvées
         if (!stats || stats.length === 0) {
             return res.status(404).json({ error: "No stats found for this party ID" });
@@ -288,11 +282,14 @@ app.get("/parties/:partyId/stats", async (req, res) => {
 // @ts-ignore
 app.get('/gameState', async (req, res) => {
     try {
+        console.log(`Fetching game state`);
         const gameState = await prisma.gameState.findFirst(); // Find the first (and only) game state
         if (gameState) {
+            console.log('Game state found:', gameState);
             res.json(gameState);
         }
         else {
+            console.log('Game state not found');
             res.status(404).json({ error: 'Game state not found' });
         }
     }
@@ -481,10 +478,12 @@ app.put("/gamesResults/:id", async (req, res) => {
             return res.status(400).json({ error: "Invalid game ID" });
         }
         const gameData = req.body;
+        console.log("Received game data:", req.body);
         const updatedGame = await prisma.playerStats.update({
             where: { id: gameId },
             data: gameData,
         });
+        console.log("Updated game:", updatedGame);
         res.json(updatedGame);
     }
     catch (error) {
@@ -518,11 +517,14 @@ app.put("/parties/:id", async (req, res) => {
     if (isNaN(partyId)) {
         return res.status(400).json({ error: "Invalid party ID" });
     }
+    // Validate the date format or any other necessary validation
+    // This step is optional and depends on your requirements
     try {
         const updatedParty = await prisma.party.update({
             where: { id: partyId },
             data: { date }
         });
+        console.log("Updating party date to:", date);
         res.json(updatedParty);
     }
     catch (error) {
@@ -532,6 +534,7 @@ app.put("/parties/:id", async (req, res) => {
 });
 // sais pas comment ça fonctionne
 app.put("/playerStats/eliminate", async (req, res) => {
+    console.log("Request received at /playerStats/eliminate");
     const { playerId, eliminatedById, partyId } = req.body;
     if (!playerId) {
         return res.status(400).json({ error: "Player ID is required" });
