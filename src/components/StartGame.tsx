@@ -44,14 +44,15 @@ const StartGame: React.FC<StartGameProps> = ({
 
   const [isPaused, setIsPaused] = useState(false);
   const [selectedTournament, setSelectedTournament] = useState<Tournaments | null>(null);
-  const [blindDuration, setBlindDuration] = useState<number>(20);
+  // const [blindDuration, setBlindDuration] = useState<number>(20);
   const [playerOutGame, setPlayerOutGame] = useState<number | null>(null);
   const [partyId, setPartyId] = useState(false);
   const [isEnding, setIsEnding] = useState(false);
+  const [initialBlindDuration, setInitialBlindDuration] = useState<number>(20); 
 
   
   // const [lastUsedPosition, setLastUsedPosition] = useState(0);
-  const initialTimeLeft = blindDuration * 60;
+  // const initialTimeLeft = blindDuration * 60;
 
 
   
@@ -89,13 +90,23 @@ const StartGame: React.FC<StartGameProps> = ({
     setLastUsedPosition,
     initialPlayerCount,  // Récupérer initialPlayerCount ici
     setInitialPlayerCount,
+    currentBlindDuration 
    
    
-  } = useGameState(gameStarted, setGameStarted, selectedPlayers, setSelectedPLayers, blindIndex, setBlindIndex, initialTimeLeft);
+  } = useGameState(gameStarted, setGameStarted, selectedPlayers, setSelectedPLayers, blindIndex, setBlindIndex, initialBlindDuration);
 
   const navigate = useNavigate();
+  const initialTimeLeft = currentBlindDuration * 60;
 
 
+  const handleGameConfiguration = (selectedTournament: Tournaments | null, currentBlindDuration: number, selectedPlayers: Player[]) => {
+   
+    setSelectedTournament(selectedTournament);
+    setInitialBlindDuration(currentBlindDuration);
+    setSelectedPLayers(selectedPlayers);
+    setShowConfig(false);
+    setShowReview(true);
+  };
   
 
   
@@ -151,15 +162,7 @@ const StartGame: React.FC<StartGameProps> = ({
   }, [stateRestored]);
   
   
-  const handleStartGameConfiguration = (selectedTournament: Tournaments | null, blindDuration: number, selectedPlayers: Player[]) => {
-   
-    setSelectedTournament(selectedTournament);
-    setBlindDuration(blindDuration);
-    setSelectedPLayers(selectedPlayers);
-    setShowConfig(false);
-    setShowReview(true);
-  };
-  
+
   
 
   
@@ -392,7 +395,9 @@ const StartGame: React.FC<StartGameProps> = ({
 
 
   return (
-    <div style={{ maxWidth: "88%", maxHeight: "95vh", margin: "auto", overflow: "auto" }}>
+    <div style={{paddingTop:"1%", maxWidth: "95%", maxHeight: "90vh", margin: "auto", overflow: "auto",display: "flex",
+      flexDirection: "column",
+      alignItems: "center", }}>
       <KillerSelectionModal
         killer={killer}
         games={games}
@@ -416,7 +421,7 @@ const StartGame: React.FC<StartGameProps> = ({
         <GameConfiguration
           championnat={championnat}
           players={players}
-          onStartGameConfiguration={handleStartGameConfiguration}
+          handleGameConfiguration={handleGameConfiguration}
         />
       )}
       {/* <Modal isOpen={!gameStarted && !partyId && !showConfig}>
@@ -436,9 +441,15 @@ const StartGame: React.FC<StartGameProps> = ({
       {showReview && !partyId ? (
         <ReviewSelectedPlayers selectedPlayers={selectedPlayers}  selectedTournament={selectedTournament} onConfirm={confirmAndStartGame}/>
       ) : (
-        <div style={{ maxHeight: "600px" }}>
-          <Modal style={{ height: "400px" }} isOpen={gameStarted} onClose={handleGameEnd}>
-            <div style={{ display: "flex", alignContent: "flex-end" }}>
+        <div style={{ width: "100%", flex: 1, display: "flex", flexDirection: "column" }}>
+
+          <Modal style={{
+              width: "100%",
+              maxWidth: "800px", // Adjust as needed
+              height: "auto", // Let content dictate height
+              maxHeight: "90vh",
+            }} isOpen={gameStarted} onClose={handleGameEnd}>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
               {!isPaused ? (
                 <ModalHeader
                   style={{
@@ -462,7 +473,7 @@ const StartGame: React.FC<StartGameProps> = ({
               )}
               <Content selectedTournament={selectedTournament}  />
             </div>
-            <ModalBody>
+            <ModalBody style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
               <GameControls
                 gameStarted={gameStarted}
                 isPaused={isPaused}
@@ -482,6 +493,7 @@ const StartGame: React.FC<StartGameProps> = ({
                 setBlindIndex={setBlindIndex}
                 initialTimeLeft={timeLeft || initialTimeLeft}
               />
+             
               {selectedPlayers.length > 0 && games.length > 0 ? (
                 
                 <PlayerList
@@ -502,4 +514,3 @@ const StartGame: React.FC<StartGameProps> = ({
 };
 
 export default StartGame;
-

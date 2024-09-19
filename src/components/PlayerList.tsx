@@ -12,7 +12,16 @@ interface PlayerListProps {
 const PlayerList: React.FC<PlayerListProps> = ({ players, games, handleRebuy, handleOutOfGame }) => {
 
   return (
-    <div style={{ display: "flex", flexDirection: "row", flexWrap: "wrap" }}>
+    <div
+    style={{
+      display: "flex",
+      flexDirection: "row",
+      overflowX: "auto",
+      padding: "10px",
+      // Optional: Add some space at the bottom to prevent cutting off
+      marginBottom: "10px",
+    }}
+  >
       {players.map((player) => {
         const gameForPlayer = games.find((game) => game.playerId === player.id);
         if (!gameForPlayer) {
@@ -24,7 +33,7 @@ const PlayerList: React.FC<PlayerListProps> = ({ players, games, handleRebuy, ha
           );
         }
         return (
-          <div key={player.id} style={{ display: "flex", flexDirection: "column" }}>
+          <div key={player.id} style={{ flex: "0 0 auto", marginRight: "2px" }}>
             <div className="p-1">
               <CardPlayer
                 key={player.id}
@@ -43,3 +52,4 @@ const PlayerList: React.FC<PlayerListProps> = ({ players, games, handleRebuy, ha
 };
 
 export default PlayerList;
+
