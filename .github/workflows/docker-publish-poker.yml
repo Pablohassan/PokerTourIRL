@@ -22,7 +22,7 @@ jobs:
        run: docker buildx create --use
 
         # Log in to Docker Hub
-     - name: Log in to Docker Hub
+     - name: Log in to Docker Hub using specic token generated for this repo and and dockerhub username
        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
         # Build and push the Frontend Docker image for ARM64
