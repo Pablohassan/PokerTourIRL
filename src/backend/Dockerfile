@@ -19,10 +19,10 @@ COPY tsconfig.node.json /app/tsconfig.node.json
 
 
 # Copy the prisma directory, which contains schema.prisma
-COPY backend/prisma ./prisma
+COPY backend/src/prisma ./prisma
 
 # Generate Prisma client
-WORKDIR /app/backend/prisma
+WORKDIR /app/src/backend/prisma
 RUN npx prisma generate
 
 # Build the backend application
@@ -34,7 +34,7 @@ FROM node:20-alpine
 LABEL maintainer="Pablo Hassan YOMBA <sesmanovic@gmail.com>"
 
 # Set the working directory inside the container
-WORKDIR /app/backend
+WORKDIR /app/src/backend
 
 # Copy only the necessary files from the build stage
 COPY --from=build /app/backend /app/backend
