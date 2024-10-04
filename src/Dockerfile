@@ -38,7 +38,7 @@ COPY ./src/nginx_frontend.conf /etc/nginx/conf.d/
 # Copy the built static files from the build stage
 COPY --from=build /app/dist /usr/share/nginx/html
 
-# Expose port 5174 for Nginx
+# Expose port 5173 for Nginx
 EXPOSE 5173
 
 # Start the Nginx server
