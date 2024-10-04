@@ -3,17 +3,17 @@ FROM node:20-alpine AS build
 LABEL maintainer="Pablo Hassan YOMBA <sesmanovic@gmail.com>"
 
 # Set the working directory inside the containe
-WORKDIR /app/backend
+WORKDIR /app/src/backend
 
-COPY backend/package.json ./package.json
-COPY backend/package-lock.json ./package-lock.json
+COPY backend/src/package.json ./package.json
+COPY backend/src/package-lock.json ./package-lock.json
 RUN npm install
 
 
-COPY backend ./
+COPY ./src/backend ./
 
 # Copy backend's own tsconfig.json
-COPY backend/tsconfig.json ./tsconfig.json
+COPY ./src/backend/tsconfig.json ./tsconfig.json
 
 COPY tsconfig.node.json /app/tsconfig.node.json
 
@@ -26,7 +26,7 @@ WORKDIR /app/src/backend/prisma
 RUN npx prisma generate
 
 # Build the backend application
-WORKDIR /app/backend
+WORKDIR /app/src/backend
 RUN npm run build
 
 # Step 2: Production stage
@@ -37,7 +37,7 @@ LABEL maintainer="Pablo Hassan YOMBA <sesmanovic@gmail.com>"
 WORKDIR /app/src/backend
 
 # Copy only the necessary files from the build stage
-COPY --from=build /app/backend /app/backend
+COPY --from=build /app/src/backend /app/backend
 COPY --from=build /app/tsconfig.node.json /app/tsconfig.node.json 
 # COPY --from=build /app/backend/dist /app/backend/dist
 

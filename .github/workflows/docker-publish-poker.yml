@@ -29,6 +29,8 @@ jobs:
      - name: Build and Push Frontend Poker Docker image
        run: |
          docker buildx build --platform linux/arm64 \
+           --build-arg VITE_REACT_APP_CLERK_PUBLISHABLE_KEY=${{ secrets.VITE_REACT_APP_CLERK_PUBLISHABLE_KEY }} \
+           --build-arg VITE_WEBSOCKET_URL=${{ secrets.VITE_WEBSOCKET_URL }} \
            -t pablohassan/poker_frontend_app:01 \
            -f ./src/Dockerfile --push .
 

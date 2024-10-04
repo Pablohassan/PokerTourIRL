@@ -14,6 +14,14 @@ RUN npm install
 # Copy the rest of the application code
 COPY . .
 
+# Define build arguments
+ARG VITE_REACT_APP_CLERK_PUBLISHABLE_KEY
+ARG VITE_WEBSOCKET_URL
+
+# Set environment variables
+ENV VITE_REACT_APP_CLERK_PUBLISHABLE_KEY=${VITE_REACT_APP_CLERK_PUBLISHABLE_KEY}
+ENV VITE_WEBSOCKET_URL=${VITE_WEBSOCKET_URL}
+
 # Build the application
 RUN npm run build
 
