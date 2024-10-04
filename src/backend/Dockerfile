@@ -39,6 +39,7 @@ WORKDIR /app/src/backend
 # Copy only the necessary files from the build stage
 COPY --from=build /app/src/backend /app/backend
 COPY --from=build /app/tsconfig.node.json /app/tsconfig.node.json 
+COPY --from=build /app/tsconfig.json /app/tsconfig.json
 # COPY --from=build /app/backend/dist /app/backend/dist
 
 # Expose the port your app runs on
