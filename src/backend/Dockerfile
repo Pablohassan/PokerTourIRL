@@ -37,8 +37,15 @@ LABEL maintainer="Pablo Hassan YOMBA <sesmanovic@gmail.com>"
 # Set the working directory inside the container
 WORKDIR /app/src/backend
 
+
+
 # Copy only the necessary files from the build stage
 COPY --from=build /app/src/backend /app/backend
+
+COPY --from=build /app/src/backend/package.json /app/src/backend/package.json
+COPY --from=build /app/src/backend/package-lock.json /app/src/backend/package-lock.json
+# COPY --from=build /app/src/backend/tsconfig.backend.json /app/src/backend/tsconfig.backend.json
+
 COPY --from=build /app/tsconfig.node.json /app/tsconfig.node.json 
 COPY --from=build /app/tsconfig.json /app/tsconfig.json
 # COPY --from=build /app/backend/dist /app/backend/dist
