@@ -5,8 +5,8 @@ LABEL maintainer="Pablo Hassan YOMBA <sesmanovic@gmail.com>"
 # Set the working directory inside the containe
 WORKDIR /app/src/backend
 
-COPY backend/package.json ./package.json
-COPY backend/package-lock.json ./package-lock.json
+COPY ./src/backend/package.json ./package.json
+COPY ./src/backend/package-lock.json ./package-lock.json
 RUN npm install
 
 
