@@ -13,8 +13,8 @@ RUN npm install
 COPY ./src/backend ./
 
 # Copy backend's own tsconfig.json
-COPY ./src/backend/tsconfig.json ./tsconfig.json
-
+COPY ./src/backend/tsconfig.backend.json ./tsconfig.backend.json
+COPY tsconfig.json ./tsconfig.json
 COPY tsconfig.node.json /app/tsconfig.node.json
 
 
