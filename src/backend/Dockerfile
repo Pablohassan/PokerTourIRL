@@ -40,7 +40,7 @@ WORKDIR /app/src/backend
 
 
 # Copy only the necessary files from the build stage
-COPY --from=build /app/src/backend /app/backend
+COPY --from=build /app/src/backend /app/src/backend
 
 COPY --from=build /app/src/backend/package.json /app/src/backend/package.json
 COPY --from=build /app/src/backend/package-lock.json /app/src/backend/package-lock.json
