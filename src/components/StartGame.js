@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api";
 import GameConfiguration from './GameConfiguration'; // Corriger le nom du fichier
-// import { Content } from "./Content";
 import ReviewSelectedPlayers from "../components/ReviewSelectedPlayers";
 import GameControls from "./GameControls";
 import PlayerList from "./PlayerList";
@@ -285,16 +284,31 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, players, 
                             height: "100%",
                             maxHeight: "100vh"
                         }, children: [_jsx(ModalHeader, { style: {
-                                    fontSize: "clamp(18px, 4vw, 28px)", // Responsive font size
+                                    fontSize: "clamp(18px, 4vw, 28px)",
                                     fontWeight: "bolder",
                                     color: isPaused ? "red" : "green",
                                 }, children: isPaused ? "Game Paused" : "Game in Progress" }), _jsxs(ModalBody, { style: {
-                                    overflow: "auto",
+                                    overflow: "hidden",
                                     flexGrow: 1,
                                     padding: "10px",
                                     display: "flex",
                                     flexDirection: "column",
-                                    gap: "10px"
-                                }, children: [_jsx(GameControls, { gameStarted: gameStarted, isPaused: isPaused, timeLeft: timeLeft, smallBlind: smallBlind, bigBlind: bigBlind, ante: ante, handleGameEnd: handleGameEnd, setIsPaused: setIsPaused, pot: pot, middleStack: middleStack, setSmallBlind: setSmallBlind, setBigBlind: setBigBlind, setAnte: setAnte, setTimeLeft: setTimeLeft, blindIndex: blindIndex, setBlindIndex: setBlindIndex, initialTimeLeft: timeLeft || initialTimeLeft }), selectedPlayers.length > 0 && games.length > 0 ? (_jsx(PlayerList, { players: selectedPlayers, games: games, handleRebuy: handleRebuy, handleOutOfGame: handleOutOfGame })) : (_jsx("div", { children: "Loading player data..." }))] })] }) }) }))] }));
+                                    gap: "10px",
+                                    maxHeight: "calc(100vh - 100px)"
+                                }, children: [_jsx(GameControls, { gameStarted: gameStarted, isPaused: isPaused, timeLeft: timeLeft, smallBlind: smallBlind, bigBlind: bigBlind, ante: ante, handleGameEnd: handleGameEnd, setIsPaused: setIsPaused, pot: pot, middleStack: middleStack, setSmallBlind: setSmallBlind, setBigBlind: setBigBlind, setAnte: setAnte, setTimeLeft: setTimeLeft, blindIndex: blindIndex, setBlindIndex: setBlindIndex, initialTimeLeft: timeLeft || initialTimeLeft, style: {
+                                            maxHeight: "min(700px, 50vh)",
+                                            overflow: "visible"
+                                        } }), selectedPlayers.length > 0 && games.length > 0 ? (_jsx("div", { style: {
+                                            maxHeight: "700px",
+                                            overflowY: "auto",
+                                            overflowX: "hidden",
+                                            marginTop: "10px",
+                                            padding: "10px",
+                                            display: "flex",
+                                            flexWrap: "wrap",
+                                            gap: "10px",
+                                            justifyContent: "center",
+                                            alignItems: "flex-start"
+                                        }, children: _jsx(PlayerList, { players: selectedPlayers, games: games, handleRebuy: handleRebuy, handleOutOfGame: handleOutOfGame }) })) : (_jsx("div", { children: "Loading player data..." }))] })] }) }) }))] }));
 };
 export default StartGame;
