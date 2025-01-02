@@ -10,7 +10,6 @@ import bourlyimage from "./assets/bourlypoker3.webp";
 // import Ak from "./components/PokerLogo";
 import { ClerkProvider, SignedIn, SignedOut, RedirectToSignIn, SignIn, SignUp, } from "@clerk/clerk-react";
 import AddPlayer from "./components/AddPlayer";
-import axios from "axios";
 if (!import.meta.env.VITE_REACT_APP_CLERK_PUBLISHABLE_KEY) {
     throw new Error("Missing Publishable Key");
 }
@@ -27,7 +26,7 @@ export default function App() {
     useEffect(() => {
         const fetchChampionnat = async () => {
             try {
-                const response = await axios.get("https://api.bourlypokertour.fr/tournaments");
+                const response = await api.get("/tournaments");
                 // Si vous souhaitez stocker tous les tournois dans le tableau:
                 const formattedChampionnat = response.data.map((t) => ({
                     id: t.id,

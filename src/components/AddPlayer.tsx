@@ -1,6 +1,6 @@
 import { FormEvent, useContext, useEffect, useState } from "react";
 import axios, { AxiosError } from "axios";
-
+import api from '../api';
 
 import {UIContext} from '../components/UiProvider'
 import { Button, Card,  Table, Spacer, Input, TableHeader, TableColumn, TableBody, TableRow, TableCell} from "@nextui-org/react";
@@ -34,7 +34,7 @@ function AddPlayer() {
   useEffect(() => {
     const fetchPlayers = async () => {
       try {
-        const response = await axios.get("https://api.bourlypokertour.fr/player");
+        const response = await api.get('/player');
         setPlayers(response.data);
       } catch (error) {
         console.error(error);
@@ -61,8 +61,8 @@ function AddPlayer() {
       
   
     try {
-      // Fetch all players
-      const response = await axios.get("https://api.bourlypokertour.fr/player");
+      // Change the URL to match your backend
+      const response = await api.get('/player');
       const players = response.data;
   
       // Check if a player with the given name already exists
@@ -75,8 +75,8 @@ function AddPlayer() {
         return;
       }
   
-      // If the player doesn't exist, proceed to create a new player
-      const postResponse = await axios.post("https://api.bourlypokertour.fr/players", { name, phoneNumber });
+      // Change the URL to match your backend
+      const postResponse = await api.post('/players', { name, phoneNumber });
       
       // If the player is successfully created, show a success toast
       if (postResponse.data) {

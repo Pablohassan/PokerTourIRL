@@ -5,7 +5,6 @@ import GameTimer from "./GameTimer";
 const GameControls = ({ gameStarted, isPaused, timeLeft, smallBlind, bigBlind, ante, handleGameEnd, setIsPaused, pot, middleStack, setSmallBlind, setBigBlind, setAnte, setTimeLeft, blindIndex, setBlindIndex, initialTimeLeft }) => {
     const timerRef = useRef(null);
     useEffect(() => {
-        console.log("GameControls initialTimeLeft:", initialTimeLeft);
     }, [initialTimeLeft]);
     useEffect(() => {
         if (!isPaused && gameStarted && timeLeft > 0) {

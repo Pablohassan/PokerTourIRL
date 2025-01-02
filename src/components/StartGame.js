@@ -13,14 +13,15 @@ import toast from "react-hot-toast";
 import { Modal, ModalBody, ModalHeader } from "@nextui-org/react";
 const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, players, updateAfterGameEnd, blindIndex, setBlindIndex }) => {
     const [gameStarted, setGameStarted] = useState(false);
-    const [showReview, setShowReview] = useState(true);
+    const [showReview, setShowReview] = useState(false);
     const [showConfig, setShowConfig] = useState(true);
     // const [outPlayers, setOutPlayers] = useState<Player[]>([]);
     const [isPaused, setIsPaused] = useState(false);
     const [selectedTournament, setSelectedTournament] = useState(null);
     const [blindDuration, setBlindDuration] = useState(20);
     const [playerOutGame, setPlayerOutGame] = useState(null);
-    const [partyId, setPartyId] = useState(null);
+    const [partyId, setPartyId] = useState(false);
+    const [isEnding, setIsEnding] = useState(false);
     // const [lastUsedPosition, setLastUsedPosition] = useState(0);
     const initialTimeLeft = blindDuration * 60;
     const { timeLeft, setTimeLeft, smallBlind, setSmallBlind, bigBlind, setBigBlind, ante, setAnte, games, setGames, pot, setPot, middleStack, setSavedTotalStack, totalStack, setTotalStack, saveGameState, resetGameState, rebuyPlayerId, setRebuyPlayerId, killer, setKiller, stateRestored, postInitialGameState, loading, error, setPositions, outPlayers, // Ajoutez cette ligne
@@ -68,39 +69,38 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, players, 
             });
         }
     }, [stateRestored]);
+    const handleStartGameConfiguration = (selectedTournament, blindDuration, selectedPlayers) => {
+        setSelectedTournament(selectedTournament);
+        setBlindDuration(blindDuration);
+        setSelectedPLayers(selectedPlayers);
+        setShowConfig(false);
+        setShowReview(true);
+    };
     const onStartGame = async () => {
-        if (gameStarted || stateRestored) {
+        if (gameStarted) {
             alert("A game is already in progress.");
             return;
         }
         resetGameState();
+        if (selectedPlayers.length < 4) {
+            alert("You need at least 4 players to start a game.");
+            return;
+        }
         try {
-            const response = await api.post("/playerStats/start", {
-                date: new Date(),
+            // Appeler directement l'API playerStats/start pour créer une nouvelle partie et les statistiques des joueurs
+            const playerStatsResponse = await api.post("/playerStats/start", {
                 players: selectedPlayers.map((player) => player.id),
-                tournamentId: selectedTournament ? selectedTournament.id : null,
             });
-            if (response.data && response.data.message) {
-                toast(response.data.message);
+            if (playerStatsResponse.data?.playerStats) {
+                const playerStats = playerStatsResponse.data.playerStats;
+                setGames(playerStats);
+                setSelectedPLayers(selectedPlayers);
                 setGameStarted(true);
-                if (Array.isArray(response.data.playerStats)) {
-                    const playerStats = response.data.playerStats;
-                    setGames(playerStats);
-                    setSelectedPLayers(selectedPlayers);
-                    if (response.data.partyId) {
-                        setPartyId(response.data.partyId);
-                        postInitialGameState();
-                    }
-                    else {
-                        console.error('No partyId received in API response');
-                    }
-                }
-                else {
-                    console.error("Invalid playerStats format in API response:", response.data.playerStats);
-                }
+                postInitialGameState(); // Envoyer l'état initial du jeu
+                toast("Game started successfully!");
             }
             else {
-                console.error("Invalid API response:", response.data);
+                throw new Error("Invalid playerStats format in API response.");
             }
         }
         catch (err) {
@@ -116,10 +116,10 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, players, 
         setInitialPlayerCount(selectedPlayers.length);
     };
     useEffect(() => {
-        if (gameStarted) {
+        if (gameStarted && !isEnding) {
             saveGameState(timeLeft);
         }
-    }, [gameStarted, outPlayers]);
+    }, [gameStarted, timeLeft, isEnding, outPlayers]);
     const confirmAndStartGame = async () => {
         setShowReview(false);
         await onStartGame();
@@ -210,11 +210,13 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, players, 
     };
     const handleGameEnd = async () => {
         if (games.filter((game) => !game.outAt).length === 1) {
+            setIsEnding(true);
             const winningPlayerId = games.find((game) => !game.outAt)?.playerId;
             const updatedGames = games.map((game) => game.playerId === winningPlayerId
                 ? { ...game, points: initialPlayerCount, outAt: new Date(), position: 1 }
                 : game);
             try {
+                console.log("Saving final results...");
                 // Enregistrer les résultats finaux
                 await api.post("/gameResults", updatedGames);
                 updateAfterGameEnd(updatedGames);
@@ -226,9 +228,10 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, players, 
                     throw new Error("Failed to delete game state on server");
                 }
                 console.log('Game state deleted successfully from server');
+                toast.success("Game ended successfully!");
                 resetGameState(); // Réinitialiser l'état local
                 setGameStarted(false);
-                setPartyId(null);
+                setPartyId(false);
                 navigate("/results");
             }
             catch (error) {
@@ -239,15 +242,26 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, players, 
         else {
             alert("The game cannot be ended yet as more than one player is still playing.");
         }
+        try {
+            const response = await fetch(`https://api.bourlypokertour.fr/gameState`);
+            console.log("API Response:", response);
+            if (response.ok) {
+                const response = await fetch('https://api.bourlypokertour.fr/gameState', {
+                    method: 'DELETE',
+                });
+                if (!response.ok) {
+                    throw new Error("Failed to delete game state on server");
+                }
+                console.log('Game state deleted successfully from server');
+                toast.success("Game ended successfully!");
+            }
+        }
+        catch (error) {
+            console.error("Error:", error);
+        }
+        setIsEnding(false);
     };
-    const handleStartGameConfiguration = (selectedTournament, blindDuration, selectedPlayers) => {
-        setSelectedTournament(selectedTournament);
-        setBlindDuration(blindDuration);
-        setSelectedPLayers(selectedPlayers);
-        setShowConfig(false);
-        setShowReview(true);
-    };
-    return (_jsxs("div", { style: { maxWidth: "90%", maxHeight: "80vh", margin: "auto", overflow: "auto" }, children: [_jsx(KillerSelectionModal, { killer: killer, games: games, currentlyPlayingPlayers: selectedPlayers.filter((p) => !games.find((g) => g.playerId === p.id && g.outAt)), rebuyPlayerId: rebuyPlayerId, playerOutGame: playerOutGame, handlePlayerKillSelection: (killerPlayerId) => {
+    return (_jsxs("div", { style: { maxWidth: "95%", maxHeight: "90vh", margin: "auto", overflow: "auto" }, children: [_jsx(KillerSelectionModal, { killer: killer, games: games, currentlyPlayingPlayers: selectedPlayers.filter((p) => !games.find((g) => g.playerId === p.id && g.outAt)), rebuyPlayerId: rebuyPlayerId, playerOutGame: playerOutGame, handlePlayerKillSelection: (killerPlayerId) => {
                     if (window.confirm("Do you want to select this player as the killer?")) {
                         setGames((prevGames) => prevGames.map((game) => game.playerId === killerPlayerId ? { ...game, kills: game.kills + 1 } : game));
                         setKiller(false);

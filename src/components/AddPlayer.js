@@ -1,6 +1,6 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { useContext, useEffect, useState } from "react";
-import axios from "axios";
+import api from '../api';
 import { UIContext } from '../components/UiProvider';
 import { Button, Card, Table, Spacer, Input, TableHeader, TableColumn, TableBody, TableRow, TableCell } from "@nextui-org/react";
 // interface UIContextProps {
@@ -19,7 +19,7 @@ function AddPlayer() {
     useEffect(() => {
         const fetchPlayers = async () => {
             try {
-                const response = await axios.get("https://api.bourlypokertour.fr/player");
+                const response = await api.get('/player');
                 setPlayers(response.data);
             }
             catch (error) {
@@ -40,8 +40,8 @@ function AddPlayer() {
             return;
         }
         try {
-            // Fetch all players
-            const response = await axios.get("https://api.bourlypokertour.fr/player");
+            // Change the URL to match your backend
+            const response = await api.get('/player');
             const players = response.data;
             // Check if a player with the given name already exists
             const playerExists = players.some((player) => player.name.toLowerCase() === name.toLowerCase());
@@ -50,8 +50,8 @@ function AddPlayer() {
                 notify('warning', `Player ${name} already exists`);
                 return;
             }
-            // If the player doesn't exist, proceed to create a new player
-            const postResponse = await axios.post("https://api.bourlypokertour.fr/players", { name, phoneNumber });
+            // Change the URL to match your backend
+            const postResponse = await api.post('/players', { name, phoneNumber });
             // If the player is successfully created, show a success toast
             if (postResponse.data) {
                 notify('success', `Player ${name} has been added successfully`);
