@@ -23,7 +23,7 @@ import {
   Parties,Tournaments
 } from "./components/interfaces";
 import AddPlayer from "./components/AddPlayer";
-import axios from "axios";
+
 
 
 
@@ -45,7 +45,7 @@ export default function App() {
    useEffect(() => {
     const fetchChampionnat = async () => {
   try {
-    const response = await axios.get("https://api.bourlypokertour.fr/tournaments");
+ const response = await api.get("/tournaments");
     
     // Si vous souhaitez stocker tous les tournois dans le tableau:
     const formattedChampionnat = response.data.map((t: any) => ({

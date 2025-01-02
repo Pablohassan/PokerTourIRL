@@ -10,10 +10,28 @@ import { fetchGamesForPlayer } from "./services/fetsh-game-for-player.js";
 const prisma = new PrismaClient();
 const app = express();
 
+const allowedOrigins = [
+  'http://localhost:5173',  // Vite dev server
+  'http://localhost:3000',
+  'https://bourlypokertour.fr'
+];
+
 app.use(bodyParser.json({ limit: '10mb' }));
 
 app.options("*", cors());
-app.use(cors({ origin: process.env.CORS_ORIGIN || "https://bourlypokertour.fr" }));
+// app.use(cors({ origin: process.env.CORS_ORIGIN || "https://bourlypokertour.fr" }));
+
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true
+}));
+
 
 app.use(express.json());
 

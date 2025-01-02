@@ -392,7 +392,14 @@ const StartGame: React.FC<StartGameProps> = ({
 
 
   return (
-    <div style={{ maxWidth: "95%", maxHeight: "90vh", margin: "auto", overflow: "auto" }}>
+    <div style={{ 
+      maxWidth: "100%", 
+      height: "100vh",
+      margin: "auto", 
+      overflow: "hidden",
+      display: "flex",
+      flexDirection: "column"
+    }}>
       <KillerSelectionModal
         killer={killer}
         games={games}
@@ -437,63 +444,74 @@ const StartGame: React.FC<StartGameProps> = ({
         <ReviewSelectedPlayers selectedPlayers={selectedPlayers}  selectedTournament={selectedTournament} onConfirm={confirmAndStartGame}/>
       ) : (
         <div style={{ maxHeight: "90%" }}>
-          <Modal style={{ height: "800px" }} isOpen={gameStarted} onClose={handleGameEnd}>
-            <div style={{ display: "flex", alignContent: "flex-end" }}>
-              {!isPaused ? (
-                <ModalHeader
-                  style={{
-                    fontSize: "28px",
-                    fontWeight: "bolder",
-                    color: "green",
-                  }}
-                >
-                  Game in Progress
-                </ModalHeader>
-              ) : (
-                <ModalHeader
-                  style={{
-                    fontSize: "28px",
-                    fontWeight: "bold",
-                    color: "red",
-                  }}
-                >
-                  Game Paused
-                </ModalHeader>
-              )}
-              <Content selectedTournament={selectedTournament}  />
-            </div>
-            <ModalBody>
-              <GameControls
-                gameStarted={gameStarted}
-                isPaused={isPaused}
-                timeLeft={timeLeft}
-                smallBlind={smallBlind}
-                bigBlind={bigBlind}
-                ante={ante}
-                handleGameEnd={handleGameEnd}
-                setIsPaused={setIsPaused}
-                pot={pot}
-                middleStack={middleStack}
-                setSmallBlind={setSmallBlind}
-                setBigBlind={setBigBlind}
-                setAnte={setAnte}
-                setTimeLeft={setTimeLeft}
-                blindIndex={blindIndex}
-                setBlindIndex={setBlindIndex}
-                initialTimeLeft={timeLeft || initialTimeLeft}
-              />
-              {selectedPlayers.length > 0 && games.length > 0 ? (
+          <Modal 
+            style={{ 
+              height: "100vh",
+              maxHeight: "100vh",
+              overflow: "auto"
+            }} 
+            isOpen={gameStarted} 
+            onClose={handleGameEnd}
+          >
+            <div style={{ 
+              display: "flex", 
+              flexDirection: "column",
+              height: "100%",
+              maxHeight: "100vh"
+            }}>
+              <ModalHeader
+                style={{
+                  fontSize: "clamp(18px, 4vw, 28px)", // Responsive font size
+                  fontWeight: "bolder",
+                  color: isPaused ? "red" : "green",
+                }}
+              >
+                {isPaused ? "Game Paused" : "Game in Progress"}
+              </ModalHeader>
+              
+              <ModalBody style={{
+                overflow: "auto",
+                flexGrow: 1,
+                padding: "10px",
+                display: "flex",
+                flexDirection: "column",
+                gap: "10px"
+              }}>
+                <GameControls
+                  gameStarted={gameStarted}
+                  isPaused={isPaused}
+                  timeLeft={timeLeft}
+                  smallBlind={smallBlind}
+                  bigBlind={bigBlind}
+                  ante={ante}
+                  handleGameEnd={handleGameEnd}
+                  setIsPaused={setIsPaused}
+                  pot={pot}
+                  middleStack={middleStack}
+                  setSmallBlind={setSmallBlind}
+                  setBigBlind={setBigBlind}
+                  setAnte={setAnte}
+                  setTimeLeft={setTimeLeft}
+                  blindIndex={blindIndex}
+                  setBlindIndex={setBlindIndex}
+                  initialTimeLeft={timeLeft || initialTimeLeft}
+                 
                 
-                <PlayerList
-                  players={selectedPlayers}
-                  games={games}
-                  handleRebuy={handleRebuy}
-                  handleOutOfGame={handleOutOfGame}
                 />
-              ) : (
-                <div>Loading player data...</div>
-              )}
-            </ModalBody>
+                
+                {selectedPlayers.length > 0 && games.length > 0 ? (
+                  <PlayerList
+                    players={selectedPlayers}
+                    games={games}
+                    handleRebuy={handleRebuy}
+                    handleOutOfGame={handleOutOfGame}
+                   
+                  />
+                ) : (
+                  <div>Loading player data...</div>
+                )}
+              </ModalBody>
+            </div>
           </Modal>
         </div>
       )}

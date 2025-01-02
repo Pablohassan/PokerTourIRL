@@ -37,8 +37,10 @@ const PartyResults = ({ players, }) => {
         {
             title: "Points 2024",
             filterFunction: (playerStat) => {
+                // Sort by date before filtering
+                const sortedStats = playerStat.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
                 // Filter out stats not from 2024
-                const filteredStats = playerStat.filter(stat => {
+                const filteredStats = sortedStats.filter(stat => {
                     const year = new Date(stat.createdAt).getFullYear();
                     return year === 2024;
                 });
@@ -47,8 +49,10 @@ const PartyResults = ({ players, }) => {
                 return result;
             },
             rankFunction: (playerStat) => {
+                // Sort by date before ranking
+                const sortedStats = playerStat.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
                 // Sum points only for games in 2024
-                return playerStat.filter(stat => new Date(stat.createdAt).getFullYear() === 2024)
+                return sortedStats.filter(stat => new Date(stat.createdAt).getFullYear() === 2024)
                     .reduce((total, game) => total + game.points, 0);
             },
         },
