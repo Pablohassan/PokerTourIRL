@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api";
 import GameConfiguration from './GameConfiguration'; // Corriger le nom du fichier
-import { Content } from "./Content";
 import ReviewSelectedPlayers from "../components/ReviewSelectedPlayers";
 import GameControls from "./GameControls";
 import PlayerList from "./PlayerList";
