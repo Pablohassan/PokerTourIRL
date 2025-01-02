@@ -67,46 +67,86 @@ const GameConfiguration: React.FC<GameConfigurationProps> = ({ championnat, play
   };
 
   return (
-    <form onSubmit={handleSubmit} className="form-modern">
-    <div className="form-modern-group">
-        <label htmlFor="tournament" className="form-modern-label">Selectionner un tournoi :</label>
-        <select id="tournament" value={selectedTournamentId || ''} onChange={handleTournamentChange} className="form-modern-select">
-            <option value="" disabled>Selectionner un tournoi</option>
-            {championnat.map(tournament => (
-                <option key={tournament.id} value={tournament.id}>{tournament.year}</option>
-            ))}
-        </select>
-        <div className="form-modern-checkbox-group">
-            <label htmlFor="newTournamentYear" className="form-modern-label">Creer un nouveau tournoi :</label>
-            <input
-                type="number"
-                id="newTournamentYear"
-                value={newTournamentYear}
-                onChange={(e) => setNewTournamentYear(e.target.value)}
-                placeholder="Année du tournoi"
-                className="form-modern-input"
-            />
-           
+    <div style={{
+      height: "100vh",
+      padding: "20px",
+      overflow: "hidden",
+      display: "flex",
+      flexDirection: "column"
+    }}>
+      <form onSubmit={handleSubmit} className="form-modern" style={{
+        flex: 1,
+        overflowY: "auto",
+        padding: "20px",
+        display: "flex",
+        flexDirection: "column",
+        gap: "20px"
+      }}>
+        <div className="form-modern-group">
+          <label htmlFor="tournament" className="form-modern-label">Selectionner un tournoi :</label>
+          <select id="tournament" value={selectedTournamentId || ''} onChange={handleTournamentChange} className="form-modern-select">
+              <option value="" disabled>Selectionner un tournoi</option>
+              {championnat.map(tournament => (
+                  <option key={tournament.id} value={tournament.id}>{tournament.year}</option>
+              ))}
+          </select>
+          <div className="form-modern-checkbox-group">
+              <label htmlFor="newTournamentYear" className="form-modern-label">Creer un nouveau tournoi :</label>
+              <input
+                  type="number"
+                  id="newTournamentYear"
+                  value={newTournamentYear}
+                  onChange={(e) => setNewTournamentYear(e.target.value)}
+                  placeholder="Année du tournoi"
+                  className="form-modern-input"
+              />
+          </div>
+          <button type="submit" onClick={handleCreateTournament} className="form-modern-button">Cree nouveau Trournois</button>
         </div>
-        <button type="submit" onClick={handleCreateTournament} className="form-modern-button">Cree nouveau Trournois</button>
-    </div>
-    <div className="form-modern-group">
-        <label htmlFor="blindDuration" className="form-modern-label">Duree des blindes (minutes) :</label>
-        <input type="number" id="blindDuration" value={blindDuration} onChange={handleBlindDurationChange} min="1" className="form-modern-input" />
-    </div>
-    <div className="form-modern-group">
-        <label className="form-modern-label">Selection des Joueurs :</label>
-        {players.map(player => (
-            <div key={player.id} className="form-modern-checkbox-group">
-                <Checkbox type="checkbox" id={`player-${player.id}`} onChange={() => handlePlayerSelect(player)} className="form-modern-checkbox" />
-                <label htmlFor={`player-${player.id}`} className="form-modern-label">{player.name}</label>
-            </div>
-        ))}
-    </div>
-    <button type="submit" className="form-modern-button">Valider La sellection</button>
-    <Button size="lg" color="danger" onFocus={focus} onClick={() => navigate("/partypage")}>Back</Button>
 
-</form>
+        <div className="form-modern-group">
+          <label htmlFor="blindDuration" className="form-modern-label">Duree des blindes (minutes) :</label>
+          <input type="number" id="blindDuration" value={blindDuration} onChange={handleBlindDurationChange} min="1" className="form-modern-input" />
+        </div>
+
+        <div className="form-modern-group" style={{
+          flex: 1,
+          overflowY: "auto",
+          padding: "10px",
+          border: "1px solid #ccc",
+          borderRadius: "8px"
+        }}>
+          <label className="form-modern-label">Selection des Joueurs :</label>
+          <div style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "10px"
+          }}>
+            {players.map(player => (
+              <div key={player.id} className="form-modern-checkbox-group">
+                <Checkbox 
+                  type="checkbox" 
+                  id={`player-${player.id}`} 
+                  onChange={() => handlePlayerSelect(player)} 
+                  className="form-modern-checkbox" 
+                />
+                <label htmlFor={`player-${player.id}`} className="form-modern-label">{player.name}</label>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div style={{
+          display: "flex",
+          gap: "10px",
+          justifyContent: "center",
+          marginTop: "20px"
+        }}>
+          <button type="submit" className="form-modern-button">Valider La sellection</button>
+          <Button size="lg" color="danger" onClick={() => navigate("/partypage")}>Back</Button>
+        </div>
+      </form>
+    </div>
   );
 };
 
