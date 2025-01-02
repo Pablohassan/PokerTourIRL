@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api";
 import GameConfiguration from './GameConfiguration'; // Corriger le nom du fichier
-import { Content } from "./Content";
+// import { Content } from "./Content";
 import ReviewSelectedPlayers from "../components/ReviewSelectedPlayers";
 import GameControls from "./GameControls";
 import PlayerList from "./PlayerList";
@@ -261,21 +261,40 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, players, 
         }
         setIsEnding(false);
     };
-    return (_jsxs("div", { style: { maxWidth: "95%", maxHeight: "90vh", margin: "auto", overflow: "auto" }, children: [_jsx(KillerSelectionModal, { killer: killer, games: games, currentlyPlayingPlayers: selectedPlayers.filter((p) => !games.find((g) => g.playerId === p.id && g.outAt)), rebuyPlayerId: rebuyPlayerId, playerOutGame: playerOutGame, handlePlayerKillSelection: (killerPlayerId) => {
+    return (_jsxs("div", { style: {
+            maxWidth: "100%",
+            height: "100vh",
+            margin: "auto",
+            overflow: "hidden",
+            display: "flex",
+            flexDirection: "column"
+        }, children: [_jsx(KillerSelectionModal, { killer: killer, games: games, currentlyPlayingPlayers: selectedPlayers.filter((p) => !games.find((g) => g.playerId === p.id && g.outAt)), rebuyPlayerId: rebuyPlayerId, playerOutGame: playerOutGame, handlePlayerKillSelection: (killerPlayerId) => {
                     if (window.confirm("Do you want to select this player as the killer?")) {
                         setGames((prevGames) => prevGames.map((game) => game.playerId === killerPlayerId ? { ...game, kills: game.kills + 1 } : game));
                         setKiller(false);
                         setRebuyPlayerId(null);
                         saveGameState(timeLeft);
                     }
-                } }), showConfig && (_jsx(GameConfiguration, { championnat: championnat, players: players, onStartGameConfiguration: handleStartGameConfiguration })), showReview && !partyId ? (_jsx(ReviewSelectedPlayers, { selectedPlayers: selectedPlayers, selectedTournament: selectedTournament, onConfirm: confirmAndStartGame })) : (_jsx("div", { style: { maxHeight: "90%" }, children: _jsxs(Modal, { style: { height: "800px" }, isOpen: gameStarted, onClose: handleGameEnd, children: [_jsxs("div", { style: { display: "flex", alignContent: "flex-end" }, children: [!isPaused ? (_jsx(ModalHeader, { style: {
-                                        fontSize: "28px",
-                                        fontWeight: "bolder",
-                                        color: "green",
-                                    }, children: "Game in Progress" })) : (_jsx(ModalHeader, { style: {
-                                        fontSize: "28px",
-                                        fontWeight: "bold",
-                                        color: "red",
-                                    }, children: "Game Paused" })), _jsx(Content, { selectedTournament: selectedTournament })] }), _jsxs(ModalBody, { children: [_jsx(GameControls, { gameStarted: gameStarted, isPaused: isPaused, timeLeft: timeLeft, smallBlind: smallBlind, bigBlind: bigBlind, ante: ante, handleGameEnd: handleGameEnd, setIsPaused: setIsPaused, pot: pot, middleStack: middleStack, setSmallBlind: setSmallBlind, setBigBlind: setBigBlind, setAnte: setAnte, setTimeLeft: setTimeLeft, blindIndex: blindIndex, setBlindIndex: setBlindIndex, initialTimeLeft: timeLeft || initialTimeLeft }), selectedPlayers.length > 0 && games.length > 0 ? (_jsx(PlayerList, { players: selectedPlayers, games: games, handleRebuy: handleRebuy, handleOutOfGame: handleOutOfGame })) : (_jsx("div", { children: "Loading player data..." }))] })] }) }))] }));
+                } }), showConfig && (_jsx(GameConfiguration, { championnat: championnat, players: players, onStartGameConfiguration: handleStartGameConfiguration })), showReview && !partyId ? (_jsx(ReviewSelectedPlayers, { selectedPlayers: selectedPlayers, selectedTournament: selectedTournament, onConfirm: confirmAndStartGame })) : (_jsx("div", { style: { maxHeight: "90%" }, children: _jsx(Modal, { style: {
+                        height: "100vh",
+                        maxHeight: "100vh",
+                        overflow: "auto"
+                    }, isOpen: gameStarted, onClose: handleGameEnd, children: _jsxs("div", { style: {
+                            display: "flex",
+                            flexDirection: "column",
+                            height: "100%",
+                            maxHeight: "100vh"
+                        }, children: [_jsx(ModalHeader, { style: {
+                                    fontSize: "clamp(18px, 4vw, 28px)", // Responsive font size
+                                    fontWeight: "bolder",
+                                    color: isPaused ? "red" : "green",
+                                }, children: isPaused ? "Game Paused" : "Game in Progress" }), _jsxs(ModalBody, { style: {
+                                    overflow: "auto",
+                                    flexGrow: 1,
+                                    padding: "10px",
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    gap: "10px"
+                                }, children: [_jsx(GameControls, { gameStarted: gameStarted, isPaused: isPaused, timeLeft: timeLeft, smallBlind: smallBlind, bigBlind: bigBlind, ante: ante, handleGameEnd: handleGameEnd, setIsPaused: setIsPaused, pot: pot, middleStack: middleStack, setSmallBlind: setSmallBlind, setBigBlind: setBigBlind, setAnte: setAnte, setTimeLeft: setTimeLeft, blindIndex: blindIndex, setBlindIndex: setBlindIndex, initialTimeLeft: timeLeft || initialTimeLeft }), selectedPlayers.length > 0 && games.length > 0 ? (_jsx(PlayerList, { players: selectedPlayers, games: games, handleRebuy: handleRebuy, handleOutOfGame: handleOutOfGame })) : (_jsx("div", { children: "Loading player data..." }))] })] }) }) }))] }));
 };
 export default StartGame;
