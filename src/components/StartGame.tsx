@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api";
 import GameConfiguration from './GameConfiguration'; // Corriger le nom du fichier
-// import { Content } from "./Content";
+import { Content } from "./Content";
 import ReviewSelectedPlayers from "../components/ReviewSelectedPlayers";
 import GameControls from "./GameControls";
 import PlayerList from "./PlayerList";
@@ -461,7 +461,7 @@ const StartGame: React.FC<StartGameProps> = ({
             }}>
               <ModalHeader
                 style={{
-                  fontSize: "clamp(18px, 4vw, 28px)", // Responsive font size
+                  fontSize: "clamp(18px, 4vw, 28px)",
                   fontWeight: "bolder",
                   color: isPaused ? "red" : "green",
                 }}
@@ -470,12 +470,13 @@ const StartGame: React.FC<StartGameProps> = ({
               </ModalHeader>
               
               <ModalBody style={{
-                overflow: "auto",
+                overflow: "hidden",
                 flexGrow: 1,
                 padding: "10px",
                 display: "flex",
                 flexDirection: "column",
-                gap: "10px"
+                gap: "10px",
+                maxHeight: "calc(100vh - 100px)"
               }}>
                 <GameControls
                   gameStarted={gameStarted}
@@ -495,18 +496,32 @@ const StartGame: React.FC<StartGameProps> = ({
                   blindIndex={blindIndex}
                   setBlindIndex={setBlindIndex}
                   initialTimeLeft={timeLeft || initialTimeLeft}
-                 
-                
+                  style={{
+                    maxHeight: "min(700px, 50vh)",
+                    overflow: "visible"
+                  }}
                 />
                 
                 {selectedPlayers.length > 0 && games.length > 0 ? (
-                  <PlayerList
-                    players={selectedPlayers}
-                    games={games}
-                    handleRebuy={handleRebuy}
-                    handleOutOfGame={handleOutOfGame}
-                   
-                  />
+                  <div style={{
+                    maxHeight: "700px",
+                    overflowY: "auto",
+                    overflowX: "hidden",
+                    marginTop: "10px",
+                    padding: "10px",
+                    display: "flex",
+                    flexWrap: "wrap",
+                    gap: "10px",
+                    justifyContent: "center",
+                    alignItems: "flex-start"
+                  }}>
+                    <PlayerList
+                      players={selectedPlayers}
+                      games={games}
+                      handleRebuy={handleRebuy}
+                      handleOutOfGame={handleOutOfGame}
+                    />
+                  </div>
                 ) : (
                   <div>Loading player data...</div>
                 )}
