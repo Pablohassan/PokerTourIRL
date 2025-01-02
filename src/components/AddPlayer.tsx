@@ -1,5 +1,5 @@
 import { FormEvent, useContext, useEffect, useState } from "react";
-import axios, { AxiosError } from "axios";
+import  { AxiosError } from "axios";
 import api from '../api';
 
 import {UIContext} from '../components/UiProvider'

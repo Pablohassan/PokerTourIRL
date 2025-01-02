@@ -118,6 +118,54 @@ const PartyResults = ({ players, }) => {
             filterFunction: (playerStat) => playerStat.filter(stat => new Date(stat.createdAt).getFullYear() === 2024).some(stat => stat.position == 4),
             rankFunction: (playerStat) => playerStat.filter(stat => new Date(stat.createdAt).getFullYear() === 2024).reduce((total, stat) => total + stat.position, 0),
         },
+        {
+            title: "Points 2025",
+            filterFunction: (playerStat) => {
+                const sortedStats = playerStat.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+                const filteredStats = sortedStats.filter(stat => {
+                    const year = new Date(stat.createdAt).getFullYear();
+                    return year === 2025;
+                });
+                const result = filteredStats.some(game => game.points > 1);
+                return result;
+            },
+            rankFunction: (playerStat) => {
+                const sortedStats = playerStat.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+                return sortedStats.filter(stat => new Date(stat.createdAt).getFullYear() === 2025)
+                    .reduce((total, game) => total + game.points, 0);
+            },
+        },
+        {
+            title: "Gains 2025",
+            filterFunction: (playerStat) => {
+                const filteredStats = playerStat.filter(stat => new Date(stat.createdAt).getFullYear() === 2025);
+                return calculateGains(filteredStats) > 0;
+            },
+            rankFunction: (playerStat) => calculateGains(playerStat.filter(stat => new Date(stat.createdAt).getFullYear() === 2025)),
+        },
+        {
+            title: "Recave 2025",
+            filterFunction: (playerStat) => {
+                const filteredStats = playerStat.filter(stat => new Date(stat.createdAt).getFullYear() === 2025);
+                return filteredStats.some(stat => stat.rebuys > 1);
+            },
+            rankFunction: (playerStat) => playerStat.filter(stat => new Date(stat.createdAt).getFullYear() === 2025).reduce((total, stat) => total + stat.rebuys, 0),
+        },
+        {
+            title: "Moneydown 2025",
+            filterFunction: (playerStat) => playerStat.filter(stat => new Date(stat.createdAt).getFullYear() === 2025).some(stat => stat.totalCost > 5),
+            rankFunction: (playerStat) => playerStat.filter(stat => new Date(stat.createdAt).getFullYear() === 2025).reduce((total, stat) => total + stat.totalCost, 0),
+        },
+        {
+            title: "Killer 2025",
+            filterFunction: (playerStat) => playerStat.filter(stat => new Date(stat.createdAt).getFullYear() === 2025).some(stat => stat.kills > 2),
+            rankFunction: (playerStat) => playerStat.filter(stat => new Date(stat.createdAt).getFullYear() === 2025).reduce((total, stat) => total + stat.kills, 0),
+        },
+        {
+            title: "Bule 2025",
+            filterFunction: (playerStat) => playerStat.filter(stat => new Date(stat.createdAt).getFullYear() === 2025).some(stat => stat.position == 4),
+            rankFunction: (playerStat) => playerStat.filter(stat => new Date(stat.createdAt).getFullYear() === 2025).reduce((total, stat) => total + stat.position, 0),
+        },
         // Add more configs as needed
     ];
     // {

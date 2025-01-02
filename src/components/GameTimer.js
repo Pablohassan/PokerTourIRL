@@ -22,18 +22,21 @@ const GameTimer = ({ middleStack, totalPot, formatTime, timeLeft, smallBlind, bi
     return (_jsxs("div", { style: {
             display: 'grid',
             gridTemplateRows: '3fr 1fr',
-            height: '420px',
-            width: '970px',
+            height: 'min(420px, 80vh)',
+            width: 'min(970px, 95vw)',
             border: '4px solid black',
             borderRadius: '16px',
             background: 'rgba(0, 0, 0, 0.2)',
-            boxShadow: '0px 4px 6px rgba(0, 0,5, 0, 0.3)'
+            boxShadow: '0px 4px 6px rgba(0, 0,5, 0, 0.3)',
+            overflow: 'hidden'
         }, children: [_jsxs("div", { style: {
                     display: 'flex',
                     justifyContent: 'space-around',
                     alignItems: 'center',
                     padding: '10px',
-                    borderBottom: '2px solid #D1D5DB'
+                    borderBottom: '2px solid #D1D5DB',
+                    flexWrap: 'wrap',
+                    gap: '10px'
                 }, children: [_jsxs("div", { style: {
                             fontFamily: "DS-DIGI",
                             alignItems: "center",
