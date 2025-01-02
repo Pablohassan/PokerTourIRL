@@ -7,7 +7,6 @@ interface PlayerListProps {
   games: PlayerStats[];
   handleRebuy: (playerId: number) => void;
   handleOutOfGame: (partyId: number, playerId: number, eliminatedById: number | null) => void;
-  style?: React.CSSProperties;
 }
 
 const PlayerList: React.FC<PlayerListProps> = ({ players, games, handleRebuy, handleOutOfGame }) => {
