@@ -20,7 +20,7 @@ interface GameControlsProps {
   blindIndex: number;
   setBlindIndex: React.Dispatch<React.SetStateAction<number>>;
   initialTimeLeft: number;
-  
+  style?: React.CSSProperties;
 }
 
 const GameControls: React.FC<GameControlsProps> = ({
