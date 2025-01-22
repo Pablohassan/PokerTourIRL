@@ -72,11 +72,30 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, players, 
         setShowConfig(false);
         setShowReview(true);
     };
+    // Add new function to handle fullscreen
+    const enableFullScreen = async () => {
+        try {
+            if (document.documentElement.requestFullscreen) {
+                await document.documentElement.requestFullscreen();
+            }
+            else if (document.documentElement.webkitRequestFullscreen) {
+                await document.documentElement.webkitRequestFullscreen();
+            }
+            else if (document.documentElement.msRequestFullscreen) {
+                await document.documentElement.msRequestFullscreen();
+            }
+        }
+        catch (error) {
+            console.error('Error enabling fullscreen:', error);
+        }
+    };
     const onStartGame = async () => {
         if (gameStarted) {
             toast.error("A game is already in progress.");
             return;
         }
+        // Enable fullscreen when starting the game
+        await enableFullScreen();
         resetGameState();
         if (selectedPlayers.length < 4) {
             toast.error("You need at least 4 players to start a game.");
@@ -366,6 +385,17 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, players, 
         showingGameModal: gameStarted,
         hasPlayers: selectedPlayers.length > 0 && games.length > 0
     });
+    // Add useEffect to handle screen orientation
+    useEffect(() => {
+        if (gameStarted) {
+            // Lock to portrait orientation if possible
+            if ('screen' in window && 'orientation' in screen) {
+                screen.orientation.lock?.('portrait').catch((err) => {
+                    console.error('Failed to lock screen orientation:', err);
+                });
+            }
+        }
+    }, [gameStarted]);
     return (_jsxs("div", { style: {
             height: '100vh',
             maxWidth: '100%',

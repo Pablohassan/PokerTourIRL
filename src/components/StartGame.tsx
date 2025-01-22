@@ -137,11 +137,29 @@ const StartGame: React.FC<StartGameProps> = ({
     setShowReview(true);
   };
 
+  // Add new function to handle fullscreen
+  const enableFullScreen = async () => {
+    try {
+      if (document.documentElement.requestFullscreen) {
+        await document.documentElement.requestFullscreen();
+      } else if ((document.documentElement as any).webkitRequestFullscreen) {
+        await (document.documentElement as any).webkitRequestFullscreen();
+      } else if ((document.documentElement as any).msRequestFullscreen) {
+        await (document.documentElement as any).msRequestFullscreen();
+      }
+    } catch (error) {
+      console.error('Error enabling fullscreen:', error);
+    }
+  };
+
   const onStartGame = async () => {
     if (gameStarted) {
       toast.error("A game is already in progress.");
       return;
     }
+
+    // Enable fullscreen when starting the game
+    await enableFullScreen();
 
     resetGameState();
 
@@ -487,6 +505,18 @@ const StartGame: React.FC<StartGameProps> = ({
     showingGameModal: gameStarted,
     hasPlayers: selectedPlayers.length > 0 && games.length > 0
   });
+
+  // Add useEffect to handle screen orientation
+  useEffect(() => {
+    if (gameStarted) {
+      // Lock to portrait orientation if possible
+      if ('screen' in window && 'orientation' in screen) {
+        (screen.orientation as any).lock?.('portrait').catch((err: Error) => {
+          console.error('Failed to lock screen orientation:', err);
+        });
+      }
+    }
+  }, [gameStarted]);
 
   return (
     <div style={{
