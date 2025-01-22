@@ -79,6 +79,18 @@ const StartGame: React.FC<StartGameProps> = ({
     setInitialPlayerCount,
   } = useGameState(gameStarted, setGameStarted, selectedPlayers, setSelectedPLayers, blindIndex, setBlindIndex, initialTimeLeft);
 
+  // Add screen orientation effect here, with other hooks
+  useEffect(() => {
+    if (gameStarted) {
+      // Lock to portrait orientation if possible
+      if ('screen' in window && 'orientation' in screen) {
+        (screen.orientation as any).lock?.('portrait').catch((err: Error) => {
+          console.error('Failed to lock screen orientation:', err);
+        });
+      }
+    }
+  }, [gameStarted]);
+
   useEffect(() => {
     if (stateRestored) {
       setGameStarted(true);
@@ -506,18 +518,6 @@ const StartGame: React.FC<StartGameProps> = ({
     hasPlayers: selectedPlayers.length > 0 && games.length > 0
   });
 
-  // Add useEffect to handle screen orientation
-  useEffect(() => {
-    if (gameStarted) {
-      // Lock to portrait orientation if possible
-      if ('screen' in window && 'orientation' in screen) {
-        (screen.orientation as any).lock?.('portrait').catch((err: Error) => {
-          console.error('Failed to lock screen orientation:', err);
-        });
-      }
-    }
-  }, [gameStarted]);
-
   return (
     <div style={{
       height: '100vh',
@@ -722,4 +722,3 @@ const StartGame: React.FC<StartGameProps> = ({
 };
 
 export default StartGame;
-

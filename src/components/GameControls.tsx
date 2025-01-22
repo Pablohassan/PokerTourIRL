@@ -126,13 +126,13 @@ const GameControls: React.FC<GameControlsProps> = ({
 
   return (
     <div className={cn(
-      "w-full max-w-[1280px] min-h-[370px] mx-auto",
+      "w-full max-w-[900px] min-h-[250px] mx-auto",
       "bg-slate-950/95 backdrop-blur-md",
       "border border-amber-400/10",
       "shadow-[0_0_35px_-5px_rgba(245,158,11,0.15)]",
       "rounded-2xl overflow-hidden"
     )}>
-      <div className="space-y-3">
+      <div className="space-y-2">
         <BlindTimer
           gameStarted={gameStarted}
           isPaused={isPaused}
