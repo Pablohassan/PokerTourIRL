@@ -2,9 +2,6 @@
 FROM node:20-alpine AS build
 LABEL maintainer="Pablo Hassan YOMBA <sesmanovic@gmail.com>"
 
-# Install OpenSSL 1.1
-RUN apk add --no-cache openssl1.1-compat
-
 # Set the working directory inside the containe
 WORKDIR /app/src/backend
 
@@ -36,9 +33,6 @@ RUN npm run build
 # Step 2: Production stage
 FROM node:20-alpine
 LABEL maintainer="Pablo Hassan YOMBA <sesmanovic@gmail.com>"
-
-# Install OpenSSL 1.1 in the final stage as well
-RUN apk add --no-cache openssl1.1-compat
 
 # Set the working directory inside the container
 WORKDIR /app/src/backend
