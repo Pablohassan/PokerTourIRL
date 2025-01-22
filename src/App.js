@@ -7,6 +7,9 @@ import PartyResults from "./components/PartyResults";
 import StartGame from "./components/StartGame";
 import PartyPage from "./components/PartyPage";
 import bourlyimage from "./assets/bourlypoker3.webp";
+import { Menu } from "./components/Menu";
+import { cn } from "./lib/utils";
+import { motion } from "framer-motion";
 // import Ak from "./components/PokerLogo";
 import { ClerkProvider, SignedIn, SignedOut, RedirectToSignIn, SignIn, SignUp, } from "@clerk/clerk-react";
 import AddPlayer from "./components/AddPlayer";
@@ -20,7 +23,7 @@ export default function App() {
     const [parties, setParties] = useState([]);
     const [stats, setStats] = useState([]);
     const [championnat, setChampionnat] = useState([]);
-    // const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [blindIndex, setBlindIndex] = useState(0);
     useEffect(() => {
@@ -80,7 +83,8 @@ export default function App() {
     let element = useRoutes([
         {
             path: "/",
-            element: (_jsxs("div", { children: [_jsx("div", { className: " text-red-200 ", children: "Welcome to the BoulyPokerTour, this app in alpha version so be nice please " }), _jsx("img", { src: bourlyimage, alt: "pokercouv", className: "w-1/2", style: { display: 'block', marginLeft: 'auto', marginRight: 'auto' } })] })),
+            element: (_jsxs("div", { className: cn("relative w-full min-h-screen"), children: [_jsxs("div", { className: cn("absolute inset-0"), children: [_jsx("img", { src: bourlyimage, alt: "pokercouv", className: cn("w-full h-full object-cover") }), _jsx("div", { className: cn("absolute inset-0 bg-black/50") }), " "] }), _jsxs("div", { className: cn("relative z-10 container mx-auto pt-8"), children: [_jsxs("h1", { className: cn("text-red-200 text-4xl font-bold text-center mt-20 mb-6", "font-['DS-DIGI']" // Using your custom font
+                                ), children: ["Welcome to the BoulyPokerTour", _jsx("p", { className: cn("text-xl mt-2 text-gray-300"), children: "This app is in beta version, so be nice please" })] }), _jsx(motion.button, { onClick: () => setIsMenuOpen(true), whileHover: { scale: 1.05 }, whileTap: { scale: 0.95 }, className: cn("mx-auto mt-8 block px-6 py-3", "bg-green-900/40 text-green-100 rounded-md", "hover:bg-green-800/60 transition-colors", "border border-green-800/30", "text-2xl font-['DS-DIGI']"), children: "Enter the Game" })] })] })),
         },
         {
             path: "/partypage",
@@ -104,7 +108,7 @@ export default function App() {
         },
     ]);
     if (isLoading) {
-        return _jsx("div", { children: "Loading..." }); // Or any other loading indicator
+        return _jsx("div", { className: cn("flex items-center justify-center min-h-screen"), children: "Loading..." });
     }
-    return (_jsx("div", { children: _jsxs(ClerkProvider, { publishableKey: clerkPubKey, children: [element, _jsx(SignedIn, {}), _jsxs(SignedOut, { children: [_jsx(RedirectToSignIn, {}), _jsx(SignIn, {}), _jsx(SignUp, {})] })] }) }));
+    return (_jsx("div", { className: cn("min-h-screen bg-background"), children: _jsxs(ClerkProvider, { publishableKey: clerkPubKey, children: [element, _jsx(Menu, { isOpen: isMenuOpen, onClose: () => setIsMenuOpen(false) }), _jsx(SignedIn, {}), _jsxs(SignedOut, { children: [_jsx(RedirectToSignIn, {}), _jsx(SignIn, {}), _jsx(SignUp, {})] })] }) }));
 }

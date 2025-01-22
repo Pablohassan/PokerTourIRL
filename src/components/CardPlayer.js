@@ -1,28 +1,8 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
-import { Card, Button, CardHeader, Image, CardFooter, } from "@nextui-org/react";
+import { Card, CardContent, CardHeader } from "./ui/card";
+import { Button } from "./ui/button";
+import { cn } from "../lib/utils";
 export const CardPlayer = ({ playername, recave, kill, rebuy, outOfGame, }) => {
-    return (_jsxs(Card, { style: { width: "100px", height: "180px" }, children: [_jsx(CardHeader, { style: { position: "absolute", zIndex: 1, top: 5 }, children: _jsx("div", { style: { fontSize: 12, fontWeight: "bold",
-                        textTransform: "capitalize" }, children: playername }) }), _jsx(Image, { src: "https://nextui.org/images/card-example-6.jpeg", width: "100%", height: "100%", className: "z-0 w-full h-full object-cover", alt: "Card example background" }), _jsx(CardFooter, { style: {
-                    backgroundColor: "#ffffff",
-                    position: "absolute",
-                    borderTop: "$borderWeights$light solid rgba(255, 255, 255, 0.2)",
-                    bottom: 0,
-                    zIndex: 1,
-                }, children: _jsxs("div", { children: [_jsxs("div", { children: [_jsxs("div", { className: "text-lg", color: "#000", children: ["Recaves:", recave] }), _jsxs("div", { className: "text-lg", color: "#000", children: ["Kills:", kill] })] }), _jsxs("div", { children: [_jsx("div", { children: _jsx(Button, { size: "sm", variant: "bordered", fullWidth: true, color: "secondary", onClick: (e) => {
-                                            rebuy();
-                                            e.currentTarget.blur(); // Add this line to blur the button
-                                        }, children: _jsx("div", { style: {
-                                                color: "inherit",
-                                                textAlign: "center",
-                                                fontSize: 13,
-                                                fontWeight: "bold",
-                                            }, children: "recave" }) }) }), _jsx("div", { className: "p1", children: _jsx(Button, { style: { marginTop: "2px" }, size: "sm", variant: "bordered", fullWidth: true, color: "secondary", onClick: (e) => {
-                                            outOfGame();
-                                            e.currentTarget.blur(); // Add this line to blur the button
-                                        }, children: _jsx("div", { style: {
-                                                color: "inherit",
-                                                fontSize: 13,
-                                                fontWeight: "bold",
-                                                textTransform: "capitalize",
-                                            }, children: "Elimin\u00E9" }) }) })] })] }) })] }));
+    return (_jsxs(Card, { className: cn("w-full max-w-[130px] mx-auto", "aspect-[3/5]", "bg-slate-900/90 backdrop-blur-md", "border border-amber-400/20", "shadow-[0_0_15px_-3px_rgba(245,158,11,0.15)]", "overflow-hidden", "transition-all duration-300", "hover:shadow-[0_0_25px_-5px_rgba(245,158,11,0.25)]", "hover:scale-[1.02]", "relative"), children: [_jsx("div", { className: "absolute inset-0 z-0", children: _jsxs("div", { className: "w-full h-full bg-slate-800/50", children: [_jsx("img", { src: "https://nextui.org/images/card-example-6.jpeg", alt: "Card background", className: "w-full h-full object-cover opacity-30" }), _jsx("div", { className: "absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/80 to-transparent" })] }) }), _jsxs("div", { className: "relative z-10 h-full flex flex-col", children: [_jsx(CardHeader, { className: cn("p-1.5 space-y-0", "border-b border-amber-400/10", "bg-gradient-to-r from-amber-500/10 via-slate-800/80 to-slate-800/80"), children: _jsx("h3", { className: cn("font-['DS-DIGI'] text-base text-center", "text-amber-400 tracking-wide", "truncate"), children: playername }) }), _jsx("div", { className: "flex-1 flex items-center justify-center p-1", children: _jsxs("div", { className: "space-y-1 w-full", children: [_jsxs("div", { className: "flex justify-between items-center", children: [_jsx("span", { className: "text-amber-400/80 text-xs", children: "Recaves" }), _jsx("span", { className: "font-['DS-DIGI'] text-amber-400 text-lg", children: recave })] }), _jsxs("div", { className: "flex justify-between items-center", children: [_jsx("span", { className: "text-amber-400/80 text-xs", children: "Kills" }), _jsx("span", { className: "font-['DS-DIGI'] text-amber-400 text-lg", children: kill })] })] }) }), _jsxs(CardContent, { className: cn("p-2 space-y-1.5", "bg-gradient-to-t from-slate-900/95 to-transparent"), children: [_jsx(Button, { variant: "outline", size: "sm", onClick: rebuy, className: cn("w-full h-7 text-sm font-['DS-DIGI']", "border-amber-400/20 hover:border-amber-400/40", "bg-amber-500/5 hover:bg-amber-500/10", "text-amber-400 hover:text-amber-300", "relative z-20"), children: "Recave" }), _jsx(Button, { variant: "outline", size: "sm", onClick: outOfGame, className: cn("w-full h-7 text-sm font-['DS-DIGI']", "border-red-400/20 hover:border-red-400/40", "bg-red-500/5 hover:bg-red-500/10", "text-red-400 hover:text-red-300", "relative z-20"), children: "Elimin\u00E9" })] })] })] }));
 };
+export default CardPlayer;

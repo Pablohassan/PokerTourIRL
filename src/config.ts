@@ -1,10 +1,27 @@
-const config = {
-  API_BASE_URL: import.meta.env.PROD 
-    ? 'https://api.bourlypokertour.fr'
-    : 'http://localhost:3000',
-  WEBSITE_URL: import.meta.env.PROD
-    ? 'https://bourlypokertour.fr'
-    : 'http://localhost:5173'
+const isDevelopment = process.env.NODE_ENV === "development";
+
+export const API_BASE_URL = isDevelopment
+  ? "http://localhost:3000"
+  : "https://api.bourlypokertour.fr";
+
+export const API_ENDPOINTS = {
+  GAME_STATE: `${API_BASE_URL}/gameState`,
+  TOURNAMENTS: `${API_BASE_URL}/tournaments`,
+  PARTIES: `${API_BASE_URL}/parties`,
+  PLAYERS: `${API_BASE_URL}/player`,
+  PLAYER_STATS: `${API_BASE_URL}/playerstats`,
+  SEASON_POINTS: (playerId: number, tournamentId: number) =>
+    `${API_BASE_URL}/season-points/${playerId}/${tournamentId}`,
+  PLAYER_STATS_BY_ID: (playerId: number, tournamentId: number) =>
+    `${API_BASE_URL}/player-stats/${playerId}/${tournamentId}`,
 };
 
-export default config; 
+export const API_CONFIG = {
+  headers: {
+    "Content-Type": "application/json",
+    Accept: "application/json",
+  },
+  withCredentials: true,
+};
+
+export default API_ENDPOINTS;

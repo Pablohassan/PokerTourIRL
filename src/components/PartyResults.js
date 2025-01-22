@@ -1,5 +1,8 @@
-import { jsx as _jsx } from "react/jsx-runtime";
+import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import PlayerTable from "./PlayerTable";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
+import { cn } from "../lib/utils";
 function calculateGains(playerStats) {
     return playerStats.reduce((sum, game) => {
         let gain = 0;
@@ -12,186 +15,56 @@ function calculateGains(playerStats) {
         return sum + Math.round(gain);
     }, 0);
 }
-const PartyResults = ({ players, }) => {
-    ;
-    const tableConfigs = [
-        {
-            title: "Points 2023",
-            filterFunction: (playerStat) => {
-                // Filter out stats not from 2023
-                const filteredStats = playerStat.filter(stat => {
-                    const year = new Date(stat.createdAt).getFullYear();
-                    return year === 2023;
-                });
-                // Check if there are any games with points greater than 1 in 2023
-                const result = filteredStats.some(game => game.points > 1);
-                console.log("Points Filter result for games in 2023", filteredStats, "is", result);
-                return result;
-            },
-            rankFunction: (playerStat) => {
-                // Sum points only for games in 2023
-                return playerStat.filter(stat => new Date(stat.createdAt).getFullYear() === 2023)
-                    .reduce((total, game) => total + game.points, 0);
-            },
+const PartyResults = ({ players }) => {
+    // Group configs by year for better organization
+    const years = [2023, 2024, 2025];
+    const categories = ["Points", "Gains", "Recave", "Moneydown", "Killer", "Bule"];
+    const tableConfigs = years.flatMap(year => categories.map(category => ({
+        title: `${category} ${year}`,
+        filterFunction: (playerStat) => {
+            const filteredStats = playerStat.filter(stat => new Date(stat.createdAt).getFullYear() === year);
+            switch (category) {
+                case "Points":
+                    return filteredStats.some(game => game.points > 1);
+                case "Gains":
+                    return calculateGains(filteredStats) > 0;
+                case "Recave":
+                    return filteredStats.some(stat => stat.rebuys > 1);
+                case "Moneydown":
+                    return filteredStats.some(stat => stat.totalCost > 5);
+                case "Killer":
+                    return filteredStats.some(stat => stat.kills > 2);
+                case "Bule":
+                    return filteredStats.some(stat => stat.position === 4);
+                default:
+                    return false;
+            }
         },
-        {
-            title: "Points 2024",
-            filterFunction: (playerStat) => {
-                // Sort by date before filtering
-                const sortedStats = playerStat.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
-                // Filter out stats not from 2024
-                const filteredStats = sortedStats.filter(stat => {
-                    const year = new Date(stat.createdAt).getFullYear();
-                    return year === 2024;
-                });
-                // Check if there are any games with points greater than 1 in 2024
-                const result = filteredStats.some(game => game.points > 1);
-                return result;
-            },
-            rankFunction: (playerStat) => {
-                // Sort by date before ranking
-                const sortedStats = playerStat.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
-                // Sum points only for games in 2024
-                return sortedStats.filter(stat => new Date(stat.createdAt).getFullYear() === 2024)
-                    .reduce((total, game) => total + game.points, 0);
-            },
+        rankFunction: (playerStat) => {
+            const filteredStats = playerStat.filter(stat => new Date(stat.createdAt).getFullYear() === year);
+            switch (category) {
+                case "Points":
+                    return filteredStats.reduce((total, game) => total + game.points, 0);
+                case "Gains":
+                    return calculateGains(filteredStats);
+                case "Recave":
+                    return filteredStats.reduce((total, stat) => total + stat.rebuys, 0);
+                case "Moneydown":
+                    return filteredStats.reduce((total, stat) => total + stat.totalCost, 0);
+                case "Killer":
+                    return filteredStats.reduce((total, stat) => total + stat.kills, 0);
+                case "Bule":
+                    return filteredStats.reduce((total, stat) => total + stat.position, 0);
+                default:
+                    return 0;
+            }
         },
-        {
-            title: "Gains 2023",
-            filterFunction: (playerStat) => {
-                const filteredStats = playerStat.filter(stat => new Date(stat.createdAt).getFullYear() === 2023);
-                return calculateGains(filteredStats) > 0;
-            },
-            rankFunction: (playerStat) => calculateGains(playerStat.filter(stat => new Date(stat.createdAt).getFullYear() === 2023)),
-        },
-        {
-            title: "Gains 2024",
-            filterFunction: (playerStat) => {
-                const filteredStats = playerStat.filter(stat => new Date(stat.createdAt).getFullYear() === 2024);
-                return calculateGains(filteredStats) > 0;
-            },
-            rankFunction: (playerStat) => calculateGains(playerStat.filter(stat => new Date(stat.createdAt).getFullYear() === 2024)),
-        },
-        {
-            title: "Recave 2023",
-            filterFunction: (playerStat) => {
-                const filteredStats = playerStat.filter(stat => new Date(stat.createdAt).getFullYear() === 2023);
-                return filteredStats.some(stat => stat.rebuys > 1);
-            },
-            rankFunction: (playerStat) => playerStat.filter(stat => new Date(stat.createdAt).getFullYear() === 2023).reduce((total, stat) => total + stat.rebuys, 0),
-        },
-        {
-            title: "Recave 2024",
-            filterFunction: (playerStat) => {
-                const filteredStats = playerStat.filter(stat => new Date(stat.createdAt).getFullYear() === 2024);
-                return filteredStats.some(stat => stat.rebuys > 1);
-            },
-            rankFunction: (playerStat) => playerStat.filter(stat => new Date(stat.createdAt).getFullYear() === 2024).reduce((total, stat) => total + stat.rebuys, 0),
-        },
-        {
-            title: "Moneydown 2023",
-            filterFunction: (playerStat) => playerStat.filter(stat => new Date(stat.createdAt).getFullYear() === 2023).some(stat => stat.totalCost > 5),
-            rankFunction: (playerStat) => playerStat.filter(stat => new Date(stat.createdAt).getFullYear() === 2023).reduce((total, stat) => total + stat.totalCost, 0),
-        },
-        {
-            title: "Moneydown 2024",
-            filterFunction: (playerStat) => playerStat.filter(stat => new Date(stat.createdAt).getFullYear() === 2024).some(stat => stat.totalCost > 5),
-            rankFunction: (playerStat) => playerStat.filter(stat => new Date(stat.createdAt).getFullYear() === 2024).reduce((total, stat) => total + stat.totalCost, 0),
-        },
-        {
-            title: "Killer 2023",
-            filterFunction: (playerStat) => playerStat.filter(stat => new Date(stat.createdAt).getFullYear() === 2023).some(stat => stat.kills > 2),
-            rankFunction: (playerStat) => playerStat.filter(stat => new Date(stat.createdAt).getFullYear() === 2023).reduce((total, stat) => total + stat.kills, 0),
-        },
-        {
-            title: "Killer 2024",
-            filterFunction: (playerStat) => playerStat.filter(stat => new Date(stat.createdAt).getFullYear() === 2024).some(stat => stat.kills > 2),
-            rankFunction: (playerStat) => playerStat.filter(stat => new Date(stat.createdAt).getFullYear() === 2024).reduce((total, stat) => total + stat.kills, 0),
-        },
-        {
-            title: "Bule 2023",
-            filterFunction: (playerStat) => playerStat.filter(stat => new Date(stat.createdAt).getFullYear() === 2023).some(stat => stat.position == 4),
-            rankFunction: (playerStat) => playerStat.filter(stat => new Date(stat.createdAt).getFullYear() === 2023).reduce((total, stat) => total + stat.position, 0),
-        },
-        {
-            title: "Bule 2024",
-            filterFunction: (playerStat) => playerStat.filter(stat => new Date(stat.createdAt).getFullYear() === 2024).some(stat => stat.position == 4),
-            rankFunction: (playerStat) => playerStat.filter(stat => new Date(stat.createdAt).getFullYear() === 2024).reduce((total, stat) => total + stat.position, 0),
-        },
-        {
-            title: "Points 2025",
-            filterFunction: (playerStat) => {
-                const sortedStats = playerStat.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
-                const filteredStats = sortedStats.filter(stat => {
-                    const year = new Date(stat.createdAt).getFullYear();
-                    return year === 2025;
-                });
-                const result = filteredStats.some(game => game.points > 1);
-                return result;
-            },
-            rankFunction: (playerStat) => {
-                const sortedStats = playerStat.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
-                return sortedStats.filter(stat => new Date(stat.createdAt).getFullYear() === 2025)
-                    .reduce((total, game) => total + game.points, 0);
-            },
-        },
-        {
-            title: "Gains 2025",
-            filterFunction: (playerStat) => {
-                const filteredStats = playerStat.filter(stat => new Date(stat.createdAt).getFullYear() === 2025);
-                return calculateGains(filteredStats) > 0;
-            },
-            rankFunction: (playerStat) => calculateGains(playerStat.filter(stat => new Date(stat.createdAt).getFullYear() === 2025)),
-        },
-        {
-            title: "Recave 2025",
-            filterFunction: (playerStat) => {
-                const filteredStats = playerStat.filter(stat => new Date(stat.createdAt).getFullYear() === 2025);
-                return filteredStats.some(stat => stat.rebuys > 1);
-            },
-            rankFunction: (playerStat) => playerStat.filter(stat => new Date(stat.createdAt).getFullYear() === 2025).reduce((total, stat) => total + stat.rebuys, 0),
-        },
-        {
-            title: "Moneydown 2025",
-            filterFunction: (playerStat) => playerStat.filter(stat => new Date(stat.createdAt).getFullYear() === 2025).some(stat => stat.totalCost > 5),
-            rankFunction: (playerStat) => playerStat.filter(stat => new Date(stat.createdAt).getFullYear() === 2025).reduce((total, stat) => total + stat.totalCost, 0),
-        },
-        {
-            title: "Killer 2025",
-            filterFunction: (playerStat) => playerStat.filter(stat => new Date(stat.createdAt).getFullYear() === 2025).some(stat => stat.kills > 2),
-            rankFunction: (playerStat) => playerStat.filter(stat => new Date(stat.createdAt).getFullYear() === 2025).reduce((total, stat) => total + stat.kills, 0),
-        },
-        {
-            title: "Bule 2025",
-            filterFunction: (playerStat) => playerStat.filter(stat => new Date(stat.createdAt).getFullYear() === 2025).some(stat => stat.position == 4),
-            rankFunction: (playerStat) => playerStat.filter(stat => new Date(stat.createdAt).getFullYear() === 2025).reduce((total, stat) => total + stat.position, 0),
-        },
-        // Add more configs as needed
-    ];
-    // {
-    //   title: "adefinir",
-    //   dataKey: "adef",
-    //   filter: (game: GameWithPlayerName) => game.rebuys > 2
-    // },
-    // Add more configurations for more tables
-    // {
-    //   title: "Bule",
-    //   dataKey: "BulMan",
-    // },
-    // {
-    //   title: "Assidu",
-    //   dataKey: "Nombre de parties",
-    //   rankFunction: (games: Game[]) => games.reduce((total, game) => total + game.totalCost, 0),
-    //   filterFunction: (games: Game[]) => games.length > 1, // for example, only include players who played at least one game
-    // },
-    // Define playerGames inside the map function, so 'player' is accessible
-    return (_jsx("div", { style: { display: 'grid',
-            gridTemplateColumns: 'repeat(2, 1fr)',
-            justifyContent: 'center', // Center horizontally
-            alignItems: 'stretch', // Center vertically
-            justifyItems: 'center',
-            gap: '10px',
-            margin: "10px"
-        }, children: tableConfigs.map((config, i) => (_jsx("div", { children: _jsx(PlayerTable, { "aria-label": "tableau des parties", config: config, players: players }) }, i))) }));
+    })));
+    return (_jsx("div", { className: "w-full px-1 bg-slate-950", children: _jsxs(Tabs, { defaultValue: "2025", className: "w-full", children: [_jsx(TabsList, { className: "grid w-full grid-cols-3 mb-2 bg-slate-800/50 p-0.5 rounded-lg", children: years.map(year => (_jsx(TabsTrigger, { value: year.toString(), className: cn("font-['DS-DIGI']", "text-3xl xl:text-base", "h-8", "data-[state=active]:bg-amber-500/10", "data-[state=active]:text-amber-400", "data-[state=active]:shadow-[0_0_10px_rgba(245,158,11,0.1)]", "text-slate-400", "transition-all"), children: year }, year))) }), years.map(year => (_jsx(TabsContent, { value: year.toString(), className: cn("grid gap-2", "grid-cols-1", "sm:grid-cols-2", "lg:grid-cols-3"), children: categories.map(category => {
+                        const config = tableConfigs.find(c => c.title === `${category} ${year}`);
+                        if (!config)
+                            return null;
+                        return (_jsxs(Card, { className: cn("transition-all duration-300", "border-0", "shadow-[0_4px_12px_-2px_rgba(0,0,0,0.3)]", "hover:shadow-[0_8px_20px_-4px_rgba(0,0,0,0.4)]", "bg-slate-900/90 backdrop-blur-sm", "overflow-hidden rounded-lg"), children: [_jsx(CardHeader, { className: "py-2.5 px-3 border-b border-slate-700/50 bg-gradient-to-r from-amber-500/10 via-slate-800 to-slate-800", children: _jsx(CardTitle, { className: cn("font-['DS-DIGI']", "text-base lg:text-xl", "text-amber-400", "tracking-wide"), children: category }) }), _jsx(CardContent, { className: "p-0", children: _jsx(PlayerTable, { "aria-label": `${category} ${year} results`, config: config, players: players }) })] }, category));
+                    }) }, year)))] }) }));
 };
 export default PartyResults;

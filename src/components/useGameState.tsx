@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { Player, PlayerStats } from "./interfaces";
+import { API_ENDPOINTS } from "../config";
+import api from "../api";
 
 const useGameState = (
   gameStarted: boolean,
@@ -10,8 +12,6 @@ const useGameState = (
   setBlindIndex: React.Dispatch<React.SetStateAction<number>>,
   initialTimeLeft: number
 ) => {
-
-
   const [timeLeft, setTimeLeft] = useState<number>(initialTimeLeft);
   const [smallBlind, setSmallBlind] = useState(10);
   const [bigBlind, setBigBlind] = useState(20);
@@ -31,8 +31,7 @@ const useGameState = (
   const [outPlayers, setOutPlayers] = useState<Player[]>([]);
   const [lastUsedPosition, setLastUsedPosition] = useState<number>(0);
   const [initialPlayerCount, setInitialPlayerCount] = useState(selectedPlayers.length);
-
-  
+  const [lastSaveTime, setLastSaveTime] = useState(0);
 
   const resetGameState = () => {
     setTimeLeft(initialTimeLeft);
@@ -52,12 +51,20 @@ const useGameState = (
     setOutPlayers([]);
     setLastUsedPosition(0);
     setInitialPlayerCount(0);
-
+    setStateRestored(false);
   };
 
   const saveGameState = async (currentTimeLeft: number = timeLeft) => {
-    console.log('saveGameState called with initialGameStatePosted:', initialGameStatePosted);  // Add this line
-    if (!initialGameStatePosted) return;
+    if (!initialGameStatePosted) {
+      console.log('Skipping save - initial game state not posted yet');
+      return;
+    }
+
+    const now = Date.now();
+    if (now - lastSaveTime < 5000) {
+      return;
+    }
+    setLastSaveTime(now);
 
     const gameState = {
       timeLeft: currentTimeLeft,
@@ -74,148 +81,100 @@ const useGameState = (
       blindIndex,
       positions,
       outPlayers,
-      lastSavedTime: Date.now(),
+      lastSavedTime: now,
       initialPlayerCount,
     };
 
-    const gameStateString = JSON.stringify({ state: gameState });
-
     try {
-      const response = await fetch('https://api.bourlypokertour.fr/gamestate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: gameStateString,
-      });
-  
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-
-     
+      const response = await api.post(API_ENDPOINTS.GAME_STATE, { state: gameState });
+      console.log('Game state saved successfully:', response.data);
     } catch (error) {
       console.error('Error saving game state:', error);
-    }
-  } 
-
-  const postInitialGameState = async () => {
-    const gameState = {
-      timeLeft,
-      smallBlind,
-      bigBlind,
-      games,
-      selectedPlayers,
-      totalStack,
-      pot,
-      middleStack,
-      rebuyPlayerId,
-      killer,
-      blindIndex,
-      positions,
-      outPlayers,
-      lastSavedTime: Date.now(),
-      initialPlayerCount,
-    };
-  
-    console.log("Posting initial game state:", gameState);
-  
-    try {
-      const response = await fetch('https://api.bourlypokertour.fr/gameState', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ state: gameState }),
-      });
-  
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-  
-      console.log("Initial game state posted successfully");
-  
-      setInitialGameStatePosted(true); // Mark the initial POST as done
-      console.log("initialGameStatePosted set to true");  // Add this line to verify
-    } catch (error) {
-      console.error('Error posting initial game state:', error);
-      setError('Error posting initial game state');
+      setError('Failed to save game state');
     }
   };
-  
+
+  const postInitialGameState = async () => {
+    try {
+      setLoading(true);
+      // We no longer need to post the state here since it's already posted in onStartGame
+      setInitialGameStatePosted(true);
+      console.log('Initial game state marked as posted');
+      setLoading(false);
+    } catch (error) {
+      console.error('Error marking initial game state as posted:', error);
+      setError('Failed to mark initial game state as posted');
+      setLoading(false);
+      throw error;
+    }
+  };
 
   const restoreState = async () => {
-    
     try {
-        const response = await fetch(`https://api.bourlypokertour.fr/gameState`);
-        console.log("API Response:", response);
+      console.log("Attempting to restore game state...");
+      const response = await api.get(API_ENDPOINTS.GAME_STATE);
+      console.log("Game state response:", response);
 
-        if (!response.ok) {
-            if (response.status === 404) {
-                console.log('No game state found (404).');
-                // setGameStarted(false);
-                setLoading(false);
-                return;
-            }
-            throw new Error('Failed to fetch game state');
-        }
-
-        const gameState = await response.json();
-        console.log("Game state data received:", gameState);
-
-        if (!gameState.state) {
-            console.error('No state found in the game state response');
-            throw new Error('No state found in the game state response');
-        }
-
-        const { state } = gameState;
-        console.log("Restored state:", state);
-
-        const elapsedTime = (Date.now() - state.lastSavedTime) / 1000;
-        const adjustedTimeLeft = Math.max(0, state.timeLeft - elapsedTime);
-
-        setTimeLeft(Math.floor(adjustedTimeLeft));
-        setSmallBlind(state.smallBlind);
-        setBigBlind(state.bigBlind);
-        setAnte(state.ante);
-        setGames(state.games);
-        setSelectedPlayers(state.selectedPlayers);
-        setTotalStack(state.totalStack);
-        setPot(state.pot);
-        setRebuyPlayerId(state.rebuyPlayerId);
-        setMiddleStack(state.middleStack);
-        setBlindIndex(state.blindIndex);
-        setPositions(state.positions);
-        setOutPlayers(state.outPlayers);
-        setLastUsedPosition(Math.max(...Object.values(state.positions) as number[], 0));
-        setGameStarted(true);
-        setInitialGameStatePosted(true);
-        setInitialPlayerCount(state.initialPlayerCount);
-
-  
-        setStateRestored(true);  // This should be set here, after successful restoration
-    } catch (error) {
-        console.error('Error restoring game state', error);
-        setError('Error restoring game state');
-        setGameStarted(false);
-        // setStateRestored(false);
-    } finally {
+      if (!response.data?.state) {
+        console.log('No saved game state found');
         setLoading(false);
+        return;
+      }
+
+      const { state } = response.data;
+      console.log("Restored state:", state);
+
+      const elapsedTime = (Date.now() - state.lastSavedTime) / 1000;
+      const adjustedTimeLeft = Math.max(0, state.timeLeft - elapsedTime);
+
+      setTimeLeft(Math.floor(adjustedTimeLeft));
+      setSmallBlind(state.smallBlind);
+      setBigBlind(state.bigBlind);
+      setAnte(state.ante);
+      setGames(state.games);
+      setSelectedPlayers(state.selectedPlayers);
+      setTotalStack(state.totalStack);
+      setPot(state.pot);
+      setRebuyPlayerId(state.rebuyPlayerId);
+      setMiddleStack(state.middleStack);
+      setBlindIndex(state.blindIndex);
+      setPositions(state.positions);
+      setOutPlayers(state.outPlayers);
+      setLastUsedPosition(Math.max(...Object.values(state.positions) as number[], 0));
+      setGameStarted(true);
+      setInitialGameStatePosted(true);
+      setInitialPlayerCount(state.initialPlayerCount);
+      setStateRestored(true);
+
+      console.log("Game state restored successfully");
+    } catch (error: any) {
+      if (error.response?.status === 404) {
+        console.log('No game state found (404)');
+        setLoading(false);
+        return;
+      }
+      console.error('Error restoring game state:', error);
+      setError(error.message || 'Failed to restore game state');
+      setGameStarted(false);
+    } finally {
+      setLoading(false);
     }
-};
+  };
 
-useEffect(() => {
+  // Initial state restoration
+  useEffect(() => {
     restoreState();
-}, []);
+  }, []);
 
+  // Calculate total stack when players change
   useEffect(() => {
     if (!stateRestored && selectedPlayers.length > 0 && !totalStack) {
       const calculatedTotalStack = selectedPlayers.length * 5350;
       setTotalStack(calculatedTotalStack);
     }
-  }, [selectedPlayers.length, stateRestored]);
+  }, [selectedPlayers.length, stateRestored, totalStack]);
 
+  // Calculate initial pot
   useEffect(() => {
     if (gameStarted && pot === 0 && selectedPlayers.length > 0) {
       const calculatedPot = selectedPlayers.length * 5;
@@ -223,30 +182,16 @@ useEffect(() => {
     }
   }, [gameStarted, selectedPlayers.length, pot]);
 
+  // Update middle stack when total stack changes
   useEffect(() => {
     const remainingPlayers = selectedPlayers.length;
     if (remainingPlayers > 0) {
       const newMiddleStack = totalStack / remainingPlayers;
       const roundedMiddleStack = Math.round(newMiddleStack);
-      console.log("Setting middleStack:", roundedMiddleStack);
       setMiddleStack(roundedMiddleStack);
       setSavedTotalStack(totalStack);
-      saveGameState(timeLeft);
     }
-  }, [totalStack, selectedPlayers.length, timeLeft]);
-
-  useEffect(() => {
-  
-    const interval = setInterval(() => {
-      if (gameStarted) {
-        saveGameState(timeLeft);
-      }
-    }, 1000); // Save state every second
-    return () => {
-      clearInterval(interval);
-    };
-  }, [gameStarted, timeLeft]);
-
+  }, [totalStack, selectedPlayers.length]);
 
   return {
     timeLeft,
@@ -274,7 +219,6 @@ useEffect(() => {
     killer,
     setKiller,
     stateRestored,
-
     loading,
     error,
     positions,

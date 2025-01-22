@@ -1,6 +1,13 @@
-import { Modal, ModalBody, ModalHeader } from '@nextui-org/react';
-import { useState, useEffect } from 'react';
-import alerteSon from '../assets/alarmpok.mp3'
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { toast } from 'react-hot-toast';
+import alerteSon from '../assets/alarmpok.mp3';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "./ui/dialog";
+import { cn } from "../lib/utils";
 
 interface BlindTimerProps {
   gameStarted: boolean;
@@ -12,10 +19,20 @@ interface BlindTimerProps {
   initialTimeLeft: number;
 }
 
-const BlindTimer: React.FC<BlindTimerProps> = ({ gameStarted, isPaused, onBlindChange, onTimeChange, blindIndex, setBlindIndex, initialTimeLeft }) => {
-  const [timeLeft, setTimeLeft] = useState(initialTimeLeft); 
+const BlindTimer: React.FC<BlindTimerProps> = ({
+  gameStarted,
+  isPaused,
+  onBlindChange,
+  onTimeChange,
+  blindIndex,
+  setBlindIndex,
+  initialTimeLeft
+}) => {
+  const [timeLeft, setTimeLeft] = useState(initialTimeLeft);
   const [playAlert, setPlayAlert] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const isUpdatingRef = useRef(false);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   const blinds = [
     { small: 10, big: 20, ante: 0 },
@@ -37,82 +54,116 @@ const BlindTimer: React.FC<BlindTimerProps> = ({ gameStarted, isPaused, onBlindC
     { small: 1400, big: 2800, ante: 300 },
     { small: 1600, big: 3200, ante: 400 },
     { small: 1800, big: 3600, ante: 400 },
-
   ];
 
+  const updateBlinds = useCallback(() => {
+    if (isUpdatingRef.current) return;
+    isUpdatingRef.current = true;
+
+    try {
+      let newBlindIndex = blindIndex;
+      if (blindIndex < blinds.length - 1) {
+        newBlindIndex = blindIndex + 1;
+        setBlindIndex(newBlindIndex);
+      }
+
+      const { small, big, ante } = blinds[newBlindIndex];
+      onBlindChange(small, big, ante);
+      setTimeLeft(initialTimeLeft);
+      setPlayAlert(true);
+      setShowModal(true);
+    } catch (error) {
+      console.error('Error updating blinds:', error);
+      toast.error('Failed to update blinds');
+    } finally {
+      isUpdatingRef.current = false;
+    }
+  }, [blindIndex, blinds, initialTimeLeft, onBlindChange, setBlindIndex]);
 
   useEffect(() => {
     if (!gameStarted) {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
       return;
     }
 
-    const timer = setInterval(() => {
+    timerRef.current = setInterval(() => {
       setTimeLeft((time) => {
         if (isPaused) {
           return time;
         }
-        if (time === 0) {
-          setPlayAlert(true);
-          setShowModal(true);
 
-          let newBlindIndex = blindIndex;
-          if (blindIndex < blinds.length - 1) {
-            newBlindIndex = blindIndex + 1;
-            setBlindIndex(newBlindIndex);
-          }
-          onBlindChange(blinds[newBlindIndex].small, blinds[newBlindIndex].big, blinds[newBlindIndex].ante);
-          return initialTimeLeft;; // reset time
-        } else {
-          return Math.floor(time - 1)
+        if (time === 0) {
+          updateBlinds();
+          return initialTimeLeft;
         }
+
+        return Math.floor(time - 1);
       });
     }, 1000);
 
-    return () => clearInterval(timer);
-  }, [gameStarted, isPaused, blindIndex, onBlindChange, blinds, setBlindIndex,initialTimeLeft]);
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, [gameStarted, isPaused, updateBlinds, initialTimeLeft]);
 
   useEffect(() => {
     if (showModal) {
       const timer = setTimeout(() => {
         setShowModal(false);
-        setPlayAlert(false);  
-      }, 5000); // 5 seconds
+        setPlayAlert(false);
+      }, 5000);
 
-      return () => clearTimeout(timer); // Cleanup
+      return () => clearTimeout(timer);
     }
   }, [showModal]);
 
   useEffect(() => {
     if (timeLeft !== 0) {
-        onTimeChange(timeLeft);
+      onTimeChange(timeLeft);
     }
-}, [timeLeft, onTimeChange]);
-
-
-
-  const handleCloseModal = () => {
-    setShowModal(false);
-  };
-
-  // const formatTime = (time: number): string => {
-  //   const minutes = Math.floor(time / 60);
-  //   const seconds = Math.floor(time % 60);
-  //   return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-  // };
+  }, [timeLeft, onTimeChange]);
 
   return (
     <>
       {playAlert && <audio src={alerteSon} autoPlay />}
-      <Modal isOpen={showModal} className="fixed min-w-fit inset-0 flex items-center justify-center z-50" onClick={handleCloseModal}>
-        <div className="relative w-4/5 h-4/5 bg-white shadow-lg overflow-auto rounded-lg p-4" onClick={(e) => e.stopPropagation()}>
-          <ModalHeader className="text-center text-lg font-bold">
-            New Blind Level
-          </ModalHeader>
-          <ModalBody className="text-center text-base">
-            Small: {blinds[blindIndex].small} / Big: {blinds[blindIndex].big} Ante: {blinds[blindIndex].ante}
-          </ModalBody>
-        </div>
-      </Modal>
+      <Dialog open={showModal} onOpenChange={setShowModal}>
+        <DialogContent className={cn(
+          "bg-slate-900/95 border-amber-400/20",
+          "backdrop-blur-md",
+          "shadow-[0_0_25px_-5px_rgba(245,158,11,0.2)]"
+        )}>
+          <DialogHeader>
+            <DialogTitle className={cn(
+              "font-['DS-DIGI'] text-3xl text-center",
+              "text-amber-400",
+              "tracking-wider"
+            )}>
+              New Blind Level
+            </DialogTitle>
+          </DialogHeader>
+          <div className="font-['DS-DIGI'] text-2xl text-center space-y-2 py-4">
+            <div className="flex justify-between px-8">
+              <span className="text-amber-400/80">Small Blind</span>
+              <span className="text-amber-400">{blinds[blindIndex].small}</span>
+            </div>
+            <div className="flex justify-between px-8">
+              <span className="text-amber-400/80">Big Blind</span>
+              <span className="text-amber-400">{blinds[blindIndex].big}</span>
+            </div>
+            <div className="h-px bg-amber-400/20 mx-8 my-4" />
+            <div className="flex justify-between px-8">
+              <span className="text-amber-400/80">Ante</span>
+              <span className="text-amber-400">{blinds[blindIndex].ante}</span>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
