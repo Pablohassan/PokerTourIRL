@@ -6,23 +6,6 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "./ui/sheet";
 import { Button } from "./ui/button";
 import { cn } from "../lib/utils";
 // Add CSS styles
-const styles = {
-    button: {
-        padding: '8px 16px',
-        fontSize: '1rem',
-        fontWeight: '600',
-        color: 'black',
-        backgroundColor: '#F59E0B',
-        border: 'none',
-        borderRadius: '6px',
-        cursor: 'pointer',
-        transition: 'background-color 0.2s',
-        position: 'fixed',
-        top: '10px',
-        right: '100px',
-        zIndex: 1000
-    }
-};
 // Add CSS classes for hover effects
 const cssStyles = `
   .button-warning:hover {

@@ -23,7 +23,7 @@ const GameTimer: React.FC<GameTimerProps> = ({
   timeLeft,
   smallBlind,
   bigBlind,
-  handleGameEnd,
+  // handleGameEnd,
   isPaused,
   setIsPaused,
   ante
