@@ -1,8 +1,42 @@
-import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-runtime";
 import { useState } from 'react';
 import api from '../api';
-import { Button, Checkbox } from '@nextui-org/react';
 import { useNavigate } from 'react-router-dom';
+import { API_ENDPOINTS } from '../config';
+// Add CSS styles
+const styles = {
+    button: {
+        padding: '12px 24px',
+        fontSize: '1rem',
+        fontWeight: '600',
+        color: 'white',
+        border: 'none',
+        borderRadius: '8px',
+        cursor: 'pointer',
+        transition: 'background-color 0.2s'
+    },
+    primaryButton: {
+        backgroundColor: '#3B82F6'
+    },
+    dangerButton: {
+        backgroundColor: '#EF4444'
+    },
+    checkbox: {
+        width: '20px',
+        height: '20px',
+        accentColor: '#3B82F6',
+        cursor: 'pointer'
+    }
+};
+// Add CSS classes for hover effects
+const cssStyles = `
+  .button-primary:hover {
+    background-color: #2563EB !important;
+  }
+  .button-danger:hover {
+    background-color: #DC2626 !important;
+  }
+`;
 const GameConfiguration = ({ championnat, players, onStartGameConfiguration }) => {
     const [selectedTournamentId, setSelectedTournamentId] = useState(null);
     const [blindDuration, setBlindDuration] = useState(20);
@@ -36,9 +70,11 @@ const GameConfiguration = ({ championnat, players, onStartGameConfiguration }) =
     const handleCreateTournament = async () => {
         if (newTournamentYear) {
             try {
-                const response = await api.post('/tournaments', { year: parseInt(newTournamentYear) });
+                const response = await api.post(API_ENDPOINTS.TOURNAMENTS, {
+                    year: parseInt(newTournamentYear)
+                });
                 if (response.data) {
-                    setSelectedTournamentId(response.data.id); // Sélectionne automatiquement le tournoi créé
+                    setSelectedTournamentId(response.data.id);
                     alert('Nouveau tournoi créé avec succès!');
                 }
             }
@@ -48,6 +84,110 @@ const GameConfiguration = ({ championnat, players, onStartGameConfiguration }) =
             }
         }
     };
-    return (_jsxs("form", { onSubmit: handleSubmit, className: "form-modern", children: [_jsxs("div", { className: "form-modern-group", children: [_jsx("label", { htmlFor: "tournament", className: "form-modern-label", children: "Selectionner un tournoi :" }), _jsxs("select", { id: "tournament", value: selectedTournamentId || '', onChange: handleTournamentChange, className: "form-modern-select", children: [_jsx("option", { value: "", disabled: true, children: "Selectionner un tournoi" }), championnat.map(tournament => (_jsx("option", { value: tournament.id, children: tournament.year }, tournament.id)))] }), _jsxs("div", { className: "form-modern-checkbox-group", children: [_jsx("label", { htmlFor: "newTournamentYear", className: "form-modern-label", children: "Creer un nouveau tournoi :" }), _jsx("input", { type: "number", id: "newTournamentYear", value: newTournamentYear, onChange: (e) => setNewTournamentYear(e.target.value), placeholder: "Ann\u00E9e du tournoi", className: "form-modern-input" })] }), _jsx("button", { type: "submit", onClick: handleCreateTournament, className: "form-modern-button", children: "Cree nouveau Trournois" })] }), _jsxs("div", { className: "form-modern-group", children: [_jsx("label", { htmlFor: "blindDuration", className: "form-modern-label", children: "Duree des blindes (minutes) :" }), _jsx("input", { type: "number", id: "blindDuration", value: blindDuration, onChange: handleBlindDurationChange, min: "1", className: "form-modern-input" })] }), _jsxs("div", { className: "form-modern-group", children: [_jsx("label", { className: "form-modern-label", children: "Selection des Joueurs :" }), players.map(player => (_jsxs("div", { className: "form-modern-checkbox-group", children: [_jsx(Checkbox, { type: "checkbox", id: `player-${player.id}`, onChange: () => handlePlayerSelect(player), className: "form-modern-checkbox" }), _jsx("label", { htmlFor: `player-${player.id}`, className: "form-modern-label", children: player.name })] }, player.id)))] }), _jsx("button", { type: "submit", className: "form-modern-button", children: "Valider La sellection" }), _jsx(Button, { size: "lg", color: "danger", onFocus: focus, onClick: () => navigate("/partypage"), children: "Back" })] }));
+    return (_jsxs(_Fragment, { children: [_jsx("style", { children: cssStyles }), _jsx("div", { style: {
+                    minHeight: '100vh',
+                    padding: '20px',
+                    overflow: 'hidden',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    background: 'linear-gradient(to bottom, #111827, #1F2937)'
+                }, children: _jsxs("form", { onSubmit: handleSubmit, style: {
+                        flex: 1,
+                        overflowY: 'auto',
+                        padding: '20px',
+                        maxWidth: '56rem',
+                        margin: '0 auto',
+                        width: '100%',
+                        backgroundColor: '#1F2937',
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+                    }, children: [_jsxs("div", { style: { marginBottom: '24px' }, children: [_jsx("h2", { style: {
+                                        fontSize: '1.5rem',
+                                        fontWeight: 'bold',
+                                        color: 'white',
+                                        marginBottom: '24px'
+                                    }, children: "Game Configuration" }), _jsxs("div", { style: { marginBottom: '16px' }, children: [_jsx("label", { htmlFor: "tournament", style: {
+                                                display: 'block',
+                                                fontSize: '1.125rem',
+                                                fontWeight: '500',
+                                                color: '#E5E7EB',
+                                                marginBottom: '8px'
+                                            }, children: "Select Tournament:" }), _jsxs("select", { id: "tournament", value: selectedTournamentId || '', onChange: handleTournamentChange, style: {
+                                                width: '100%',
+                                                padding: '12px',
+                                                backgroundColor: '#374151',
+                                                color: 'white',
+                                                borderRadius: '8px',
+                                                border: '2px solid transparent',
+                                                outline: 'none'
+                                            }, children: [_jsx("option", { value: "", disabled: true, children: "Select a tournament" }), championnat.map(tournament => (_jsx("option", { value: tournament.id, children: tournament.year }, tournament.id)))] })] }), _jsxs("div", { style: { marginBottom: '16px' }, children: [_jsx("label", { htmlFor: "newTournamentYear", style: {
+                                                display: 'block',
+                                                fontSize: '1.125rem',
+                                                fontWeight: '500',
+                                                color: '#E5E7EB',
+                                                marginBottom: '8px'
+                                            }, children: "Create New Tournament:" }), _jsxs("div", { style: { display: 'flex', gap: '8px' }, children: [_jsx("input", { type: "number", id: "newTournamentYear", value: newTournamentYear, onChange: (e) => setNewTournamentYear(e.target.value), placeholder: "Tournament Year", style: {
+                                                        flex: 1,
+                                                        padding: '12px',
+                                                        backgroundColor: '#374151',
+                                                        color: 'white',
+                                                        borderRadius: '8px',
+                                                        border: '2px solid transparent',
+                                                        outline: 'none'
+                                                    } }), _jsx("button", { type: "button", onClick: handleCreateTournament, className: "button-primary", style: {
+                                                        ...styles.button,
+                                                        ...styles.primaryButton
+                                                    }, children: "Create" })] })] }), _jsxs("div", { style: { marginBottom: '16px' }, children: [_jsx("label", { htmlFor: "blindDuration", style: {
+                                                display: 'block',
+                                                fontSize: '1.125rem',
+                                                fontWeight: '500',
+                                                color: '#E5E7EB',
+                                                marginBottom: '8px'
+                                            }, children: "Blind Duration (minutes):" }), _jsx("input", { type: "number", id: "blindDuration", value: blindDuration, onChange: handleBlindDurationChange, min: "1", style: {
+                                                width: '100%',
+                                                padding: '12px',
+                                                backgroundColor: '#374151',
+                                                color: 'white',
+                                                borderRadius: '8px',
+                                                border: '2px solid transparent',
+                                                outline: 'none'
+                                            } })] }), _jsxs("div", { style: { marginBottom: '16px' }, children: [_jsx("label", { style: {
+                                                display: 'block',
+                                                fontSize: '1.125rem',
+                                                fontWeight: '500',
+                                                color: '#E5E7EB',
+                                                marginBottom: '8px'
+                                            }, children: "Select Players:" }), _jsx("div", { style: {
+                                                display: 'grid',
+                                                gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+                                                gap: '16px',
+                                                padding: '16px',
+                                                backgroundColor: '#374151',
+                                                borderRadius: '8px',
+                                                maxHeight: '400px',
+                                                overflowY: 'auto'
+                                            }, children: players.map(player => (_jsxs("div", { style: {
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '12px',
+                                                    padding: '8px',
+                                                    backgroundColor: '#4B5563',
+                                                    borderRadius: '8px'
+                                                }, children: [_jsx("input", { type: "checkbox", id: `player-${player.id}`, checked: selectedPlayers.some(p => p.id === player.id), onChange: () => handlePlayerSelect(player), style: styles.checkbox }), _jsx("label", { htmlFor: `player-${player.id}`, style: {
+                                                            color: 'white',
+                                                            cursor: 'pointer',
+                                                            userSelect: 'none'
+                                                        }, children: player.name })] }, player.id))) })] })] }), _jsxs("div", { style: {
+                                display: 'flex',
+                                justifyContent: 'flex-end',
+                                gap: '16px',
+                                paddingTop: '24px'
+                            }, children: [_jsx("button", { type: "button", onClick: () => navigate("/partypage"), className: "button-danger", style: {
+                                        ...styles.button,
+                                        ...styles.dangerButton
+                                    }, children: "Back" }), _jsx("button", { type: "submit", className: "button-primary", style: {
+                                        ...styles.button,
+                                        ...styles.primaryButton
+                                    }, children: "Start Game" })] })] }) })] }));
 };
 export default GameConfiguration;

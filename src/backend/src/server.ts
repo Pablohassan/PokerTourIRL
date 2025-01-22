@@ -1,8 +1,8 @@
 import express, { Request, Response, NextFunction } from "express";
-import bodyParser from 'body-parser';
+import bodyParser from "body-parser";
 import _ from "lodash";
 import cors from "cors";
-import dotenv from 'dotenv';
+import dotenv from "dotenv";
 dotenv.config();
 import { Prisma, PrismaClient } from "@prisma/client";
 import { fetchGamesForPlayer } from "./services/fetsh-game-for-player.js";
@@ -10,40 +10,29 @@ import { fetchGamesForPlayer } from "./services/fetsh-game-for-player.js";
 const prisma = new PrismaClient();
 const app = express();
 
-const allowedOrigins = [
-  'http://localhost:5173',  // Vite dev server
-  'http://localhost:3000',
-  'https://bourlypokertour.fr'
-];
+const isDevelopment = process.env.NODE_ENV === "development";
+const corsOrigin = isDevelopment
+  ? "http://localhost:5173"
+  : "https://bourlypokertour.fr";
 
-app.use(bodyParser.json({ limit: '10mb' }));
+app.use(bodyParser.json({ limit: "10mb" }));
 
-app.options("*", cors());
-// app.use(cors({ origin: process.env.CORS_ORIGIN || "https://bourlypokertour.fr" }));
+// Configure CORS - Single configuration
+app.use(
+  cors({
+    origin: corsOrigin,
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: [
+      "Origin",
+      "X-Requested-With",
+      "Content-Type",
+      "Accept",
+      "Authorization",
+    ],
+  })
+);
 
-app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true
-}));
-
-
-app.use(express.json());
-
-// @ts-ignore
-app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "https://bourlypokertour.fr");
-  res.header(
-    "Access-Control-Allow-Headers",
-    "Origin, X-Requested-With, Content-Type, Accept"
-  );
-  next();
-});
 app.use(express.json());
 
 app.get(
@@ -208,7 +197,7 @@ app.get(
     try {
       const tournament = await prisma.tournament.findFirst({
         where: {
-          year
+          year,
         },
       });
 
@@ -259,7 +248,7 @@ app.get(
         where: { id: Number(id) },
         select: { partyStarted: true, partyEnded: true },
       });
-      
+
       res.json({
         partyStarted: party?.partyStarted,
         partyEnded: party?.partyEnded,
@@ -344,8 +333,9 @@ app.get("/parties/:partyId/stats", async (req, res) => {
 
     // Vérifiez si des statistiques ont été trouvées
     if (!stats || stats.length === 0) {
-      return res.status(404).json({ error: "No stats found for this party ID" });
-    
+      return res
+        .status(404)
+        .json({ error: "No stats found for this party ID" });
     }
 
     res.json(stats);
@@ -355,17 +345,17 @@ app.get("/parties/:partyId/stats", async (req, res) => {
   }
 });
 // @ts-ignore
-app.get('/gameState', async (req, res) => {
-  try { 
-      const gameState = await prisma.gameState.findFirst(); // Find the first (and only) game state
-      if (gameState) {
-        res.json(gameState);
-      } else {
-        res.status(404).json({ error: 'Game state not found' });
-      }
+app.get("/gameState", async (req, res) => {
+  try {
+    const gameState = await prisma.gameState.findFirst(); // Find the first (and only) game state
+    if (gameState) {
+      res.json(gameState);
+    } else {
+      res.status(404).json({ error: "Game state not found" });
+    }
   } catch (error) {
-    console.error('Error fetching game state:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Error fetching game state:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
@@ -375,7 +365,9 @@ app.post("/tournaments", async (req: Request, res: Response) => {
     where: { year },
   });
   if (existingTournament) {
-    return res.status(400).json({ error: "Tournament for this year already exists" });
+    return res
+      .status(400)
+      .json({ error: "Tournament for this year already exists" });
   }
 
   const newTournament = await prisma.tournament.create({
@@ -385,10 +377,10 @@ app.post("/tournaments", async (req: Request, res: Response) => {
   res.json(newTournament);
 });
 
-// modifié 
+// modifié
 app.post("/parties", async (req: Request, res: Response) => {
   const { date, tournamentId } = req.body;
-  
+
   if (!tournamentId) {
     return res.status(400).json({ error: "Un ID de tournoi est requis." });
   }
@@ -407,7 +399,6 @@ app.post("/parties", async (req: Request, res: Response) => {
   });
   res.json(parties);
 });
-
 
 app.post("/players", async (req: Request, res: Response) => {
   try {
@@ -459,9 +450,9 @@ app.post("/playerStats/start", async (req: Request, res: Response) => {
     },
   });
 
-
-
-  const newPlayerStats:Prisma.PromiseReturnType<typeof prisma.playerStats.create>[] = [];
+  const newPlayerStats: Prisma.PromiseReturnType<
+    typeof prisma.playerStats.create
+  >[] = [];
 
   for (const playerId of players) {
     // Start a new game for each player
@@ -525,7 +516,9 @@ app.post("/playerStats", async (req: Request, res: Response) => {
 
 app.post("/gameResults", async (req: Request, res: Response) => {
   const games = req.body;
-  const updatedGames:Prisma.PromiseReturnType<typeof prisma.playerStats.update>[] = [];
+  const updatedGames: Prisma.PromiseReturnType<
+    typeof prisma.playerStats.update
+  >[] = [];
 
   try {
     for (const game of games) {
@@ -547,24 +540,24 @@ app.post("/gameResults", async (req: Request, res: Response) => {
   }
 });
 
-app.post('/gameState', async (req, res) => {
+app.post("/gameState", async (req, res) => {
   const { state } = req.body;
   try {
-      const existingGameState = await prisma.gameState.findFirst();
-      if (existingGameState) {
-          const updatedGameState = await prisma.gameState.update({
-              where: { id: existingGameState.id },
-              data: { state }
-          });
-          res.json(updatedGameState);
-      } else {
-          const newGameState = await prisma.gameState.create({
-              data: { state }
-          });
-          res.json(newGameState);
-      }
+    const existingGameState = await prisma.gameState.findFirst();
+    if (existingGameState) {
+      const updatedGameState = await prisma.gameState.update({
+        where: { id: existingGameState.id },
+        data: { state },
+      });
+      res.json(updatedGameState);
+    } else {
+      const newGameState = await prisma.gameState.create({
+        data: { state },
+      });
+      res.json(newGameState);
+    }
   } catch (error) {
-      res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
@@ -592,7 +585,7 @@ app.put("/gamesResults/:id", async (req: Request, res: Response) => {
 
 app.put("/updateMultipleGamesResults", async (req: Request, res: Response) => {
   try {
-    const gameUpdates: Array<{ id: number, data: any }> = req.body;
+    const gameUpdates: Array<{ id: number; data: any }> = req.body;
 
     const updatedGames = await Promise.all(
       gameUpdates.map(async (update) => {
@@ -606,13 +599,13 @@ app.put("/updateMultipleGamesResults", async (req: Request, res: Response) => {
     res.json({ updatedGames });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "An error occurred while updating the game results" });
+    res
+      .status(500)
+      .json({ error: "An error occurred while updating the game results" });
   }
 });
 
-
 app.put("/parties/:id", async (req, res) => {
-  
   let { date } = req.body; // Extract the new date from the request body
   const partyId = parseInt(req.params.id, 10); // Convert the id to a number
   date = new Date(date);
@@ -620,20 +613,20 @@ app.put("/parties/:id", async (req, res) => {
   if (isNaN(partyId)) {
     return res.status(400).json({ error: "Invalid party ID" });
   }
-  
+
   try {
     const updatedParty = await prisma.party.update({
       where: { id: partyId },
-      data: { date }
-      
+      data: { date },
     });
     res.json(updatedParty);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "An error occurred while updating the party date" });
+    res
+      .status(500)
+      .json({ error: "An error occurred while updating the party date" });
   }
 });
-
 
 // sais pas comment ça fonctionne
 app.put("/playerStats/eliminate", async (req: Request, res: Response) => {
@@ -714,35 +707,41 @@ app.put("/playerStats/out/:playerId", async (req: Request, res: Response) => {
   }
 });
 // Delete a specific party by its ID
-app.delete("/parties/:id", async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const { id } = req.params;  // Get the ID from the URL params
-       // First delete related PlayerStats
-       await prisma.playerStats.deleteMany({
+app.delete(
+  "/parties/:id",
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params; // Get the ID from the URL params
+      // First delete related PlayerStats
+      await prisma.playerStats.deleteMany({
         where: { partyId: Number(id) },
       });
-  
+
       // Then delete the Party
       await prisma.party.delete({
         where: { id: Number(id) },
       });
-  
+
       res.status(204).send();
-  } catch (err) {
-    // Pass the error to the error-handling middleware
-    next(err);
+    } catch (err) {
+      // Pass the error to the error-handling middleware
+      next(err);
+    }
   }
-});
+);
 // @ts-ignore
-app.delete("/gameState", async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const deleteGameState = await prisma.gameState.deleteMany({});
-    res.json({ message: "Game state deleted", count: deleteGameState.count });
-  } catch (error) {
-    console.error("Error deleting game state:", error);
-    next(error);
+app.delete(
+  "/gameState",
+  async (_req: Request, res: Response, next: NextFunction) => {
+    try {
+      const deleteGameState = await prisma.gameState.deleteMany({});
+      res.json({ message: "Game state deleted", count: deleteGameState.count });
+    } catch (error) {
+      console.error("Error deleting game state:", error);
+      next(error);
+    }
   }
-});
+);
 
 // @ts-ignore
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {

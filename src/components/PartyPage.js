@@ -1,21 +1,79 @@
-import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-runtime";
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { Table, TableBody, TableCell, TableColumn, TableHeader, TableRow, Button } from '@nextui-org/react';
 import api from '../api'; // replace with your actual API import
-import React from 'react';
 import ReactDOM from 'react-dom';
 import axios from 'axios';
+import { toast } from 'react-hot-toast';
+// Add CSS styles
+const styles = {
+    button: {
+        padding: '8px 16px',
+        fontSize: '0.875rem',
+        fontWeight: '600',
+        color: 'white',
+        border: 'none',
+        borderRadius: '6px',
+        cursor: 'pointer',
+        transition: 'background-color 0.2s'
+    },
+    primaryButton: {
+        backgroundColor: '#3B82F6'
+    },
+    dangerButton: {
+        backgroundColor: '#EF4444'
+    },
+    table: {
+        width: '100%',
+        borderCollapse: 'collapse',
+        backgroundColor: 'white',
+        borderRadius: '8px',
+        overflow: 'hidden',
+        boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)'
+    },
+    th: {
+        backgroundColor: '#F3F4F6',
+        color: '#374151',
+        fontWeight: '600',
+        padding: '12px',
+        textAlign: 'left',
+        fontSize: '0.875rem',
+        borderBottom: '1px solid #E5E7EB'
+    },
+    td: {
+        padding: '12px',
+        color: '#1F2937',
+        fontSize: '0.875rem',
+        borderBottom: '1px solid #E5E7EB'
+    }
+};
+// Add CSS classes for hover effects
+const cssStyles = `
+  .button-primary:hover {
+    background-color: #2563EB !important;
+  }
+  .button-danger:hover {
+    background-color: #DC2626 !important;
+  }
+  .table-row:hover {
+    background-color: #F9FAFB;
+  }
+`;
 export const PartyPage = () => {
     const [parties, setParties] = useState([]);
     const [isModalOpen, setModalOpen] = useState(false);
     const [selectedParty, setSelectedParty] = useState(null);
-    const [page, setPage] = useState(1); // Page actuelle
-    const [hasMore, setHasMore] = useState(true); // Indique s'il y a plus de données à charger
+    const [page, setPage] = useState(1);
+    const [hasMore, setHasMore] = useState(true);
+    const [isLoading, setIsLoading] = useState(false);
     const observer = useRef(null);
-    const limit = 15; // Limite d'éléments par page
+    const limit = 15;
     useEffect(() => {
         const fetchParties = async () => {
+            if (isLoading)
+                return;
             try {
+                setIsLoading(true);
+                console.log(`Fetching parties for page ${page}`);
                 const response = await api.get(`/parties?page=${page}&limit=${limit}`);
                 const fetchedParties = response.data;
                 const partiesWithStats = await Promise.all(fetchedParties.map(async (party) => {
@@ -25,11 +83,27 @@ export const PartyPage = () => {
                         playerStats: statsResponse.data,
                     };
                 }));
-                setParties(prevParties => [...prevParties, ...partiesWithStats]);
+                setParties(prevParties => {
+                    // Create a map of existing parties by ID
+                    const existingPartiesMap = new Map(prevParties.map(p => [p.id, p]));
+                    // Add new parties, avoiding duplicates
+                    partiesWithStats.forEach(party => {
+                        if (!existingPartiesMap.has(party.id)) {
+                            existingPartiesMap.set(party.id, party);
+                        }
+                    });
+                    // Convert map back to array and sort by date (most recent first)
+                    return Array.from(existingPartiesMap.values())
+                        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+                });
                 setHasMore(fetchedParties.length === limit);
+                console.log(`Fetched ${partiesWithStats.length} parties`);
             }
             catch (error) {
-                console.error('Erreur lors du chargement des parties:', error);
+                console.error('Error loading parties:', error);
+            }
+            finally {
+                setIsLoading(false);
             }
         };
         fetchParties();
@@ -37,14 +111,17 @@ export const PartyPage = () => {
     const lastPartyElementRef = useCallback((node) => {
         if (observer.current)
             observer.current.disconnect();
+        if (isLoading)
+            return;
         observer.current = new IntersectionObserver(entries => {
             if (entries[0].isIntersecting && hasMore) {
+                console.log('Loading more parties...');
                 setPage(prevPage => prevPage + 1);
             }
         });
         if (node)
             observer.current.observe(node);
-    }, [hasMore]);
+    }, [hasMore, isLoading]);
     const openModal = useCallback((party) => {
         setSelectedParty(party);
         setModalOpen(true);
@@ -118,53 +195,75 @@ export const PartyPage = () => {
         });
     };
     const deleteParty = async (partyId) => {
-        if (window.confirm(`Supprimer la partie ${partyId}?`))
+        if (window.confirm(`Delete party ${partyId}?`)) {
             try {
                 await api.delete(`/parties/${partyId}`);
-                const updatedParties = parties.filter((party) => party.id !== partyId);
-                setParties(updatedParties);
+                setParties(prevParties => prevParties.filter(party => party.id !== partyId));
+                toast.success('Party deleted successfully');
             }
             catch (error) {
-                console.error("Error deleting the party:", error);
+                console.error("Error deleting party:", error);
+                toast.error('Failed to delete party');
             }
+        }
     };
-    return (_jsxs("div", { children: [parties.map((party, i) => {
-                if (parties.length === i + 1) {
-                    return (_jsxs("div", { ref: lastPartyElementRef, className: "mb-20", children: [_jsxs("div", { className: "p-2 ml-10", children: [new Date(party.date).toLocaleDateString(), _jsx(Button, { style: { marginLeft: "10px" }, size: "sm", color: "danger", onClick: () => deleteParty(party.id), children: "Delete" })] }), _jsxs(Table, { "aria-label": "tableau general", style: { padding: 10, width: '100%' }, children: [_jsxs(TableHeader, { children: [_jsx(TableColumn, { children: "Player" }), _jsx(TableColumn, { children: "Position" }), _jsx(TableColumn, { children: "Points" }), _jsx(TableColumn, { children: "Rebuys" }), _jsx(TableColumn, { children: "Sortie" }), _jsx(TableColumn, { children: "Gains" })] }), _jsx(TableBody, { children: party.playerStats.map((stat, i) => (_jsxs(TableRow, { children: [_jsx(TableCell, { children: stat.player.name }), _jsx(TableCell, { children: stat.position }), _jsx(TableCell, { children: stat.points }), _jsx(TableCell, { children: stat.rebuys }), _jsx(TableCell, { children: stat.outAt
+    return (_jsxs(_Fragment, { children: [_jsx("style", { children: cssStyles }), _jsxs("div", { style: { padding: '20px' }, children: [isLoading && parties.length === 0 && (_jsx("div", { style: { textAlign: 'center', padding: '20px' }, children: "Loading parties..." })), parties.map((party, i) => (_jsxs("div", { ref: parties.length === i + 1 ? lastPartyElementRef : undefined, style: { marginBottom: '20px' }, children: [_jsxs("div", { style: { padding: '8px', marginLeft: '40px', display: 'flex', alignItems: 'center', gap: '10px' }, children: [_jsx("span", { children: new Date(party.date).toLocaleDateString() }), _jsx("button", { onClick: () => deleteParty(party.id), className: "button-danger", style: {
+                                            ...styles.button,
+                                            ...styles.dangerButton
+                                        }, children: "Delete" })] }), _jsxs("table", { style: styles.table, children: [_jsx("thead", { children: _jsxs("tr", { children: [_jsx("th", { style: styles.th, children: "Player" }), _jsx("th", { style: styles.th, children: "Position" }), _jsx("th", { style: styles.th, children: "Points" }), _jsx("th", { style: styles.th, children: "Rebuys" }), _jsx("th", { style: styles.th, children: "Out Time" }), _jsx("th", { style: styles.th, children: "Gains" })] }) }), _jsx("tbody", { children: party.playerStats.map((stat, statIndex) => (_jsxs("tr", { className: "table-row", children: [_jsx("td", { style: styles.td, children: stat.player.name }), _jsx("td", { style: styles.td, children: stat.position }), _jsx("td", { style: styles.td, children: stat.points }), _jsx("td", { style: styles.td, children: stat.rebuys }), _jsx("td", { style: styles.td, children: stat.outAt
                                                         ? `${new Date(stat.outAt).getHours().toString().padStart(2, '0')}:${new Date(stat.outAt).getMinutes().toString().padStart(2, '0')}:${new Date(stat.outAt).getSeconds().toString().padStart(2, '0')}`
-                                                        : 'N/A' }), _jsx(TableCell, { children: stat.gains })] }, i))) })] }), _jsx(Button, { size: "sm", color: "primary", onClick: () => openModal(party), children: "Edit" })] }, i));
-                }
-                else {
-                    return (_jsxs("div", { className: "mb-20", children: [_jsxs("div", { className: "p-2 ml-10", children: [new Date(party.date).toLocaleDateString(), _jsx(Button, { style: { marginLeft: "10px" }, size: "sm", color: "danger", onClick: () => deleteParty(party.id), children: "Delete" })] }), _jsxs(Table, { "aria-label": "tableau general", style: { padding: 10, width: '100%' }, children: [_jsxs(TableHeader, { children: [_jsx(TableColumn, { children: "Player" }), _jsx(TableColumn, { children: "Position" }), _jsx(TableColumn, { children: "Points" }), _jsx(TableColumn, { children: "Rebuys" }), _jsx(TableColumn, { children: "Sortie" }), _jsx(TableColumn, { children: "Gains" })] }), _jsx(TableBody, { children: party.playerStats.map((stat, i) => (_jsxs(TableRow, { children: [_jsx(TableCell, { children: stat.player.name }), _jsx(TableCell, { children: stat.position }), _jsx(TableCell, { children: stat.points }), _jsx(TableCell, { children: stat.rebuys }), _jsx(TableCell, { children: stat.outAt
-                                                        ? `${new Date(stat.outAt).getHours().toString().padStart(2, '0')}:${new Date(stat.outAt).getMinutes().toString().padStart(2, '0')}:${new Date(stat.outAt).getSeconds().toString().padStart(2, '0')}`
-                                                        : 'N/A' }), _jsx(TableCell, { children: stat.gains })] }, i))) })] }), _jsx(Button, { size: "sm", color: "primary", onClick: () => openModal(party), children: "Edit" })] }, i));
-                }
-            }), isModalOpen && selectedParty && ReactDOM.createPortal(_jsx("div", { style: {
-                    position: 'fixed',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    zIndex: 1000
-                }, children: _jsx("div", { style: {
-                        backgroundColor: '#f0f0f0',
-                        borderRadius: '10px',
-                        maxWidth: '600px',
-                        width: '100%',
-                        padding: '20px',
-                        overflowY: 'auto',
-                        maxHeight: '90vh'
-                    }, children: _jsxs("div", { style: { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }, children: [_jsxs("div", { style: { gridColumn: '1 / -1', textAlign: 'center', marginBottom: '20px' }, children: [_jsx("h2", { children: "Edit Party Stats" }), _jsx("div", { children: selectedParty.date })] }), _jsxs("div", { style: { gridColumn: '1 / -1', marginBottom: '20px' }, children: [_jsx("label", { style: { fontWeight: 'bold' }, children: "Date of Party:" }), _jsx("input", { type: "date", value: selectedParty ? selectedParty.date.substring(0, 10) : '', onChange: (e) => {
-                                            if (selectedParty) {
-                                                setSelectedParty({
-                                                    ...selectedParty,
-                                                    date: e.target.value,
-                                                });
-                                            }
-                                        }, style: { width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', marginLeft: '10px' } })] }), selectedParty && selectedParty.playerStats.map((stat, i) => (_jsxs(React.Fragment, { children: [_jsx("div", { style: { gridColumn: '1 / -1', fontWeight: 'bold', marginBottom: '10px' }, children: stat.player.name }), _jsxs("div", { style: { display: 'flex', flexDirection: 'column', alignItems: 'center' }, children: [_jsx("div", { style: { marginBottom: '5px' }, children: "Position" }), _jsx("input", { type: "number", value: stat.position, onChange: (e) => editStat(i, 'position', Number(e.target.value)), style: { width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', marginBottom: '20px' } })] }), _jsxs("div", { style: { display: 'flex', flexDirection: 'column', alignItems: 'center' }, children: [_jsx("div", { style: { marginBottom: '5px' }, children: "Points" }), _jsx("input", { type: "number", value: stat.points, onChange: (e) => editStat(i, 'points', Number(e.target.value)), style: { width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', marginBottom: '20px' } })] }), _jsxs("div", { style: { display: 'flex', flexDirection: 'column', alignItems: 'center' }, children: [_jsx("div", { style: { marginBottom: '5px' }, children: "Rebuys" }), _jsx("input", { type: "number", value: stat.rebuys, onChange: (e) => editStat(i, 'rebuys', Number(e.target.value)), style: { width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', marginBottom: '20px' } })] })] }, i))), _jsxs("div", { style: { gridColumn: '1 / -1', display: 'flex', justifyContent: 'space-around', marginTop: '20px' }, children: [_jsx(Button, { onClick: handleSaveChanges, style: { padding: '10px 20px', backgroundColor: '#4CAF50', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }, children: "Save" }), _jsx(Button, { onClick: closeModal, style: { padding: '10px 20px', backgroundColor: '#f44336', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }, children: "Cancel" })] })] }) }) }), document.body)] }));
+                                                        : 'N/A' }), _jsx("td", { style: styles.td, children: stat.gains })] }, `${party.id}-${stat.player.id}-${statIndex}`))) })] }), _jsx("button", { onClick: () => openModal(party), className: "button-primary", style: {
+                                    ...styles.button,
+                                    ...styles.primaryButton,
+                                    marginTop: '10px'
+                                }, children: "Edit" })] }, party.id))), isModalOpen && selectedParty && ReactDOM.createPortal(_jsx("div", { style: {
+                            position: 'fixed',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            zIndex: 1000
+                        }, children: _jsxs("div", { style: {
+                                backgroundColor: 'white',
+                                padding: '24px',
+                                borderRadius: '8px',
+                                maxWidth: '600px',
+                                width: '90%',
+                                maxHeight: '90vh',
+                                overflow: 'auto'
+                            }, children: [_jsx("h2", { style: { marginBottom: '16px' }, children: "Edit Party" }), _jsxs("div", { style: { marginBottom: '24px' }, children: [_jsx("label", { style: { display: 'block', marginBottom: '8px' }, children: "Date:" }), _jsx("input", { type: "datetime-local", value: selectedParty.date.slice(0, 16), onChange: (e) => setSelectedParty({
+                                                ...selectedParty,
+                                                date: new Date(e.target.value).toISOString()
+                                            }), style: {
+                                                width: '100%',
+                                                padding: '8px',
+                                                border: '1px solid #E5E7EB',
+                                                borderRadius: '4px'
+                                            } })] }), _jsxs("table", { style: styles.table, children: [_jsx("thead", { children: _jsxs("tr", { children: [_jsx("th", { style: styles.th, children: "Player" }), _jsx("th", { style: styles.th, children: "Position" }), _jsx("th", { style: styles.th, children: "Points" }), _jsx("th", { style: styles.th, children: "Rebuys" })] }) }), _jsx("tbody", { children: selectedParty.playerStats.map((stat, index) => (_jsxs("tr", { className: "table-row", children: [_jsx("td", { style: styles.td, children: stat.player.name }), _jsx("td", { style: styles.td, children: _jsx("input", { type: "number", value: stat.position, onChange: (e) => editStat(index, 'position', parseInt(e.target.value)), style: {
+                                                                width: '60px',
+                                                                padding: '4px',
+                                                                border: '1px solid #E5E7EB',
+                                                                borderRadius: '4px'
+                                                            } }) }), _jsx("td", { style: styles.td, children: _jsx("input", { type: "number", value: stat.points, onChange: (e) => editStat(index, 'points', parseInt(e.target.value)), style: {
+                                                                width: '60px',
+                                                                padding: '4px',
+                                                                border: '1px solid #E5E7EB',
+                                                                borderRadius: '4px'
+                                                            } }) }), _jsx("td", { style: styles.td, children: _jsx("input", { type: "number", value: stat.rebuys, onChange: (e) => editStat(index, 'rebuys', parseInt(e.target.value)), style: {
+                                                                width: '60px',
+                                                                padding: '4px',
+                                                                border: '1px solid #E5E7EB',
+                                                                borderRadius: '4px'
+                                                            } }) })] }, stat.id))) })] }), _jsxs("div", { style: { marginTop: '24px', display: 'flex', gap: '12px', justifyContent: 'flex-end' }, children: [_jsx("button", { onClick: closeModal, className: "button-danger", style: {
+                                                ...styles.button,
+                                                ...styles.dangerButton
+                                            }, children: "Cancel" }), _jsx("button", { onClick: handleSaveChanges, className: "button-primary", style: {
+                                                ...styles.button,
+                                                ...styles.primaryButton
+                                            }, children: "Save Changes" })] })] }) }), document.body)] })] }));
 };
 export default PartyPage;
