@@ -136,28 +136,30 @@ const BlindTimer: React.FC<BlindTimerProps> = ({
         <DialogContent className={cn(
           "bg-slate-900/95 border-amber-400/20",
           "backdrop-blur-md",
-          "shadow-[0_0_25px_-5px_rgba(245,158,11,0.2)]"
+          "shadow-[0_0_25px_-5px_rgba(245,158,11,0.2)]",
+          "max-w-[90vw] sm:max-w-[400px]",
+          "p-3 sm:p-4"
         )}>
           <DialogHeader>
             <DialogTitle className={cn(
-              "font-['DS-DIGI'] text-3xl text-center",
+              "font-['DS-DIGI'] text-2xl sm:text-3xl text-center",
               "text-amber-400",
               "tracking-wider"
             )}>
               New Blind Level
             </DialogTitle>
           </DialogHeader>
-          <div className="font-['DS-DIGI'] text-2xl text-center space-y-2 py-4">
-            <div className="flex justify-between px-8">
+          <div className="font-['DS-DIGI'] text-xl sm:text-2xl text-center space-y-2 py-2 sm:py-4">
+            <div className="flex justify-between px-4 sm:px-8">
               <span className="text-amber-400/80">Small Blind</span>
               <span className="text-amber-400">{blinds[blindIndex].small}</span>
             </div>
-            <div className="flex justify-between px-8">
+            <div className="flex justify-between px-4 sm:px-8">
               <span className="text-amber-400/80">Big Blind</span>
               <span className="text-amber-400">{blinds[blindIndex].big}</span>
             </div>
-            <div className="h-px bg-amber-400/20 mx-8 my-4" />
-            <div className="flex justify-between px-8">
+            <div className="h-px bg-amber-400/20 mx-4 sm:mx-8 my-2 sm:my-4" />
+            <div className="flex justify-between px-4 sm:px-8">
               <span className="text-amber-400/80">Ante</span>
               <span className="text-amber-400">{blinds[blindIndex].ante}</span>
             </div>

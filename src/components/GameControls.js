@@ -81,7 +81,7 @@ const GameControls = ({ gameStarted, isPaused, timeLeft, smallBlind, bigBlind, a
     };
     if (!gameStarted)
         return null;
-    return (_jsx("div", { className: cn("w-full max-w-[1280px] min-h-[370px] mx-auto", "bg-slate-950/95 backdrop-blur-md", "border border-amber-400/10", "shadow-[0_0_35px_-5px_rgba(245,158,11,0.15)]", "rounded-2xl overflow-hidden"), children: _jsxs("div", { className: "space-y-3", children: [_jsx(BlindTimer, { gameStarted: gameStarted, isPaused: isPaused, onBlindChange: (small, big, ante) => {
+    return (_jsx("div", { className: cn("w-full max-w-[900px] min-h-[250px] mx-auto", "bg-slate-950/95 backdrop-blur-md", "border border-amber-400/10", "shadow-[0_0_35px_-5px_rgba(245,158,11,0.15)]", "rounded-2xl overflow-hidden"), children: _jsxs("div", { className: "space-y-2", children: [_jsx(BlindTimer, { gameStarted: gameStarted, isPaused: isPaused, onBlindChange: (small, big, ante) => {
                         if (isUpdatingRef.current)
                             return;
                         isUpdatingRef.current = true;

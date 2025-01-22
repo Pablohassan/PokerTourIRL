@@ -25,6 +25,17 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, players, 
     const { timeLeft, setTimeLeft, smallBlind, setSmallBlind, bigBlind, setBigBlind, ante, setAnte, games, setGames, pot, setPot, middleStack, setSavedTotalStack, totalStack, setTotalStack, saveGameState, resetGameState, rebuyPlayerId, setRebuyPlayerId, killer, setKiller, stateRestored, postInitialGameState, loading, error, setPositions, 
     // outPlayers,
     setOutPlayers, setLastUsedPosition, initialPlayerCount, setInitialPlayerCount, } = useGameState(gameStarted, setGameStarted, selectedPlayers, setSelectedPLayers, blindIndex, setBlindIndex, initialTimeLeft);
+    // Add screen orientation effect here, with other hooks
+    useEffect(() => {
+        if (gameStarted) {
+            // Lock to portrait orientation if possible
+            if ('screen' in window && 'orientation' in screen) {
+                screen.orientation.lock?.('portrait').catch((err) => {
+                    console.error('Failed to lock screen orientation:', err);
+                });
+            }
+        }
+    }, [gameStarted]);
     useEffect(() => {
         if (stateRestored) {
             setGameStarted(true);
@@ -385,17 +396,6 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, players, 
         showingGameModal: gameStarted,
         hasPlayers: selectedPlayers.length > 0 && games.length > 0
     });
-    // Add useEffect to handle screen orientation
-    useEffect(() => {
-        if (gameStarted) {
-            // Lock to portrait orientation if possible
-            if ('screen' in window && 'orientation' in screen) {
-                screen.orientation.lock?.('portrait').catch((err) => {
-                    console.error('Failed to lock screen orientation:', err);
-                });
-            }
-        }
-    }, [gameStarted]);
     return (_jsxs("div", { style: {
             height: '100vh',
             maxWidth: '100%',
