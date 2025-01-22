@@ -4,7 +4,7 @@ import _ from "lodash";
 import cors from "cors";
 import dotenv from "dotenv";
 dotenv.config();
-import { Prisma, PrismaClient } from "@prisma/client";
+import { PrismaClient, Prisma } from "@prisma/client";
 import { fetchGamesForPlayer } from "./services/fetsh-game-for-player.js";
 
 const prisma = new PrismaClient();
