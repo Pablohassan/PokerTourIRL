@@ -43,7 +43,7 @@ const GameControls: React.FC<GameControlsProps> = ({
   blindIndex,
   setBlindIndex,
   initialTimeLeft,
-  style
+
 }) => {
   const timerRef = useRef<number | null>(null);
   const isUpdatingRef = useRef(false);

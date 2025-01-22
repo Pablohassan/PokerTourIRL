@@ -4,7 +4,7 @@ import BlindTimer from "./BlindTimer";
 import GameTimer from "./GameTimer";
 import { toast } from "react-hot-toast";
 import { cn } from "../lib/utils";
-const GameControls = ({ gameStarted, isPaused, timeLeft, smallBlind, bigBlind, ante, handleGameEnd, setIsPaused, pot, middleStack, setSmallBlind, setBigBlind, setAnte, setTimeLeft, blindIndex, setBlindIndex, initialTimeLeft, style }) => {
+const GameControls = ({ gameStarted, isPaused, timeLeft, smallBlind, bigBlind, ante, handleGameEnd, setIsPaused, pot, middleStack, setSmallBlind, setBigBlind, setAnte, setTimeLeft, blindIndex, setBlindIndex, initialTimeLeft, }) => {
     const timerRef = useRef(null);
     const isUpdatingRef = useRef(false);
     const updateBlinds = useCallback(() => {
