@@ -51,7 +51,7 @@ COPY --from=build /app/src/backend/package-lock.json /app/src/backend/package-lo
 COPY --from=build /app/tsconfig.node.json /app/tsconfig.node.json 
 COPY --from=build /app/tsconfig.json /app/tsconfig.json
 # COPY --from=build /app/backend/dist /app/backend/dist
-
+RUN apk update && apk add --no-cache openssl
 # Expose the port your app runs on
 EXPOSE 3000
 
