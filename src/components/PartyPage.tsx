@@ -4,62 +4,13 @@ import { PlayerStats } from './interfaces';
 import ReactDOM from 'react-dom';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
+import { cn } from '../lib/utils';
 
 // Add CSS styles
-const styles = {
-  button: {
-    padding: '8px 16px',
-    fontSize: '0.875rem',
-    fontWeight: '600',
-    color: 'white',
-    border: 'none',
-    borderRadius: '6px',
-    cursor: 'pointer',
-    transition: 'background-color 0.2s'
-  },
-  primaryButton: {
-    backgroundColor: '#3B82F6'
-  },
-  dangerButton: {
-    backgroundColor: '#EF4444'
-  },
-  table: {
-    width: '100%',
-    borderCollapse: 'collapse',
-    backgroundColor: 'white',
-    borderRadius: '8px',
-    overflow: 'hidden',
-    boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)'
-  },
-  th: {
-    backgroundColor: '#F3F4F6',
-    color: '#374151',
-    fontWeight: '600',
-    padding: '12px',
-    textAlign: 'left',
-    fontSize: '0.875rem',
-    borderBottom: '1px solid #E5E7EB'
-  },
-  td: {
-    padding: '12px',
-    color: '#1F2937',
-    fontSize: '0.875rem',
-    borderBottom: '1px solid #E5E7EB'
-  }
-} as const;
+
 
 // Add CSS classes for hover effects
-const cssStyles = `
-  .button-primary:hover {
-    background-color: #2563EB !important;
-  }
-  .button-danger:hover {
-    background-color: #DC2626 !important;
-  }
-  .table-row:hover {
-    background-color: #F9FAFB;
-  }
-`;
+
 
 // interface Player {
 //   id: number;
@@ -230,62 +181,62 @@ export const PartyPage = () => {
   };
 
   return (
-    <>
-      <style>{cssStyles}</style>
-      <div style={{ padding: '20px' }}>
-        {isLoading && parties.length === 0 && (
-          <div style={{ textAlign: 'center', padding: '20px' }}>
-            Loading parties...
+    <div className="p-5 min-h-screen bg-slate-900">
+      {isLoading && parties.length === 0 && (
+        <div className="text-center p-5 text-amber-400">
+          Loading parties...
+        </div>
+      )}
+
+      {parties.map((party, i) => (
+        <div
+          key={party.id}
+          ref={parties.length === i + 1 ? lastPartyElementRef : undefined}
+          className="mb-5"
+        >
+          <div className="px-2 ml-10 flex items-center gap-3">
+            <span className="text-amber-400">{new Date(party.date).toLocaleDateString()}</span>
+            <button
+              onClick={() => deleteParty(party.id)}
+              className="px-4 py-2 text-sm font-semibold text-white bg-red-700 hover:bg-red-800 rounded-[5px] border border-red-300/70 transition-all duration-200 hover:shadow-[0_0_10px_rgba(251,191,36,0.3)]"
+            >
+              Delete
+            </button>
           </div>
-        )}
 
-        {parties.map((party, i) => (
-          <div
-            key={party.id}
-            ref={parties.length === i + 1 ? lastPartyElementRef : undefined}
-            style={{ marginBottom: '20px' }}
-          >
-            <div style={{ padding: '8px', marginLeft: '40px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <span>{new Date(party.date).toLocaleDateString()}</span>
-              <button
-                onClick={() => deleteParty(party.id)}
-                className="button-danger"
-                style={{
-                  ...styles.button,
-                  ...styles.dangerButton
-                }}
-              >
-                Delete
-              </button>
-            </div>
-
-            <table style={styles.table}>
+          <div className="mt-2 overflow-hidden rounded-[5px] border border-amber-400 bg-slate-900 shadow-[0_0_20px_rgba(251,191,36,0.1)]">
+            <table className="w-full">
               <thead>
                 <tr>
-                  <th style={styles.th}>Player</th>
-                  <th style={styles.th}>Position</th>
-                  <th style={styles.th}>Points</th>
-                  <th style={styles.th}>Rebuys</th>
-                  <th style={styles.th}>Out Time</th>
-                  <th style={styles.th}>Gains</th>
+                  <th className="px-3 py-3 text-left text-sm font-semibold bg-blue-900/90 text-amber-400 border-b border-amber-400">Player</th>
+                  <th className="px-3 py-3 text-left text-sm font-semibold bg-blue-900/90 text-amber-400 border-b border-amber-400">Position</th>
+                  <th className="px-3 py-3 text-left text-sm font-semibold bg-blue-900/90 text-amber-400 border-b border-amber-400">Points</th>
+                  <th className="px-3 py-3 text-left text-sm font-semibold bg-blue-900/90 text-amber-400 border-b border-amber-400">Rebuys</th>
+                  <th className="px-3 py-3 text-left text-sm font-semibold bg-blue-900/90 text-amber-400 border-b border-amber-400">Out Time</th>
+                  <th className="px-3 py-3 text-left text-sm font-semibold bg-blue-900/90 text-amber-400 border-b border-amber-400">Gains</th>
                 </tr>
               </thead>
               <tbody>
                 {party.playerStats.map((stat, statIndex) => (
                   <tr
                     key={`${party.id}-${stat.player.id}-${statIndex}`}
-                    className="table-row"
+                    className="hover:bg-blue-900/80 transition-colors"
                   >
-                    <td style={styles.td}>{stat.player.name}</td>
-                    <td style={styles.td}>{stat.position}</td>
-                    <td style={styles.td}>{stat.points}</td>
-                    <td style={styles.td}>{stat.rebuys}</td>
-                    <td style={styles.td}>
+                    <td className="px-3 py-3 text-sm text-amber-400 border-b border-amber-400/20">{stat.player.name}</td>
+                    <td className="px-3 py-3 text-sm text-amber-400 border-b border-amber-400/20">{stat.position}</td>
+                    <td className="px-3 py-3 text-sm text-amber-400 border-b border-amber-400/20">{stat.points}</td>
+                    <td className="px-3 py-3 text-sm text-amber-400 border-b border-amber-400/20">{stat.rebuys}</td>
+                    <td className="px-3 py-3 text-sm text-amber-400 border-b border-amber-400/20">
                       {stat.outAt
                         ? `${new Date(stat.outAt).getHours().toString().padStart(2, '0')}:${new Date(stat.outAt).getMinutes().toString().padStart(2, '0')}:${new Date(stat.outAt).getSeconds().toString().padStart(2, '0')}`
                         : 'N/A'}
                     </td>
-                    <td style={styles.td}>{stat.gains}</td>
+                    <td className={cn(
+                      "px-3 py-3 text-sm font-semibold border-b border-amber-400/20",
+                      stat.gains >= 0 ? "text-green-400" : "text-red-400"
+                    )}>
+                      {stat.gains >= 0 ? `+${stat.gains}` : stat.gains}€
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -293,149 +244,95 @@ export const PartyPage = () => {
 
             <button
               onClick={() => openModal(party)}
-              className="button-primary"
-              style={{
-                ...styles.button,
-                ...styles.primaryButton,
-                marginTop: '10px'
-              }}
+              className="m-3 px-4 py-2 text-sm font-semibold text-white bg-slate-700 hover:bg-blue-800 rounded-[5px] border border-slate-400/70 transition-all duration-200 hover:shadow-[0_0_10px_rgba(251,191,36,0.3)]"
             >
               Edit
             </button>
           </div>
-        ))}
+        </div>
+      ))}
 
-        {isModalOpen && selectedParty && ReactDOM.createPortal(
-          <div
-            style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              backgroundColor: 'rgba(0, 0, 0, 0.5)',
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              zIndex: 1000
-            }}
-          >
-            <div
-              style={{
-                backgroundColor: 'white',
-                padding: '24px',
-                borderRadius: '8px',
-                maxWidth: '600px',
-                width: '90%',
-                maxHeight: '90vh',
-                overflow: 'auto'
-              }}
-            >
-              <h2 style={{ marginBottom: '16px' }}>Edit Party</h2>
+      {isModalOpen && selectedParty && ReactDOM.createPortal(
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-blue-900 p-6 rounded-lg max-w-2xl w-[90%] max-h-[90vh] overflow-auto border border-amber-400 shadow-[0_0_30px_rgba(251,191,36,0.2)]">
+            <h2 className="text-2xl font-semibold mb-4 text-amber-400">Edit Party</h2>
 
-              <div style={{ marginBottom: '24px' }}>
-                <label style={{ display: 'block', marginBottom: '8px' }}>Date:</label>
-                <input
-                  type="datetime-local"
-                  value={selectedParty.date.slice(0, 16)}
-                  onChange={(e) => setSelectedParty({
-                    ...selectedParty,
-                    date: new Date(e.target.value).toISOString()
-                  })}
-                  style={{
-                    width: '100%',
-                    padding: '8px',
-                    border: '1px solid #E5E7EB',
-                    borderRadius: '4px'
-                  }}
-                />
-              </div>
+            <div className="mb-6">
+              <label className="block mb-2 text-amber-400">Date:</label>
+              <input
+                type="datetime-local"
+                value={selectedParty.date.slice(0, 16)}
+                onChange={(e) => setSelectedParty({
+                  ...selectedParty,
+                  date: new Date(e.target.value).toISOString()
+                })}
+                className="w-full px-3 py-2 bg-slate-900 border border-amber-400 rounded text-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-400/30"
+              />
+            </div>
 
-              <table style={styles.table}>
+            <div className="overflow-hidden rounded-lg border border-amber-400 bg-slate-900">
+              <table className="w-full">
                 <thead>
                   <tr>
-                    <th style={styles.th}>Player</th>
-                    <th style={styles.th}>Position</th>
-                    <th style={styles.th}>Points</th>
-                    <th style={styles.th}>Rebuys</th>
+                    <th className="px-3 py-3 text-left text-sm font-semibold bg-blue-900 text-amber-400 border-b border-amber-400">Player</th>
+                    <th className="px-3 py-3 text-left text-sm font-semibold bg-blue-900 text-amber-400 border-b border-amber-400">Position</th>
+                    <th className="px-3 py-3 text-left text-sm font-semibold bg-blue-900 text-amber-400 border-b border-amber-400">Points</th>
+                    <th className="px-3 py-3 text-left text-sm font-semibold bg-blue-900 text-amber-400 border-b border-amber-400">Rebuys</th>
                   </tr>
                 </thead>
                 <tbody>
                   {selectedParty.playerStats.map((stat, index) => (
-                    <tr key={stat.id} className="table-row">
-                      <td style={styles.td}>{stat.player.name}</td>
-                      <td style={styles.td}>
+                    <tr key={stat.id} className="hover:bg-blue-900/50 transition-colors">
+                      <td className="px-3 py-3 text-sm text-amber-400 border-b border-amber-400/20">{stat.player.name}</td>
+                      <td className="px-3 py-3 text-sm text-amber-400 border-b border-amber-400/20">
                         <input
                           type="number"
                           value={stat.position}
                           onChange={(e) => editStat(index, 'position', parseInt(e.target.value))}
-                          style={{
-                            width: '60px',
-                            padding: '4px',
-                            border: '1px solid #E5E7EB',
-                            borderRadius: '4px'
-                          }}
+                          className="w-16 px-2 py-1 bg-slate-900 border border-amber-400 rounded text-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-400/30"
                         />
                       </td>
-                      <td style={styles.td}>
+                      <td className="px-3 py-3 text-sm text-amber-400 border-b border-amber-400/20">
                         <input
                           type="number"
                           value={stat.points}
                           onChange={(e) => editStat(index, 'points', parseInt(e.target.value))}
-                          style={{
-                            width: '60px',
-                            padding: '4px',
-                            border: '1px solid #E5E7EB',
-                            borderRadius: '4px'
-                          }}
+                          className="w-16 px-2 py-1 bg-slate-900 border border-amber-400 rounded text-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-400/30"
                         />
                       </td>
-                      <td style={styles.td}>
+                      <td className="px-3 py-3 text-sm text-amber-400 border-b border-amber-400/20">
                         <input
                           type="number"
                           value={stat.rebuys}
                           onChange={(e) => editStat(index, 'rebuys', parseInt(e.target.value))}
-                          style={{
-                            width: '60px',
-                            padding: '4px',
-                            border: '1px solid #E5E7EB',
-                            borderRadius: '4px'
-                          }}
+                          className="w-16 px-2 py-1 bg-slate-900 border border-amber-400 rounded text-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-400/30"
                         />
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
-
-              <div style={{ marginTop: '24px', display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-                <button
-                  onClick={closeModal}
-                  className="button-danger"
-                  style={{
-                    ...styles.button,
-                    ...styles.dangerButton
-                  }}
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSaveChanges}
-                  className="button-primary"
-                  style={{
-                    ...styles.button,
-                    ...styles.primaryButton
-                  }}
-                >
-                  Save Changes
-                </button>
-              </div>
             </div>
-          </div>,
-          document.body
-        )}
-      </div>
-    </>
+
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={closeModal}
+                className="px-4 py-2 text-sm font-semibold text-white bg-red-900 hover:bg-red-800 rounded-lg border border-amber-400 transition-all duration-200 hover:shadow-[0_0_10px_rgba(251,191,36,0.3)]"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveChanges}
+                className="px-4 py-2 text-sm font-semibold text-white bg-blue-900 hover:bg-blue-800 rounded-lg border border-amber-400 transition-all duration-200 hover:shadow-[0_0_10px_rgba(251,191,36,0.3)]"
+              >
+                Save Changes
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+    </div>
   );
 };
 

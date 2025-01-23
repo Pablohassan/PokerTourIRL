@@ -2,6 +2,9 @@ import React from 'react';
 import { Player, Tournaments } from './interfaces';
 import bgReview from '../assets/reviewpoker.png';
 import { useNavigate } from 'react-router-dom';
+import { cn } from "../lib/utils";
+import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import { Button } from "./ui/button";
 
 interface ReviewSelectedPlayersProps {
   selectedPlayers: Player[];
@@ -35,43 +38,6 @@ const columns = [
   { key: "duration", label: "Duration" },
 ];
 
-// Add CSS styles
-const styles = {
-  button: {
-    flex: 1,
-    padding: '12px 24px',
-    fontSize: '1rem',
-    fontWeight: '600',
-    color: 'white',
-    border: 'none',
-    borderRadius: '8px',
-    cursor: 'pointer',
-    transition: 'background-color 0.2s'
-  },
-  primaryButton: {
-    backgroundColor: '#3B82F6'
-  },
-  dangerButton: {
-    backgroundColor: '#EF4444'
-  },
-  tableRow: {
-    borderBottom: '1px solid #E5E7EB'
-  }
-} as const;
-
-// Add CSS classes for hover effects
-const cssStyles = `
-  .button-primary:hover {
-    background-color: #2563EB !important;
-  }
-  .button-danger:hover {
-    background-color: #DC2626 !important;
-  }
-  .table-row:last-child {
-    border-bottom: none !important;
-  }
-`;
-
 const ReviewSelectedPlayers: React.FC<ReviewSelectedPlayersProps> = ({
   selectedPlayers,
   selectedTournament,
@@ -80,159 +46,156 @@ const ReviewSelectedPlayers: React.FC<ReviewSelectedPlayersProps> = ({
   const navigate = useNavigate();
 
   return (
-    <>
-      <style>{cssStyles}</style>
-      <div style={{
-        minHeight: '100vh',
-        width: '100%',
-        backgroundImage: `url(${bgReview})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: '32px'
+    <div className={cn(
+      "min-h-screen w-full",
+      "bg-cover bg-center",
+      "flex items-center justify-center",
+      "p-4 sm:p-6",
+      "overflow-y-auto"
+    )}
+      style={{
+        backgroundImage: `url(${bgReview})`
       }}>
-        <div style={{
-          maxWidth: '80rem',
-          width: '100%',
-          backgroundColor: 'rgba(255, 255, 255, 0.9)',
-          backdropFilter: 'blur(4px)',
-          boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-          borderRadius: '12px',
-          overflow: 'hidden'
-        }}>
-          <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '32px',
-            padding: '24px'
-          }}>
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '24px' }}>
-              {selectedTournament && (
-                <div style={{
-                  fontSize: '1.875rem',
-                  fontWeight: 'bold',
-                  color: '#1F2937'
-                }}>
+      <Card className={cn(
+        "w-full max-w-[980px]",
+        "bg-gradient-to-b from-slate-950/90 to-slate-800/95 backdrop-blur-md",
+        "border border-amber-400/20",
+        "shadow-[0_0_35px_-5px_rgba(245,158,11,0.15)]",
+        "rounded-2xl overflow-hidden"
+      )}>
+        <CardContent className="p-4 sm:p-6">
+          <div className="space-y-6">
+            {/* Tournament Title */}
+            {selectedTournament && (
+              <CardHeader className="px-0 pt-0">
+                <CardTitle className={cn(
+                  "font-['DS-DIGI'] text-2xl sm:text-3xl text-amber-400/90",
+                  "tracking-wider"
+                )}>
                   Tournament: {selectedTournament.year}
-                </div>
-              )}
+                </CardTitle>
+              </CardHeader>
+            )}
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                <h3 style={{
-                  fontSize: '1.5rem',
-                  fontWeight: '600',
-                  color: '#1F2937'
-                }}>Selected Players</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  {selectedPlayers.map((player, index) => (
-                    <div
-                      key={player.id}
-                      style={{
-                        padding: '12px',
-                        borderRadius: '8px',
-                        color: 'white',
-                        fontSize: '1.25rem',
-                        backgroundColor: index % 2 === 0 ? '#1F2937' : '#374151'
-                      }}
-                    >
-                      {player.name}
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', gap: '16px', marginTop: '24px' }}>
-                <button
-                  onClick={onConfirm}
-                  className="button-primary"
-                  style={{
-                    ...styles.button,
-                    ...styles.primaryButton
-                  }}
-                >
-                  Confirm and Start Game
-                </button>
-                <button
-                  onClick={() => navigate("/partypage")}
-                  className="button-danger"
-                  style={{
-                    ...styles.button,
-                    ...styles.dangerButton
-                  }}
-                >
-                  Back
-                </button>
+            {/* Players Grid */}
+            <div className="space-y-4">
+              <h3 className={cn(
+                "font-['DS-DIGI'] text-xl sm:text-2xl text-amber-400/80",
+                "tracking-wide"
+              )}>
+                Selected Players
+              </h3>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                {selectedPlayers.map((player, index) => (
+                  <div
+                    key={player.id}
+                    className={cn(
+                      "p-3 rounded-xl",
+                      "bg-slate-950/90",
+                      "border border-amber-400/20",
+                      "shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)]",
+                      "font-['DS-DIGI'] text-lg sm:text-xl text-amber-400/90",
+                      "tracking-wide"
+                    )}
+                  >
+                    {player.name}
+                  </div>
+                ))}
               </div>
             </div>
 
-            <div style={{ flex: 1 }}>
-              <h3 style={{
-                fontSize: '1.5rem',
-                fontWeight: '600',
-                color: '#1F2937',
-                marginBottom: '16px'
-              }}>Blinds Structure</h3>
-              <div style={{
-                width: '100%',
-                overflowX: 'auto',
-                borderRadius: '8px',
-                border: '1px solid #E5E7EB'
-              }}>
-                <table style={{
-                  width: '100%',
-                  borderCollapse: 'collapse',
-                  backgroundColor: 'white'
-                }}>
-                  <thead>
-                    <tr>
-                      {columns.map((column) => (
-                        <th
-                          key={column.key}
-                          style={{
-                            backgroundColor: '#1F2937',
-                            color: 'white',
-                            fontSize: '1.125rem',
-                            padding: '12px',
-                            textAlign: 'left',
-                            fontWeight: '600'
-                          }}
-                        >
-                          {column.label}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {blindLevels.map((item) => (
-                      <tr
-                        key={item.level}
-                        className="table-row"
-                        style={styles.tableRow}
-                      >
+            {/* Blinds Structure */}
+            <div className="space-y-4">
+              <h3 className={cn(
+                "font-['DS-DIGI'] text-xl sm:text-2xl text-amber-400/80",
+                "tracking-wide"
+              )}>
+                Blinds Structure
+              </h3>
+              <div className={cn(
+                "rounded-xl overflow-hidden",
+                "border border-amber-400/20",
+                "shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)]"
+              )}>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="bg-slate-950/90">
                         {columns.map((column) => (
-                          <td
+                          <th
                             key={column.key}
-                            style={{
-                              fontSize: '1.125rem',
-                              padding: '12px',
-                              color: '#1F2937'
-                            }}
+                            className={cn(
+                              "p-3 text-left",
+                              "font-['DS-DIGI'] text-lg text-amber-400/80",
+                              "tracking-wide",
+                              "border-b border-amber-400/20"
+                            )}
                           >
-                            {item[column.key as keyof typeof item]}
-                          </td>
+                            {column.label}
+                          </th>
                         ))}
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {blindLevels.map((item) => (
+                        <tr
+                          key={item.level}
+                          className="border-b border-amber-400/10 last:border-0 hover:bg-slate-950/30"
+                        >
+                          {columns.map((column) => (
+                            <td
+                              key={column.key}
+                              className={cn(
+                                "p-3",
+                                "font-['DS-DIGI'] text-base sm:text-lg text-amber-400/90",
+                                "tracking-wide"
+                              )}
+                            >
+                              {item[column.key as keyof typeof item]}
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-4 pt-4">
+              <Button
+                onClick={onConfirm}
+                className={cn(
+                  "flex-1",
+                  "font-['DS-DIGI'] text-lg",
+                  "bg-amber-500/80 hover:bg-amber-500/60",
+                  "text-slate-900 hover:text-slate-900",
+                  "border border-amber-400/20",
+                  "h-12"
+                )}
+              >
+                Confirm and Start Game
+              </Button>
+              <Button
+                onClick={() => navigate("/partypage")}
+                variant="secondary"
+                className={cn(
+                  "flex-1",
+                  "font-['DS-DIGI'] text-lg",
+                  "bg-slate-800/80 hover:bg-slate-800/60",
+                  "text-amber-400",
+                  "border border-amber-400/20",
+                  "h-12"
+                )}
+              >
+                Back
+              </Button>
+            </div>
           </div>
-        </div>
-      </div>
-    </>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 

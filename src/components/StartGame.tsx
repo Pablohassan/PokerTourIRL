@@ -10,6 +10,9 @@ import useGameState from "./useGameState";
 import { Player, PlayerStats, Tournaments } from "./interfaces";
 import toast from "react-hot-toast";
 import { API_ENDPOINTS } from '../config';
+import EditGameStateModal from './EditGameStateModal';
+import { Button } from "./ui/button";
+import ConfirmDialog from "./ui/confirm-dialog";
 
 interface StartGameProps {
   players: Player[];
@@ -43,6 +46,13 @@ const StartGame: React.FC<StartGameProps> = ({
   const [partyId, setPartyId] = useState<number | null>(null);
   const [isEnding, setIsEnding] = useState(false);
   const initialTimeLeft = blindDuration * 60;
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showRebuyConfirm, setShowRebuyConfirm] = useState(false);
+  const [pendingRebuyPlayerId, setPendingRebuyPlayerId] = useState<number | null>(null);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [showEndGameConfirm, setShowEndGameConfirm] = useState(false);
+  const [showEliminateConfirm, setShowEliminateConfirm] = useState(false);
+  const [pendingEliminateData, setPendingEliminateData] = useState<{ playerId: number; partyId: number } | null>(null);
 
   const {
     timeLeft,
@@ -284,44 +294,53 @@ const StartGame: React.FC<StartGameProps> = ({
   };
 
   const handleRebuy = (playerId: number) => {
-    console.log('handleRebuy called for player:', playerId);
-    if (window.confirm("Is this player paid the rebuy?")) {
-      // First update the game state for the rebuy
-      setGames((prevGames) =>
-        prevGames.map((game) =>
-          game.playerId === playerId
-            ? {
-              ...game,
-              rebuys: game.rebuys + 1,
-              totalCost: (game.totalCost ?? 0) + 5,
-            }
-            : game
-        )
-      );
-      setTotalStack((prevTotalStack) => prevTotalStack + 5350);
-      setPot((prevPot) => prevPot + 4);
-      setSavedTotalStack(totalStack);
+    setPendingRebuyPlayerId(playerId);
+    setShowRebuyConfirm(true);
+  };
 
-      // Then trigger killer selection
-      console.log('Setting rebuyPlayerId and killer state');
-      setRebuyPlayerId(playerId);
-      setKiller(true);
-    }
+  const confirmRebuy = () => {
+    if (pendingRebuyPlayerId === null) return;
+
+    // First update the game state for the rebuy
+    setGames((prevGames) =>
+      prevGames.map((game) =>
+        game.playerId === pendingRebuyPlayerId
+          ? {
+            ...game,
+            rebuys: game.rebuys + 1,
+            totalCost: (game.totalCost ?? 0) + 5,
+          }
+          : game
+      )
+    );
+    setTotalStack((prevTotalStack) => prevTotalStack + 5350);
+    setPot((prevPot) => prevPot + 4);
+    setSavedTotalStack(totalStack);
+
+    // Then trigger killer selection
+    setRebuyPlayerId(pendingRebuyPlayerId);
+    setKiller(true);
+    setPendingRebuyPlayerId(null);
   };
 
   const handleOutOfGame = async (partyId: number, playerId: number) => {
-    console.log('handleOutOfGame called for player:', playerId, 'in party:', partyId);
     const playerName = selectedPlayers.find(p => p.id === playerId)?.name;
-    if (window.confirm(`Is ${playerName} out of the game?`)) {
-      try {
-        // First trigger killer selection
-        console.log('Setting playerOutGame and killer state');
-        setPlayerOutGame(playerId);
-        setKiller(true);
-      } catch (error) {
-        console.error('Error in handleOutOfGame:', error);
-        toast.error('Failed to process player elimination');
-      }
+    setPendingEliminateData({ playerId, partyId });
+    setShowEliminateConfirm(true);
+  };
+
+  const confirmElimination = async () => {
+    if (!pendingEliminateData) return;
+
+    try {
+      // First trigger killer selection
+      setPlayerOutGame(pendingEliminateData.playerId);
+      setKiller(true);
+    } catch (error) {
+      console.error('Error in handleOutOfGame:', error);
+      toast.error('Failed to process player elimination');
+    } finally {
+      setPendingEliminateData(null);
     }
   };
 
@@ -473,6 +492,71 @@ const StartGame: React.FC<StartGameProps> = ({
     setIsEnding(false);
   };
 
+  // Add new function to handle game state updates
+  const handleUpdateGameState = async (updatedGames: PlayerStats[]) => {
+    try {
+      // Find players who are being returned to the game
+      const returningPlayers = updatedGames.filter(updatedGame => {
+        const originalGame = games.find(g => g.playerId === updatedGame.playerId);
+        return originalGame?.outAt && !updatedGame.outAt;
+      });
+
+      // Update the games state
+      setGames(updatedGames);
+
+      // Add returning players back to selectedPlayers if they're not already there
+      const updatedSelectedPlayers = [...selectedPlayers];
+      returningPlayers.forEach(game => {
+        const player = players.find(p => p.id === game.playerId);
+        if (player && !selectedPlayers.find(p => p.id === player.id)) {
+          updatedSelectedPlayers.push(player);
+        }
+      });
+      setSelectedPLayers(updatedSelectedPlayers);
+
+      // Remove returning players from outPlayers list
+      setOutPlayers(prevOutPlayers =>
+        prevOutPlayers.filter(player =>
+          !returningPlayers.find(game => game.playerId === player.id)
+        )
+      );
+
+      // Calculate new total stack and pot based on rebuys
+      const totalRebuys = updatedGames.reduce((sum, game) => sum + (game.rebuys || 0), 0);
+      const newTotalStack = initialPlayerCount * 5350 + (totalRebuys * 5350);
+      const newPot = initialPlayerCount * 5 + (totalRebuys * 4);
+
+      setTotalStack(newTotalStack);
+      setPot(newPot);
+
+      // Save the updated state
+      await saveGameState(timeLeft);
+
+      // Update positions for remaining out players
+      const remainingOutPlayers = updatedGames.filter(game => game.outAt);
+      remainingOutPlayers.sort((a, b) => {
+        const dateA = new Date(a.outAt!);
+        const dateB = new Date(b.outAt!);
+        return dateB.getTime() - dateA.getTime();
+      });
+
+      // Update positions
+      remainingOutPlayers.forEach((game, index) => {
+        const position = initialPlayerCount - remainingOutPlayers.length + index + 1;
+        game.position = position;
+        game.points = remainingOutPlayers.length - index;
+      });
+
+      // Save again with updated positions
+      await saveGameState(timeLeft);
+
+      toast.success("Game state updated successfully!");
+    } catch (error) {
+      console.error("Error updating game state:", error);
+      toast.error("Failed to update game state");
+    }
+  };
+
   // Add debug logging at the start of the render function
   console.log('StartGame render state:', {
     gameStarted,
@@ -525,8 +609,18 @@ const StartGame: React.FC<StartGameProps> = ({
       margin: 'auto',
       overflow: 'hidden',
       display: 'flex',
-      flexDirection: 'column'
+      flexDirection: 'column',
+      position: 'relative'
     }}>
+      <EditGameStateModal
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        games={games}
+        selectedPlayers={selectedPlayers}
+        players={players}
+        onUpdateStats={handleUpdateGameState}
+      />
+
       <KillerSelectionModal
         killer={killer}
         games={games}
@@ -534,6 +628,58 @@ const StartGame: React.FC<StartGameProps> = ({
         rebuyPlayerId={rebuyPlayerId}
         playerOutGame={playerOutGame}
         handlePlayerKillSelection={handlePlayerKillSelection}
+      />
+
+      <ConfirmDialog
+        isOpen={showRebuyConfirm}
+        onClose={() => setShowRebuyConfirm(false)}
+        onConfirm={confirmRebuy}
+        title="Confirm Rebuy"
+        description="Has this player paid for the rebuy?"
+        confirmText="Yes, Paid"
+        cancelText="Cancel"
+        variant="warning"
+      />
+
+      <ConfirmDialog
+        isOpen={showResetConfirm}
+        onClose={() => setShowResetConfirm(false)}
+        onConfirm={() => {
+          resetGameState();
+          setGameStarted(false);
+          setShowConfig(true);
+          toast.success('Game state reset successfully!');
+        }}
+        title="Reset Game"
+        description="All game data will be lost. Are you sure?"
+        confirmText="Yes, Reset"
+        cancelText="Cancel"
+        variant="destructive"
+      />
+
+      <ConfirmDialog
+        isOpen={showEndGameConfirm}
+        onClose={() => setShowEndGameConfirm(false)}
+        onConfirm={handleGameEnd}
+        title="End Game"
+        description="Are you sure you want to end the game?"
+        confirmText="Yes, End Game"
+        cancelText="Cancel"
+        variant="destructive"
+      />
+
+      <ConfirmDialog
+        isOpen={showEliminateConfirm}
+        onClose={() => {
+          setShowEliminateConfirm(false);
+          setPendingEliminateData(null);
+        }}
+        onConfirm={confirmElimination}
+        title="Confirm Elimination"
+        description={`Are you sure ${selectedPlayers.find(p => p.id === pendingEliminateData?.playerId)?.name} is out of the game?`}
+        confirmText="Yes, Eliminate"
+        cancelText="Cancel"
+        variant="destructive"
       />
 
       {showConfig && (
@@ -560,13 +706,12 @@ const StartGame: React.FC<StartGameProps> = ({
           right: 0,
           bottom: 0,
           backgroundColor: '#ffffff',
-          zIndex: 9999,
+          zIndex: 40,
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden'
         }}>
           <div style={{
-
             borderBottom: '1px solid #e5e7eb',
             backgroundColor: '#ffffff',
             position: 'sticky',
@@ -575,7 +720,8 @@ const StartGame: React.FC<StartGameProps> = ({
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            gap: '16px'
+            gap: '16px',
+            padding: '1rem'
           }}>
             <div style={{
               display: 'flex',
@@ -583,7 +729,7 @@ const StartGame: React.FC<StartGameProps> = ({
               gap: '16px'
             }}>
               <h1 style={{
-                fontSize: '24px',
+                fontSize: '32px',
                 fontWeight: 'bold',
                 color: isPaused ? "red" : "green",
                 margin: 0
@@ -594,65 +740,44 @@ const StartGame: React.FC<StartGameProps> = ({
                 display: 'flex',
                 gap: '8px'
               }}>
-                {/* <button
-                  onClick={() => setIsPaused(!isPaused)}
-                  style={{
-                    padding: '8px 16px',
-                    backgroundColor: isPaused ? '#22c55e' : '#f59e0b',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer'
+                <Button
+                  onClick={() => {
+                    console.log('Opening edit modal');
+                    setShowEditModal(true);
                   }}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-['DS-DIGI'] text-lg"
                 >
-                  {isPaused ? 'Resume Game' : 'Pause Game'}
-                </button> */}
-
+                  Edit Game
+                </Button>
               </div>
             </div>
             <div style={{
               display: 'flex',
               gap: '8px'
             }}>
-              <button
-                onClick={() => {
-                  if (window.confirm('TU va reinitialiser la partie, toutes les données seront perdues tu vlide?')) {
-                    resetGameState();
-                    setGameStarted(false);
-                    setShowConfig(true);
-                    toast.success('Game state reset successfully!');
-                  }
-                }}
-                style={{
-                  padding: '8px 16px',
-                  backgroundColor: '#f59e0b',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer'
-                }}
+              <Button
+                onClick={() => setShowResetConfirm(true)}
+                className="bg-amber-500 hover:bg-amber-600 text-white font-['DS-DIGI'] text-lg"
               >
                 Reset Game
-              </button>
-              <button
-                onClick={handleGameEnd}
-                style={{
-                  padding: '8px 16px',
-                  backgroundColor: '#ef4444',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer'
+              </Button>
+              <Button
+                onClick={() => {
+                  if (games.filter((game) => !game.outAt).length === 1) {
+                    setShowEndGameConfirm(true);
+                  } else {
+                    toast.error("The game cannot be ended yet as more than one player is still playing.");
+                  }
                 }}
+                className="bg-red-500 hover:bg-red-600 text-white font-['DS-DIGI'] text-lg mr-24"
               >
                 End Game
-              </button>
+              </Button>
             </div>
           </div>
 
           <div style={{
             flexGrow: 1,
-
             overflowY: 'auto',
             display: 'flex',
             flexDirection: 'column',
@@ -694,7 +819,6 @@ const StartGame: React.FC<StartGameProps> = ({
                 flexWrap: 'wrap',
                 gap: '16px',
                 justifyContent: 'center',
-
                 position: 'relative',
                 zIndex: 0
               }}>

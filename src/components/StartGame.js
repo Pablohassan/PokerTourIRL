@@ -10,6 +10,9 @@ import KillerSelectionModal from "./KillerSelectionModal";
 import useGameState from "./useGameState";
 import toast from "react-hot-toast";
 import { API_ENDPOINTS } from '../config';
+import EditGameStateModal from './EditGameStateModal';
+import { Button } from "./ui/button";
+import ConfirmDialog from "./ui/confirm-dialog";
 const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, players, updateAfterGameEnd, blindIndex, setBlindIndex }) => {
     const navigate = useNavigate();
     const [gameStarted, setGameStarted] = useState(false);
@@ -22,6 +25,13 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, players, 
     const [partyId, setPartyId] = useState(null);
     const [isEnding, setIsEnding] = useState(false);
     const initialTimeLeft = blindDuration * 60;
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [showRebuyConfirm, setShowRebuyConfirm] = useState(false);
+    const [pendingRebuyPlayerId, setPendingRebuyPlayerId] = useState(null);
+    const [showResetConfirm, setShowResetConfirm] = useState(false);
+    const [showEndGameConfirm, setShowEndGameConfirm] = useState(false);
+    const [showEliminateConfirm, setShowEliminateConfirm] = useState(false);
+    const [pendingEliminateData, setPendingEliminateData] = useState(null);
     const { timeLeft, setTimeLeft, smallBlind, setSmallBlind, bigBlind, setBigBlind, ante, setAnte, games, setGames, pot, setPot, middleStack, setSavedTotalStack, totalStack, setTotalStack, saveGameState, resetGameState, rebuyPlayerId, setRebuyPlayerId, killer, setKiller, stateRestored, postInitialGameState, loading, error, setPositions, 
     // outPlayers,
     setOutPlayers, setLastUsedPosition, initialPlayerCount, setInitialPlayerCount, } = useGameState(gameStarted, setGameStarted, selectedPlayers, setSelectedPLayers, blindIndex, setBlindIndex, initialTimeLeft);
@@ -203,39 +213,47 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, players, 
         await onStartGame();
     };
     const handleRebuy = (playerId) => {
-        console.log('handleRebuy called for player:', playerId);
-        if (window.confirm("Is this player paid the rebuy?")) {
-            // First update the game state for the rebuy
-            setGames((prevGames) => prevGames.map((game) => game.playerId === playerId
-                ? {
-                    ...game,
-                    rebuys: game.rebuys + 1,
-                    totalCost: (game.totalCost ?? 0) + 5,
-                }
-                : game));
-            setTotalStack((prevTotalStack) => prevTotalStack + 5350);
-            setPot((prevPot) => prevPot + 4);
-            setSavedTotalStack(totalStack);
-            // Then trigger killer selection
-            console.log('Setting rebuyPlayerId and killer state');
-            setRebuyPlayerId(playerId);
-            setKiller(true);
-        }
+        setPendingRebuyPlayerId(playerId);
+        setShowRebuyConfirm(true);
+    };
+    const confirmRebuy = () => {
+        if (pendingRebuyPlayerId === null)
+            return;
+        // First update the game state for the rebuy
+        setGames((prevGames) => prevGames.map((game) => game.playerId === pendingRebuyPlayerId
+            ? {
+                ...game,
+                rebuys: game.rebuys + 1,
+                totalCost: (game.totalCost ?? 0) + 5,
+            }
+            : game));
+        setTotalStack((prevTotalStack) => prevTotalStack + 5350);
+        setPot((prevPot) => prevPot + 4);
+        setSavedTotalStack(totalStack);
+        // Then trigger killer selection
+        setRebuyPlayerId(pendingRebuyPlayerId);
+        setKiller(true);
+        setPendingRebuyPlayerId(null);
     };
     const handleOutOfGame = async (partyId, playerId) => {
-        console.log('handleOutOfGame called for player:', playerId, 'in party:', partyId);
         const playerName = selectedPlayers.find(p => p.id === playerId)?.name;
-        if (window.confirm(`Is ${playerName} out of the game?`)) {
-            try {
-                // First trigger killer selection
-                console.log('Setting playerOutGame and killer state');
-                setPlayerOutGame(playerId);
-                setKiller(true);
-            }
-            catch (error) {
-                console.error('Error in handleOutOfGame:', error);
-                toast.error('Failed to process player elimination');
-            }
+        setPendingEliminateData({ playerId, partyId });
+        setShowEliminateConfirm(true);
+    };
+    const confirmElimination = async () => {
+        if (!pendingEliminateData)
+            return;
+        try {
+            // First trigger killer selection
+            setPlayerOutGame(pendingEliminateData.playerId);
+            setKiller(true);
+        }
+        catch (error) {
+            console.error('Error in handleOutOfGame:', error);
+            toast.error('Failed to process player elimination');
+        }
+        finally {
+            setPendingEliminateData(null);
         }
     };
     const handlePlayerKillSelection = async (killerPlayerId) => {
@@ -363,6 +381,57 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, players, 
         }
         setIsEnding(false);
     };
+    // Add new function to handle game state updates
+    const handleUpdateGameState = async (updatedGames) => {
+        try {
+            // Find players who are being returned to the game
+            const returningPlayers = updatedGames.filter(updatedGame => {
+                const originalGame = games.find(g => g.playerId === updatedGame.playerId);
+                return originalGame?.outAt && !updatedGame.outAt;
+            });
+            // Update the games state
+            setGames(updatedGames);
+            // Add returning players back to selectedPlayers if they're not already there
+            const updatedSelectedPlayers = [...selectedPlayers];
+            returningPlayers.forEach(game => {
+                const player = players.find(p => p.id === game.playerId);
+                if (player && !selectedPlayers.find(p => p.id === player.id)) {
+                    updatedSelectedPlayers.push(player);
+                }
+            });
+            setSelectedPLayers(updatedSelectedPlayers);
+            // Remove returning players from outPlayers list
+            setOutPlayers(prevOutPlayers => prevOutPlayers.filter(player => !returningPlayers.find(game => game.playerId === player.id)));
+            // Calculate new total stack and pot based on rebuys
+            const totalRebuys = updatedGames.reduce((sum, game) => sum + (game.rebuys || 0), 0);
+            const newTotalStack = initialPlayerCount * 5350 + (totalRebuys * 5350);
+            const newPot = initialPlayerCount * 5 + (totalRebuys * 4);
+            setTotalStack(newTotalStack);
+            setPot(newPot);
+            // Save the updated state
+            await saveGameState(timeLeft);
+            // Update positions for remaining out players
+            const remainingOutPlayers = updatedGames.filter(game => game.outAt);
+            remainingOutPlayers.sort((a, b) => {
+                const dateA = new Date(a.outAt);
+                const dateB = new Date(b.outAt);
+                return dateB.getTime() - dateA.getTime();
+            });
+            // Update positions
+            remainingOutPlayers.forEach((game, index) => {
+                const position = initialPlayerCount - remainingOutPlayers.length + index + 1;
+                game.position = position;
+                game.points = remainingOutPlayers.length - index;
+            });
+            // Save again with updated positions
+            await saveGameState(timeLeft);
+            toast.success("Game state updated successfully!");
+        }
+        catch (error) {
+            console.error("Error updating game state:", error);
+            toast.error("Failed to update game state");
+        }
+    };
     // Add debug logging at the start of the render function
     console.log('StartGame render state:', {
         gameStarted,
@@ -402,15 +471,24 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, players, 
             margin: 'auto',
             overflow: 'hidden',
             display: 'flex',
-            flexDirection: 'column'
-        }, children: [_jsx(KillerSelectionModal, { killer: killer, games: games, currentlyPlayingPlayers: selectedPlayers.filter((p) => !games.find((g) => g.playerId === p.id && g.outAt)), rebuyPlayerId: rebuyPlayerId, playerOutGame: playerOutGame, handlePlayerKillSelection: handlePlayerKillSelection }), showConfig && (_jsx(GameConfiguration, { championnat: championnat, players: players, onStartGameConfiguration: handleStartGameConfiguration })), showReview && !partyId && (_jsx(ReviewSelectedPlayers, { selectedPlayers: selectedPlayers, selectedTournament: selectedTournament, onConfirm: confirmAndStartGame })), gameStarted && (_jsxs("div", { style: {
+            flexDirection: 'column',
+            position: 'relative'
+        }, children: [_jsx(EditGameStateModal, { isOpen: showEditModal, onClose: () => setShowEditModal(false), games: games, selectedPlayers: selectedPlayers, players: players, onUpdateStats: handleUpdateGameState }), _jsx(KillerSelectionModal, { killer: killer, games: games, currentlyPlayingPlayers: selectedPlayers.filter((p) => !games.find((g) => g.playerId === p.id && g.outAt)), rebuyPlayerId: rebuyPlayerId, playerOutGame: playerOutGame, handlePlayerKillSelection: handlePlayerKillSelection }), _jsx(ConfirmDialog, { isOpen: showRebuyConfirm, onClose: () => setShowRebuyConfirm(false), onConfirm: confirmRebuy, title: "Confirm Rebuy", description: "Has this player paid for the rebuy?", confirmText: "Yes, Paid", cancelText: "Cancel", variant: "warning" }), _jsx(ConfirmDialog, { isOpen: showResetConfirm, onClose: () => setShowResetConfirm(false), onConfirm: () => {
+                    resetGameState();
+                    setGameStarted(false);
+                    setShowConfig(true);
+                    toast.success('Game state reset successfully!');
+                }, title: "Reset Game", description: "All game data will be lost. Are you sure?", confirmText: "Yes, Reset", cancelText: "Cancel", variant: "destructive" }), _jsx(ConfirmDialog, { isOpen: showEndGameConfirm, onClose: () => setShowEndGameConfirm(false), onConfirm: handleGameEnd, title: "End Game", description: "Are you sure you want to end the game?", confirmText: "Yes, End Game", cancelText: "Cancel", variant: "destructive" }), _jsx(ConfirmDialog, { isOpen: showEliminateConfirm, onClose: () => {
+                    setShowEliminateConfirm(false);
+                    setPendingEliminateData(null);
+                }, onConfirm: confirmElimination, title: "Confirm Elimination", description: `Are you sure ${selectedPlayers.find(p => p.id === pendingEliminateData?.playerId)?.name} is out of the game?`, confirmText: "Yes, Eliminate", cancelText: "Cancel", variant: "destructive" }), showConfig && (_jsx(GameConfiguration, { championnat: championnat, players: players, onStartGameConfiguration: handleStartGameConfiguration })), showReview && !partyId && (_jsx(ReviewSelectedPlayers, { selectedPlayers: selectedPlayers, selectedTournament: selectedTournament, onConfirm: confirmAndStartGame })), gameStarted && (_jsxs("div", { style: {
                     position: 'fixed',
                     top: 0,
                     left: 0,
                     right: 0,
                     bottom: 0,
                     backgroundColor: '#ffffff',
-                    zIndex: 9999,
+                    zIndex: 40,
                     display: 'flex',
                     flexDirection: 'column',
                     overflow: 'hidden'
@@ -423,44 +501,34 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, players, 
                             display: 'flex',
                             justifyContent: 'space-between',
                             alignItems: 'center',
-                            gap: '16px'
+                            gap: '16px',
+                            padding: '1rem'
                         }, children: [_jsxs("div", { style: {
                                     display: 'flex',
                                     alignItems: 'center',
                                     gap: '16px'
                                 }, children: [_jsx("h1", { style: {
-                                            fontSize: '24px',
+                                            fontSize: '32px',
                                             fontWeight: 'bold',
                                             color: isPaused ? "red" : "green",
                                             margin: 0
                                         }, children: isPaused ? "Game Paused" : "Game in Progress" }), _jsx("div", { style: {
                                             display: 'flex',
                                             gap: '8px'
-                                        } })] }), _jsxs("div", { style: {
+                                        }, children: _jsx(Button, { onClick: () => {
+                                                console.log('Opening edit modal');
+                                                setShowEditModal(true);
+                                            }, className: "bg-blue-600 hover:bg-blue-700 text-white font-['DS-DIGI'] text-lg", children: "Edit Game" }) })] }), _jsxs("div", { style: {
                                     display: 'flex',
                                     gap: '8px'
-                                }, children: [_jsx("button", { onClick: () => {
-                                            if (window.confirm('TU va reinitialiser la partie, toutes les données seront perdues tu vlide?')) {
-                                                resetGameState();
-                                                setGameStarted(false);
-                                                setShowConfig(true);
-                                                toast.success('Game state reset successfully!');
+                                }, children: [_jsx(Button, { onClick: () => setShowResetConfirm(true), className: "bg-amber-500 hover:bg-amber-600 text-white font-['DS-DIGI'] text-lg", children: "Reset Game" }), _jsx(Button, { onClick: () => {
+                                            if (games.filter((game) => !game.outAt).length === 1) {
+                                                setShowEndGameConfirm(true);
                                             }
-                                        }, style: {
-                                            padding: '8px 16px',
-                                            backgroundColor: '#f59e0b',
-                                            color: 'white',
-                                            border: 'none',
-                                            borderRadius: '4px',
-                                            cursor: 'pointer'
-                                        }, children: "Reset Game" }), _jsx("button", { onClick: handleGameEnd, style: {
-                                            padding: '8px 16px',
-                                            backgroundColor: '#ef4444',
-                                            color: 'white',
-                                            border: 'none',
-                                            borderRadius: '4px',
-                                            cursor: 'pointer'
-                                        }, children: "End Game" })] })] }), _jsxs("div", { style: {
+                                            else {
+                                                toast.error("The game cannot be ended yet as more than one player is still playing.");
+                                            }
+                                        }, className: "bg-red-500 hover:bg-red-600 text-white font-['DS-DIGI'] text-lg mr-24", children: "End Game" })] })] }), _jsxs("div", { style: {
                             flexGrow: 1,
                             overflowY: 'auto',
                             display: 'flex',
