@@ -11,12 +11,7 @@ interface PlayerListProps {
 }
 
 const PlayerList: React.FC<PlayerListProps> = ({ players, games, handleRebuy, handleOutOfGame }) => {
-  console.log('PlayerList render:', {
-    playersCount: players.length,
-    gamesCount: games.length,
-    players,
-    games
-  });
+
 
   return (
     <div className={cn(
