@@ -76,6 +76,7 @@ export function Menu({ isOpen, onClose }: MenuProps) {
                 "transition-all duration-200",
                 // Shadow effects
                 "shadow-sm hover:shadow-md",
+                "rounded-[5px]",
                 // Mobile optimization
                 "tap-highlight-transparent"
               )}

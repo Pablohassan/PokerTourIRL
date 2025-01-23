@@ -1,0 +1,9 @@
+@font-face {
+  font-family: "DS-DIGI";
+  src: url("/fonts/DS-DIGI.TTF") format("truetype"),
+    url("/fonts/DS-DIGI.woff2") format("woff2"),
+    url("/fonts/DS-DIGI.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}

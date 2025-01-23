@@ -61,6 +61,14 @@
     --destructive-foreground: 210 40% 98%;
     --ring: 216 34% 17%;
   }
+
+  @font-face {
+    font-family: "DS-DIGI";
+    src: url("/fonts/DS-DIGI.TTF") format("truetype");
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+  }
 }
 
 @layer base {

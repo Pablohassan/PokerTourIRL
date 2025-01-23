@@ -36,7 +36,7 @@ const GameTimer: React.FC<GameTimerProps> = ({
       "border border-slate-200/80",
       "shadow-[0_0_25px_-5px_rgba(245,158,11,0.2)]",
       "overflow-hidden",
-      "min-h-[260px]"
+      "min-h-[280px]"
     )}>
       <CardContent className="p-2 sm:p-2 rounded-2xl">
         {/* Main Grid */}

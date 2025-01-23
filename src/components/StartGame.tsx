@@ -743,19 +743,22 @@ const StartGame: React.FC<StartGameProps> = ({
             justifyContent: 'space-between',
             alignItems: 'center',
             gap: '16px',
-            padding: '1rem'
+            padding: '10px'
           }}>
             <div style={{
               display: 'flex',
               alignItems: 'center',
               gap: '16px'
             }}>
-              <h1 style={{
-                fontSize: '32px',
-                fontWeight: 'bold',
-                color: isPaused ? "red" : "green",
-                margin: 0
-              }}>
+              <h1
+                style={{
+                  fontSize: '2.5em',
+
+                  fontFamily: 'DS-DIGI',
+                  color: isPaused ? "red" : "green",
+                  textShadow: "2px 2px 10px 2px rgba(0, 0, 0, 0.3)",
+                  margin: 0
+                }}>
                 {isPaused ? "Game Paused" : "Game in Progress"}
               </h1>
               <div style={{
@@ -767,7 +770,7 @@ const StartGame: React.FC<StartGameProps> = ({
                     console.log('Opening edit modal');
                     setShowEditModal(true);
                   }}
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-['DS-DIGI'] text-lg"
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-['DS-DIGI'] text-lg text-shadow-sm shadow-md border border-slate-500/70 hover:border-slate-900 "
                 >
                   Edit Game
                 </Button>
@@ -778,8 +781,11 @@ const StartGame: React.FC<StartGameProps> = ({
               gap: '8px'
             }}>
               <Button
+                style={{
+                  textShadow: "4px 2px 10px 2px rgba(0, 0, 0, 0.3)",
+                }}
                 onClick={() => setShowResetConfirm(true)}
-                className="bg-amber-500 hover:bg-amber-600 text-white font-['DS-DIGI'] text-lg"
+                className="bg-amber-500 hover:bg-amber-600 text-white font-['DS-DIGI'] text-lg  shadow-md border borderslate-200/80 hover:border-amber-600 "
               >
                 Reset Game
               </Button>
@@ -791,7 +797,7 @@ const StartGame: React.FC<StartGameProps> = ({
                     toast.error("The game cannot be ended yet as more than one player is still playing.");
                   }
                 }}
-                className="bg-red-500 hover:bg-red-600 text-white font-['DS-DIGI'] text-lg mr-24"
+                className="bg-red-500 hover:bg-red-600 text-white font-['DS-DIGI'] text-lg mr-32 border border-red-200/80 hover:border-red-600 shadow-sm"
               >
                 End Game
               </Button>
