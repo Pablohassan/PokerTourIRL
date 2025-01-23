@@ -29,6 +29,7 @@ const BlindTimer: React.FC<BlindTimerProps> = ({
   setBlindIndex,
   initialTimeLeft
 }) => {
+  // @ts-ignore - Local state needed for immediate updates while staying in sync with parent
   const [timeLeft, setTimeLeft] = useState<number>(initialTimeLeft);
   const [playAlert, setPlayAlert] = useState<boolean>(false);
   const [showModal, setShowModal] = useState<boolean>(false);
