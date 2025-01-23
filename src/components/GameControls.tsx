@@ -1,7 +1,6 @@
-import React, { useRef, useCallback } from "react";
+import React, { useRef } from "react";
 import BlindTimer from "./BlindTimer";
 import GameTimer from "./GameTimer";
-import { toast } from "react-hot-toast";
 import { cn } from "../lib/utils";
 
 interface GameControlsProps {

@@ -1,6 +1,5 @@
 import React, { useEffect } from 'react';
 import { Button } from "./ui/button";
-import { Card } from "./ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 import { cn } from "../lib/utils";
 import { PlayerStats } from './interfaces';

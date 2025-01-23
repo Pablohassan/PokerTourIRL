@@ -237,7 +237,7 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, players, 
     };
     const handleOutOfGame = async (partyId, playerId) => {
         const playerName = selectedPlayers.find(p => p.id === playerId)?.name;
-        setPendingEliminateData({ playerId, partyId });
+        setPendingEliminateData({ playerId, partyId, playerName: playerName || '' });
         setShowEliminateConfirm(true);
     };
     const confirmElimination = async () => {

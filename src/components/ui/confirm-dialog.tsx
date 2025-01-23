@@ -77,7 +77,6 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
                 styles.border,
                 "border-2",
                 "backdrop-blur-md",
-                "rounded-xl",
                 "shadow-lg shadow-black/25",
                 "max-w-[90vw] sm:max-w-[500px]",
                 "p-6"

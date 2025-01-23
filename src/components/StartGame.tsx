@@ -52,7 +52,7 @@ const StartGame: React.FC<StartGameProps> = ({
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [showEndGameConfirm, setShowEndGameConfirm] = useState(false);
   const [showEliminateConfirm, setShowEliminateConfirm] = useState(false);
-  const [pendingEliminateData, setPendingEliminateData] = useState<{ playerId: number; partyId: number } | null>(null);
+  const [pendingEliminateData, setPendingEliminateData] = useState<{ playerId: number; partyId: number, playerName: string } | null>(null);
 
   const {
     timeLeft,
@@ -325,7 +325,7 @@ const StartGame: React.FC<StartGameProps> = ({
 
   const handleOutOfGame = async (partyId: number, playerId: number) => {
     const playerName = selectedPlayers.find(p => p.id === playerId)?.name;
-    setPendingEliminateData({ playerId, partyId });
+    setPendingEliminateData({ playerId, partyId, playerName: playerName || '' });
     setShowEliminateConfirm(true);
   };
 
