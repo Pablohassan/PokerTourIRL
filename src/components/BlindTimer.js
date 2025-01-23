@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, } from "./ui/dialog";
 import { cn } from "../lib/utils";
 const BlindTimer = ({ gameStarted, isPaused, onBlindChange, onTimeChange, blindIndex, setBlindIndex, initialTimeLeft }) => {
+    // @ts-ignore - Local state needed for immediate updates while staying in sync with parent
     const [timeLeft, setTimeLeft] = useState(initialTimeLeft);
     const [playAlert, setPlayAlert] = useState(false);
     const [showModal, setShowModal] = useState(false);
