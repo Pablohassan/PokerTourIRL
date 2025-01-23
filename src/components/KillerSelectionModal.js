@@ -1,4 +1,7 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
+import { Button } from "./ui/button";
+import { cn } from "../lib/utils";
 const KillerSelectionModal = ({ killer, games, currentlyPlayingPlayers, rebuyPlayerId, playerOutGame, handlePlayerKillSelection, }) => {
     if (!killer)
         return null;
@@ -12,63 +15,11 @@ const KillerSelectionModal = ({ killer, games, currentlyPlayingPlayers, rebuyPla
     const affectedPlayer = games.find(game => game.playerId === (rebuyPlayerId || playerOutGame));
     // Filter out the affected player from the killer selection list
     const availableKillers = currentlyPlayingPlayers.filter(player => player.id !== (rebuyPlayerId || playerOutGame));
-    return (_jsx("div", { style: {
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            zIndex: 10000
-        }, children: _jsxs("div", { style: {
-                backgroundColor: 'white',
-                padding: '20px',
-                borderRadius: '8px',
-                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-                maxWidth: '500px',
-                width: '90%',
-                maxHeight: '90vh',
-                overflow: 'auto'
-            }, children: [_jsx("div", { style: {
-                        borderBottom: '1px solid #e5e7eb',
-                        padding: '16px',
-                        marginBottom: '16px'
-                    }, children: _jsx("div", { style: {
-                            fontSize: '1.25rem',
-                            fontWeight: 'bold'
-                        }, children: "Select the Killer" }) }), _jsxs("div", { style: {
-                        padding: '16px',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '8px'
-                    }, children: [_jsx("div", { style: {
-                                marginBottom: '16px',
-                                fontSize: '1rem',
-                                color: '#4b5563'
-                            }, children: affectedPlayer && (_jsxs("div", { children: ["Who eliminated ", _jsx("span", { style: { fontWeight: 'bold' }, children: currentlyPlayingPlayers.find(p => p.id === affectedPlayer.playerId)?.name }), "?"] })) }), _jsx("div", { style: {
-                                display: 'grid',
-                                gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
-                                gap: '8px'
-                            }, children: availableKillers.map((player) => {
-                                const playerGame = games.find((game) => game.playerId === player.id);
-                                if (!playerGame)
-                                    return null;
-                                return (_jsxs("button", { onClick: () => handlePlayerKillSelection(player.id), style: {
-                                        padding: '12px',
-                                        backgroundColor: '#3b82f6',
-                                        color: 'white',
-                                        border: 'none',
-                                        borderRadius: '4px',
-                                        cursor: 'pointer',
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        alignItems: 'center',
-                                        gap: '4px',
-                                        width: '100%'
-                                    }, children: [_jsx("div", { style: { fontWeight: 'bold' }, children: player.name }), _jsxs("div", { style: { fontSize: '0.875rem' }, children: ["Kills: ", playerGame.kills] })] }, player.id));
-                            }) })] })] }) }));
+    return (_jsx(Dialog, { open: killer, onOpenChange: () => { }, children: _jsxs(DialogContent, { className: cn("bg-zinc-900", "border-2 border-blue-500", "backdrop-blur-md", "shadow-lg shadow-black/25", "max-w-[90vw] sm:max-w-[500px]", "p-6"), children: [_jsxs(DialogHeader, { children: [_jsx(DialogTitle, { className: cn("font-['DS-DIGI']", "text-3xl sm:text-4xl", "text-center", "text-blue-50", "tracking-wider", "font-bold"), children: "Select the Killer" }), affectedPlayer && (_jsxs("div", { className: cn("text-center", "text-blue-200/90", "font-['DS-DIGI']", "text-xl", "leading-relaxed", "mt-4"), children: ["Who eliminated", " ", _jsx("span", { className: "font-bold", children: currentlyPlayingPlayers.find(p => p.id === affectedPlayer.playerId)?.name }), "?"] }))] }), _jsx("div", { className: "grid grid-cols-1 sm:grid-cols-2 gap-4 mt-8", children: availableKillers.map((player) => {
+                        const playerGame = games.find((game) => game.playerId === player.id);
+                        if (!playerGame)
+                            return null;
+                        return (_jsx(Button, { onClick: () => handlePlayerKillSelection(player.id), className: cn("bg-gradient-to-br from-blue-500 to-blue-600", "hover:from-blue-600 hover:to-blue-700", "text-white font-semibold", "shadow-[0_0_15px_rgba(59,130,246,0.3)]", "hover:shadow-[0_0_20px_rgba(59,130,246,0.4)]", "hover:scale-110", "font-['DS-DIGI']", "text-lg", "px-6 py-4", "transition-all duration-200", "flex flex-col items-center gap-2", "border-0"), children: _jsx("span", { className: "font-bold", children: player.name }) }, player.id));
+                    }) })] }) }));
 };
 export default KillerSelectionModal;
