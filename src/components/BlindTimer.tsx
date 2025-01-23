@@ -115,7 +115,7 @@ const BlindTimer: React.FC<BlindTimerProps> = ({
 
       timerId = setInterval(() => {
         setTimeLeft(prevTime => {
-          const newTime = prevTime - 1; console.log('Timer tick:', { prevTime, newTime });
+          const newTime = prevTime - 1;
           if (newTime <= 0) {
 
             updateBlinds();
@@ -168,7 +168,7 @@ const BlindTimer: React.FC<BlindTimerProps> = ({
               "bg-zinc-950/95 border-amber-500/50",
               "backdrop-blur-lg",
               "shadow-[0_0_50px_-5px_rgba(245,158,11,0.3)]",
-              "max-w-[95vw] sm:max-w-[500px]",
+              "max-w-[95vw] sm:max-w-[700px]",
               "p-6 sm:p-8",
               "border-2"
             )}>
@@ -196,7 +196,7 @@ const BlindTimer: React.FC<BlindTimerProps> = ({
                       Blind Change!
                     </DialogTitle>
                     <p className="text-amber-400/80 text-center text-lg sm:text-xl font-ds-digital">
-                      New blinds for next hand
+                      Changement de blind a la prochaine main
                     </p>
                   </motion.div>
                 </DialogHeader>
