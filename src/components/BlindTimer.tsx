@@ -55,6 +55,13 @@ const BlindTimer: React.FC<BlindTimerProps> = ({
     { small: 1400, big: 2800, ante: 300 },
     { small: 1600, big: 3200, ante: 400 },
     { small: 1800, big: 3600, ante: 400 },
+    { small: 2000, big: 4000, ante: 500 },
+    { small: 2500, big: 5000, ante: 500 },
+    { small: 3000, big: 6000, ante: 1000 },
+    { small: 3000, big: 6000, ante: 1000 },
+    { small: 3000, big: 6000, ante: 1000 },
+    { small: 3000, big: 6000, ante: 1000 },
+    { small: 3000, big: 6000, ante: 1000 },
   ];
 
   const updateBlinds = useCallback(() => {

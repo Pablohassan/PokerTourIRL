@@ -31,7 +31,10 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, players, 
     const [showEndGameConfirm, setShowEndGameConfirm] = useState(false);
     const [showEliminateConfirm, setShowEliminateConfirm] = useState(false);
     const [pendingEliminateData, setPendingEliminateData] = useState(null);
-    const { timeLeft, setTimeLeft, smallBlind, setSmallBlind, bigBlind, setBigBlind, ante, setAnte, games, setGames, pot, setPot, middleStack, setSavedTotalStack, totalStack, setTotalStack, saveGameState, resetGameState, rebuyPlayerId, setRebuyPlayerId, killer, setKiller, stateRestored, postInitialGameState, loading, error, setPositions, setOutPlayers, setLastUsedPosition, initialPlayerCount, setInitialPlayerCount, currentBlindDuration, initialGameStatePosted, } = useGameState(gameStarted, setGameStarted, selectedPlayers, setSelectedPLayers, blindIndex, setBlindIndex, blindDuration // Pass blindDuration directly instead of initialTimeLeft
+    const { timeLeft, setTimeLeft, smallBlind, setSmallBlind, bigBlind, setBigBlind, ante, setAnte, games, setGames, pot, setPot, middleStack, setSavedTotalStack, totalStack, setTotalStack, saveGameState, resetGameState, rebuyPlayerId, setRebuyPlayerId, killer, setKiller, stateRestored, postInitialGameState, loading, error, setPositions, setOutPlayers, setLastUsedPosition, initialPlayerCount, setInitialPlayerCount,
+    // currentBlindDuration,
+    // initialGameStatePosted,
+     } = useGameState(gameStarted, setGameStarted, selectedPlayers, setSelectedPLayers, blindIndex, setBlindIndex, blindDuration // Pass blindDuration directly instead of initialTimeLeft
     );
     useEffect(() => {
         if (gameStarted) {
