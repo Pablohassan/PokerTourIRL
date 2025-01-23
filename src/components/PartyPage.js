@@ -1,63 +1,10 @@
-import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-runtime";
+import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { useEffect, useState, useCallback, useRef } from 'react';
 import api from '../api'; // replace with your actual API import
 import ReactDOM from 'react-dom';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
-// Add CSS styles
-const styles = {
-    button: {
-        padding: '8px 16px',
-        fontSize: '0.875rem',
-        fontWeight: '600',
-        color: 'white',
-        border: 'none',
-        borderRadius: '6px',
-        cursor: 'pointer',
-        transition: 'background-color 0.2s'
-    },
-    primaryButton: {
-        backgroundColor: '#3B82F6'
-    },
-    dangerButton: {
-        backgroundColor: '#EF4444'
-    },
-    table: {
-        width: '100%',
-        borderCollapse: 'collapse',
-        backgroundColor: 'white',
-        borderRadius: '8px',
-        overflow: 'hidden',
-        boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)'
-    },
-    th: {
-        backgroundColor: '#F3F4F6',
-        color: '#374151',
-        fontWeight: '600',
-        padding: '12px',
-        textAlign: 'left',
-        fontSize: '0.875rem',
-        borderBottom: '1px solid #E5E7EB'
-    },
-    td: {
-        padding: '12px',
-        color: '#1F2937',
-        fontSize: '0.875rem',
-        borderBottom: '1px solid #E5E7EB'
-    }
-};
-// Add CSS classes for hover effects
-const cssStyles = `
-  .button-primary:hover {
-    background-color: #2563EB !important;
-  }
-  .button-danger:hover {
-    background-color: #DC2626 !important;
-  }
-  .table-row:hover {
-    background-color: #F9FAFB;
-  }
-`;
+import { cn } from '../lib/utils';
 export const PartyPage = () => {
     const [parties, setParties] = useState([]);
     const [isModalOpen, setModalOpen] = useState(false);
@@ -207,63 +154,11 @@ export const PartyPage = () => {
             }
         }
     };
-    return (_jsxs(_Fragment, { children: [_jsx("style", { children: cssStyles }), _jsxs("div", { style: { padding: '20px' }, children: [isLoading && parties.length === 0 && (_jsx("div", { style: { textAlign: 'center', padding: '20px' }, children: "Loading parties..." })), parties.map((party, i) => (_jsxs("div", { ref: parties.length === i + 1 ? lastPartyElementRef : undefined, style: { marginBottom: '20px' }, children: [_jsxs("div", { style: { padding: '8px', marginLeft: '40px', display: 'flex', alignItems: 'center', gap: '10px' }, children: [_jsx("span", { children: new Date(party.date).toLocaleDateString() }), _jsx("button", { onClick: () => deleteParty(party.id), className: "button-danger", style: {
-                                            ...styles.button,
-                                            ...styles.dangerButton
-                                        }, children: "Delete" })] }), _jsxs("table", { style: styles.table, children: [_jsx("thead", { children: _jsxs("tr", { children: [_jsx("th", { style: styles.th, children: "Player" }), _jsx("th", { style: styles.th, children: "Position" }), _jsx("th", { style: styles.th, children: "Points" }), _jsx("th", { style: styles.th, children: "Rebuys" }), _jsx("th", { style: styles.th, children: "Out Time" }), _jsx("th", { style: styles.th, children: "Gains" })] }) }), _jsx("tbody", { children: party.playerStats.map((stat, statIndex) => (_jsxs("tr", { className: "table-row", children: [_jsx("td", { style: styles.td, children: stat.player.name }), _jsx("td", { style: styles.td, children: stat.position }), _jsx("td", { style: styles.td, children: stat.points }), _jsx("td", { style: styles.td, children: stat.rebuys }), _jsx("td", { style: styles.td, children: stat.outAt
+    return (_jsxs("div", { className: "p-5 min-h-screen bg-slate-900", children: [isLoading && parties.length === 0 && (_jsx("div", { className: "text-center p-5 text-amber-400", children: "Loading parties..." })), parties.map((party, i) => (_jsxs("div", { ref: parties.length === i + 1 ? lastPartyElementRef : undefined, className: "mb-5", children: [_jsxs("div", { className: "px-2 ml-10 flex items-center gap-3", children: [_jsx("span", { className: "text-amber-400", children: new Date(party.date).toLocaleDateString() }), _jsx("button", { onClick: () => deleteParty(party.id), className: "px-4 py-2 text-sm font-semibold text-white bg-red-700 hover:bg-red-800 rounded-[5px] border border-red-300/70 transition-all duration-200 hover:shadow-[0_0_10px_rgba(251,191,36,0.3)]", children: "Delete" })] }), _jsxs("div", { className: "mt-2 overflow-hidden rounded-[5px] border border-amber-400 bg-slate-900 shadow-[0_0_20px_rgba(251,191,36,0.1)]", children: [_jsxs("table", { className: "w-full", children: [_jsx("thead", { children: _jsxs("tr", { children: [_jsx("th", { className: "px-3 py-3 text-left text-sm font-semibold bg-blue-900/90 text-amber-400 border-b border-amber-400", children: "Player" }), _jsx("th", { className: "px-3 py-3 text-left text-sm font-semibold bg-blue-900/90 text-amber-400 border-b border-amber-400", children: "Position" }), _jsx("th", { className: "px-3 py-3 text-left text-sm font-semibold bg-blue-900/90 text-amber-400 border-b border-amber-400", children: "Points" }), _jsx("th", { className: "px-3 py-3 text-left text-sm font-semibold bg-blue-900/90 text-amber-400 border-b border-amber-400", children: "Rebuys" }), _jsx("th", { className: "px-3 py-3 text-left text-sm font-semibold bg-blue-900/90 text-amber-400 border-b border-amber-400", children: "Out Time" }), _jsx("th", { className: "px-3 py-3 text-left text-sm font-semibold bg-blue-900/90 text-amber-400 border-b border-amber-400", children: "Gains" })] }) }), _jsx("tbody", { children: party.playerStats.map((stat, statIndex) => (_jsxs("tr", { className: "hover:bg-blue-900/80 transition-colors", children: [_jsx("td", { className: "px-3 py-3 text-sm text-amber-400 border-b border-amber-400/20", children: stat.player.name }), _jsx("td", { className: "px-3 py-3 text-sm text-amber-400 border-b border-amber-400/20", children: stat.position }), _jsx("td", { className: "px-3 py-3 text-sm text-amber-400 border-b border-amber-400/20", children: stat.points }), _jsx("td", { className: "px-3 py-3 text-sm text-amber-400 border-b border-amber-400/20", children: stat.rebuys }), _jsx("td", { className: "px-3 py-3 text-sm text-amber-400 border-b border-amber-400/20", children: stat.outAt
                                                         ? `${new Date(stat.outAt).getHours().toString().padStart(2, '0')}:${new Date(stat.outAt).getMinutes().toString().padStart(2, '0')}:${new Date(stat.outAt).getSeconds().toString().padStart(2, '0')}`
-                                                        : 'N/A' }), _jsx("td", { style: styles.td, children: stat.gains })] }, `${party.id}-${stat.player.id}-${statIndex}`))) })] }), _jsx("button", { onClick: () => openModal(party), className: "button-primary", style: {
-                                    ...styles.button,
-                                    ...styles.primaryButton,
-                                    marginTop: '10px'
-                                }, children: "Edit" })] }, party.id))), isModalOpen && selectedParty && ReactDOM.createPortal(_jsx("div", { style: {
-                            position: 'fixed',
-                            top: 0,
-                            left: 0,
-                            right: 0,
-                            bottom: 0,
-                            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            zIndex: 1000
-                        }, children: _jsxs("div", { style: {
-                                backgroundColor: 'white',
-                                padding: '24px',
-                                borderRadius: '8px',
-                                maxWidth: '600px',
-                                width: '90%',
-                                maxHeight: '90vh',
-                                overflow: 'auto'
-                            }, children: [_jsx("h2", { style: { marginBottom: '16px' }, children: "Edit Party" }), _jsxs("div", { style: { marginBottom: '24px' }, children: [_jsx("label", { style: { display: 'block', marginBottom: '8px' }, children: "Date:" }), _jsx("input", { type: "datetime-local", value: selectedParty.date.slice(0, 16), onChange: (e) => setSelectedParty({
-                                                ...selectedParty,
-                                                date: new Date(e.target.value).toISOString()
-                                            }), style: {
-                                                width: '100%',
-                                                padding: '8px',
-                                                border: '1px solid #E5E7EB',
-                                                borderRadius: '4px'
-                                            } })] }), _jsxs("table", { style: styles.table, children: [_jsx("thead", { children: _jsxs("tr", { children: [_jsx("th", { style: styles.th, children: "Player" }), _jsx("th", { style: styles.th, children: "Position" }), _jsx("th", { style: styles.th, children: "Points" }), _jsx("th", { style: styles.th, children: "Rebuys" })] }) }), _jsx("tbody", { children: selectedParty.playerStats.map((stat, index) => (_jsxs("tr", { className: "table-row", children: [_jsx("td", { style: styles.td, children: stat.player.name }), _jsx("td", { style: styles.td, children: _jsx("input", { type: "number", value: stat.position, onChange: (e) => editStat(index, 'position', parseInt(e.target.value)), style: {
-                                                                width: '60px',
-                                                                padding: '4px',
-                                                                border: '1px solid #E5E7EB',
-                                                                borderRadius: '4px'
-                                                            } }) }), _jsx("td", { style: styles.td, children: _jsx("input", { type: "number", value: stat.points, onChange: (e) => editStat(index, 'points', parseInt(e.target.value)), style: {
-                                                                width: '60px',
-                                                                padding: '4px',
-                                                                border: '1px solid #E5E7EB',
-                                                                borderRadius: '4px'
-                                                            } }) }), _jsx("td", { style: styles.td, children: _jsx("input", { type: "number", value: stat.rebuys, onChange: (e) => editStat(index, 'rebuys', parseInt(e.target.value)), style: {
-                                                                width: '60px',
-                                                                padding: '4px',
-                                                                border: '1px solid #E5E7EB',
-                                                                borderRadius: '4px'
-                                                            } }) })] }, stat.id))) })] }), _jsxs("div", { style: { marginTop: '24px', display: 'flex', gap: '12px', justifyContent: 'flex-end' }, children: [_jsx("button", { onClick: closeModal, className: "button-danger", style: {
-                                                ...styles.button,
-                                                ...styles.dangerButton
-                                            }, children: "Cancel" }), _jsx("button", { onClick: handleSaveChanges, className: "button-primary", style: {
-                                                ...styles.button,
-                                                ...styles.primaryButton
-                                            }, children: "Save Changes" })] })] }) }), document.body)] })] }));
+                                                        : 'N/A' }), _jsxs("td", { className: cn("px-3 py-3 text-sm font-semibold border-b border-amber-400/20", stat.gains >= 0 ? "text-green-400" : "text-red-400"), children: [stat.gains >= 0 ? `+${stat.gains}` : stat.gains, "\u20AC"] })] }, `${party.id}-${stat.player.id}-${statIndex}`))) })] }), _jsx("button", { onClick: () => openModal(party), className: "m-3 px-4 py-2 text-sm font-semibold text-white bg-slate-700 hover:bg-blue-800 rounded-[5px] border border-slate-400/70 transition-all duration-200 hover:shadow-[0_0_10px_rgba(251,191,36,0.3)]", children: "Edit" })] })] }, party.id))), isModalOpen && selectedParty && ReactDOM.createPortal(_jsx("div", { className: "fixed inset-0 bg-black/50 flex items-center justify-center z-50", children: _jsxs("div", { className: "bg-blue-900 p-6 rounded-lg max-w-2xl w-[90%] max-h-[90vh] overflow-auto border border-amber-400 shadow-[0_0_30px_rgba(251,191,36,0.2)]", children: [_jsx("h2", { className: "text-2xl font-semibold mb-4 text-amber-400", children: "Edit Party" }), _jsxs("div", { className: "mb-6", children: [_jsx("label", { className: "block mb-2 text-amber-400", children: "Date:" }), _jsx("input", { type: "datetime-local", value: selectedParty.date.slice(0, 16), onChange: (e) => setSelectedParty({
+                                        ...selectedParty,
+                                        date: new Date(e.target.value).toISOString()
+                                    }), className: "w-full px-3 py-2 bg-slate-900 border border-amber-400 rounded text-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-400/30" })] }), _jsx("div", { className: "overflow-hidden rounded-lg border border-amber-400 bg-slate-900", children: _jsxs("table", { className: "w-full", children: [_jsx("thead", { children: _jsxs("tr", { children: [_jsx("th", { className: "px-3 py-3 text-left text-sm font-semibold bg-blue-900 text-amber-400 border-b border-amber-400", children: "Player" }), _jsx("th", { className: "px-3 py-3 text-left text-sm font-semibold bg-blue-900 text-amber-400 border-b border-amber-400", children: "Position" }), _jsx("th", { className: "px-3 py-3 text-left text-sm font-semibold bg-blue-900 text-amber-400 border-b border-amber-400", children: "Points" }), _jsx("th", { className: "px-3 py-3 text-left text-sm font-semibold bg-blue-900 text-amber-400 border-b border-amber-400", children: "Rebuys" })] }) }), _jsx("tbody", { children: selectedParty.playerStats.map((stat, index) => (_jsxs("tr", { className: "hover:bg-blue-900/50 transition-colors", children: [_jsx("td", { className: "px-3 py-3 text-sm text-amber-400 border-b border-amber-400/20", children: stat.player.name }), _jsx("td", { className: "px-3 py-3 text-sm text-amber-400 border-b border-amber-400/20", children: _jsx("input", { type: "number", value: stat.position, onChange: (e) => editStat(index, 'position', parseInt(e.target.value)), className: "w-16 px-2 py-1 bg-slate-900 border border-amber-400 rounded text-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-400/30" }) }), _jsx("td", { className: "px-3 py-3 text-sm text-amber-400 border-b border-amber-400/20", children: _jsx("input", { type: "number", value: stat.points, onChange: (e) => editStat(index, 'points', parseInt(e.target.value)), className: "w-16 px-2 py-1 bg-slate-900 border border-amber-400 rounded text-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-400/30" }) }), _jsx("td", { className: "px-3 py-3 text-sm text-amber-400 border-b border-amber-400/20", children: _jsx("input", { type: "number", value: stat.rebuys, onChange: (e) => editStat(index, 'rebuys', parseInt(e.target.value)), className: "w-16 px-2 py-1 bg-slate-900 border border-amber-400 rounded text-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-400/30" }) })] }, stat.id))) })] }) }), _jsxs("div", { className: "mt-6 flex justify-end gap-3", children: [_jsx("button", { onClick: closeModal, className: "px-4 py-2 text-sm font-semibold text-white bg-red-900 hover:bg-red-800 rounded-lg border border-amber-400 transition-all duration-200 hover:shadow-[0_0_10px_rgba(251,191,36,0.3)]", children: "Cancel" }), _jsx("button", { onClick: handleSaveChanges, className: "px-4 py-2 text-sm font-semibold text-white bg-blue-900 hover:bg-blue-800 rounded-lg border border-amber-400 transition-all duration-200 hover:shadow-[0_0_10px_rgba(251,191,36,0.3)]", children: "Save Changes" })] })] }) }), document.body)] }));
 };
 export default PartyPage;
