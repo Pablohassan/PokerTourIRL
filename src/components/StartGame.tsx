@@ -345,7 +345,7 @@ const StartGame: React.FC<StartGameProps> = ({
   };
 
   const handlePlayerKillSelection = async (killerPlayerId: number) => {
-    console.log('handlePlayerKillSelection called with killer:', killerPlayerId);
+
     setPendingKillerId(killerPlayerId);
     setShowKillerConfirm(true);
   };
@@ -356,7 +356,7 @@ const StartGame: React.FC<StartGameProps> = ({
 
     try {
       if (playerOutGame) {
-        console.log('Processing elimination for player:', playerOutGame);
+
         const gameIndex = games.findIndex((game) => game.playerId === playerOutGame);
         if (gameIndex !== -1) {
           const game = games[gameIndex];
@@ -621,7 +621,7 @@ const StartGame: React.FC<StartGameProps> = ({
             // First delete the game state to prevent race conditions
             try {
               await api.delete("/gameState");
-              console.log('Game state deleted successfully');
+
             } catch (error) {
               console.error('Error deleting game state:', error);
               toast.error('Failed to delete game state');
