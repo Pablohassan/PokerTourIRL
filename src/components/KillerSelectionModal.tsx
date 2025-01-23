@@ -47,18 +47,23 @@ const KillerSelectionModal: React.FC<KillerSelectionModalProps> = ({
         "border-2 border-blue-500",
         "backdrop-blur-md",
         "shadow-lg shadow-black/25",
-        "max-w-[90vw] sm:max-w-[500px]",
+        "max-w-[90vw] sm:max-w-[600px]",
         "p-6"
       )}>
         <DialogHeader>
-          <DialogTitle className={cn(
-            "font-['DS-DIGI']",
-            "text-3xl sm:text-4xl",
-            "text-center",
-            "text-blue-50",
-            "tracking-wider",
-            "font-bold"
-          )}>
+          <DialogTitle
+            style={{
+              textShadow: "2px 2px 10px 2px rgba(0, 0, 0, 0.3)",
+            }}
+            className={cn(
+              "font-['DS-DIGI']",
+
+              "text-3xl sm:text-4xl",
+              "text-center",
+              "text-white",
+              "tracking-wider",
+              "font-bold"
+            )}>
             Select the Killer
           </DialogTitle>
           {affectedPlayer && (
@@ -89,6 +94,7 @@ const KillerSelectionModal: React.FC<KillerSelectionModalProps> = ({
                 onClick={() => handlePlayerKillSelection(player.id)}
                 className={cn(
                   "bg-gradient-to-br from-blue-500 to-blue-600",
+
                   "hover:from-blue-600 hover:to-blue-700",
                   "text-white font-semibold",
                   "shadow-[0_0_15px_rgba(59,130,246,0.3)]",

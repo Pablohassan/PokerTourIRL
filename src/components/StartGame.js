@@ -33,6 +33,7 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, players, 
     const [pendingEliminateData, setPendingEliminateData] = useState(null);
     const [showKillerConfirm, setShowKillerConfirm] = useState(false);
     const [pendingKillerId, setPendingKillerId] = useState(null);
+    const [isFullscreen, setIsFullscreen] = useState(false);
     const { timeLeft, setTimeLeft, smallBlind, setSmallBlind, bigBlind, setBigBlind, ante, setAnte, games, setGames, pot, setPot, middleStack, setSavedTotalStack, totalStack, setTotalStack, saveGameState, resetGameState, rebuyPlayerId, setRebuyPlayerId, killer, setKiller, stateRestored, postInitialGameState, loading, error, setPositions, setOutPlayers, setLastUsedPosition, initialPlayerCount, setInitialPlayerCount,
     // currentBlindDuration,
     // initialGameStatePosted,
@@ -87,6 +88,27 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, players, 
             });
         }
     }, [stateRestored]);
+    useEffect(() => {
+        const handleFullscreenChange = () => {
+            setIsFullscreen(!!document.fullscreenElement);
+        };
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+        return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    }, []);
+    const toggleFullscreen = async () => {
+        try {
+            if (!document.fullscreenElement) {
+                await document.documentElement.requestFullscreen();
+            }
+            else {
+                await document.exitFullscreen();
+            }
+        }
+        catch (error) {
+            console.error('Error toggling fullscreen:', error);
+            toast.error('Failed to toggle fullscreen mode');
+        }
+    };
     const handleStartGameConfiguration = (selectedTournament, blindDuration, selectedPlayers) => {
         setSelectedTournament(selectedTournament);
         setBlindDuration(blindDuration);
@@ -94,28 +116,12 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, players, 
         setShowConfig(false);
         setShowReview(true);
     };
-    const enableFullScreen = async () => {
-        try {
-            if (document.documentElement.requestFullscreen) {
-                await document.documentElement.requestFullscreen();
-            }
-            else if (document.documentElement.webkitRequestFullscreen) {
-                await document.documentElement.webkitRequestFullscreen();
-            }
-            else if (document.documentElement.msRequestFullscreen) {
-                await document.documentElement.msRequestFullscreen();
-            }
-        }
-        catch (error) {
-            console.error('Error enabling fullscreen:', error);
-        }
-    };
     const onStartGame = async () => {
         if (gameStarted) {
             toast.error("A game is already in progress.");
             return;
         }
-        await enableFullScreen();
+        await toggleFullscreen();
         resetGameState();
         if (selectedPlayers.length < 4) {
             toast.error("You need at least 4 players to start a game.");
@@ -511,7 +517,7 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, players, 
                                     alignItems: 'center',
                                     gap: '16px'
                                 }, children: [_jsx("h1", { style: {
-                                            fontSize: '2.5em',
+                                            fontSize: '2em',
                                             fontFamily: 'DS-DIGI',
                                             color: isPaused ? "red" : "green",
                                             textShadow: "2px 2px 10px 2px rgba(0, 0, 0, 0.3)",
@@ -525,9 +531,9 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, players, 
                                             }, className: "bg-blue-600 hover:bg-blue-700 text-white font-['DS-DIGI'] text-lg text-shadow-sm shadow-md border border-slate-500/70 hover:border-slate-900 ", children: "Edit Game" }) })] }), _jsxs("div", { style: {
                                     display: 'flex',
                                     gap: '8px'
-                                }, children: [_jsx(Button, { style: {
+                                }, children: [_jsx(Button, { onClick: toggleFullscreen, className: "bg-purple-500 hover:bg-purple-600 text-white font-['DS-DIGI'] text-lg shadow-md border border-purple-200/80 hover:border-purple-600", children: isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen' }), _jsx(Button, { style: {
                                             textShadow: "4px 2px 10px 2px rgba(0, 0, 0, 0.3)",
-                                        }, onClick: () => setShowResetConfirm(true), className: "bg-amber-500 hover:bg-amber-600 text-white font-['DS-DIGI'] text-lg  shadow-md border borderslate-200/80 hover:border-amber-600 ", children: "Reset Game" }), _jsx(Button, { onClick: () => {
+                                        }, onClick: () => setShowResetConfirm(true), className: "bg-amber-500 hover:bg-amber-600 text-white font-['DS-DIGI'] text-lg shadow-md border borderslate-200/80 hover:border-amber-600", children: "Reset Game" }), _jsx(Button, { onClick: () => {
                                             if (games.filter((game) => !game.outAt).length === 1) {
                                                 setShowEndGameConfirm(true);
                                             }

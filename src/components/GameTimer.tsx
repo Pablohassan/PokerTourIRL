@@ -36,7 +36,7 @@ const GameTimer: React.FC<GameTimerProps> = ({
       "border border-slate-200/80",
       "shadow-[0_0_25px_-5px_rgba(245,158,11,0.2)]",
       "overflow-hidden",
-      "min-h-[280px]"
+      "min-h-[300px]"
     )}>
       <CardContent className="p-2 sm:p-2 rounded-2xl">
         {/* Main Grid */}
@@ -51,12 +51,12 @@ const GameTimer: React.FC<GameTimerProps> = ({
             "shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)]",
             "min-h-[150px] sm:min-h-[200px]"
           )}>
-            <span className="font-['DS-DIGI'] text-amber-400/90 text-3xl sm:text-3xl mb-1">
+            <span className="font-['DS-DIGI'] text-amber-400/90 text-3xl sm:text-3xl shadow-md">
               Time Left
             </span>
             <span className={cn(
               "font-['DS-DIGI'] text-amber-400/95",
-              "text-4xl sm:text-6xl min-[900px]:text-8xl",
+              "text-4xl sm:text-7xl min-[900px]:text-9xl",
 
               "tabular-nums tracking-wider"
             )}>
