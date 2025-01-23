@@ -91,6 +91,7 @@ const ReviewSelectedPlayers: React.FC<ReviewSelectedPlayersProps> = ({
                     key={player.id}
                     className={cn(
                       "p-3 rounded-xl",
+                      "text-xl",
                       "bg-slate-950/90",
                       "border border-amber-400/20",
                       "shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)]",
@@ -105,7 +106,7 @@ const ReviewSelectedPlayers: React.FC<ReviewSelectedPlayersProps> = ({
             </div>
 
             {/* Blinds Structure */}
-            <div className="space-y-4">
+            <div className="space-y-4 max-h-[300px] overflow-y-auto">
               <h3 className={cn(
                 "font-['DS-DIGI'] text-xl sm:text-2xl text-amber-400/80",
                 "tracking-wide"
