@@ -22,6 +22,7 @@ export const CardPlayer: React.FC<CardPlayerProps> = ({
   return (
     <Card className={cn(
       "w-full max-w-[130px] mx-auto",
+
       "aspect-[3/5]",
       "bg-gradient-to-b from-slate-900/90 via-slate-900/80 to-slate-900/95 backdrop-blur-md",
       "border border-amber-400/20",
@@ -77,7 +78,7 @@ export const CardPlayer: React.FC<CardPlayerProps> = ({
         </div>
 
         <CardContent className={cn(
-          "p-2 space-y-1.5",
+          "p-1 space-y-1.5",
           "bg-gradient-to-t from-slate-900/95 to-transparent"
         )}>
           <Button
@@ -89,7 +90,7 @@ export const CardPlayer: React.FC<CardPlayerProps> = ({
               "w-full h-7 text-sm font-['DS-DIGI']",
               "rounded-[5px]",
               "text-lg",
-              "border-amber-400/20 hover:border-amber-400/40",
+              "border-amber-400/70 hover:border-amber-400/90",
               "bg-amber-500/5 hover:bg-amber-500/10",
               "text-amber-400 hover:text-amber-300",
               "relative z-20"
@@ -103,7 +104,8 @@ export const CardPlayer: React.FC<CardPlayerProps> = ({
             onClick={outOfGame}
             className={cn(
               "w-full h-7 text-sm font-['DS-DIGI']",
-              "border-red-400/20 hover:border-red-400/40",
+              "border-red-400/70 hover:border-red-400/90",
+
               "text-lg",
               "text-shadow-lg",
               "rounded-[5px]",

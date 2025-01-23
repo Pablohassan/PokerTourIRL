@@ -31,6 +31,8 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, players, 
     const [showEndGameConfirm, setShowEndGameConfirm] = useState(false);
     const [showEliminateConfirm, setShowEliminateConfirm] = useState(false);
     const [pendingEliminateData, setPendingEliminateData] = useState(null);
+    const [showKillerConfirm, setShowKillerConfirm] = useState(false);
+    const [pendingKillerId, setPendingKillerId] = useState(null);
     const { timeLeft, setTimeLeft, smallBlind, setSmallBlind, bigBlind, setBigBlind, ante, setAnte, games, setGames, pot, setPot, middleStack, setSavedTotalStack, totalStack, setTotalStack, saveGameState, resetGameState, rebuyPlayerId, setRebuyPlayerId, killer, setKiller, stateRestored, postInitialGameState, loading, error, setPositions, setOutPlayers, setLastUsedPosition, initialPlayerCount, setInitialPlayerCount,
     // currentBlindDuration,
     // initialGameStatePosted,
@@ -39,7 +41,7 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, players, 
     useEffect(() => {
         if (gameStarted) {
             if ('screen' in window && 'orientation' in screen) {
-                screen.orientation.lock?.('portrait').catch((err) => {
+                screen.orientation.lock?.('landscape').catch((err) => {
                     console.error('Failed to lock screen orientation:', err);
                 });
             }
@@ -240,86 +242,93 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, players, 
     };
     const handlePlayerKillSelection = async (killerPlayerId) => {
         console.log('handlePlayerKillSelection called with killer:', killerPlayerId);
-        if (window.confirm("Do you want to select this player as the killer?")) {
-            try {
-                if (playerOutGame) {
-                    console.log('Processing elimination for player:', playerOutGame);
-                    const gameIndex = games.findIndex((game) => game.playerId === playerOutGame);
-                    if (gameIndex !== -1) {
-                        const game = games[gameIndex];
-                        const outAt = new Date();
-                        try {
-                            const outPlayersCount = games.filter(g => g.outAt).length;
-                            const position = initialPlayerCount - outPlayersCount;
-                            const points = outPlayersCount + 1;
-                            const gameResult = await api.put(`/gamesResults/${game.id}`, {
-                                ...game,
-                                outAt: outAt.toISOString(),
-                                position,
-                                points
-                            });
-                            const currentPartyId = gameResult.data?.partyId || game.partyId;
-                            await api.put("/playerStats/eliminate", {
-                                partyId: currentPartyId,
-                                playerId: playerOutGame,
-                                eliminatedById: killerPlayerId,
-                                points,
-                                position
-                            });
-                            const updatedGames = [...games];
-                            updatedGames[gameIndex] = {
-                                ...game,
-                                outAt,
+        setPendingKillerId(killerPlayerId);
+        setShowKillerConfirm(true);
+    };
+    const confirmKillerSelection = async () => {
+        const killerPlayerId = pendingKillerId;
+        if (!killerPlayerId)
+            return;
+        try {
+            if (playerOutGame) {
+                console.log('Processing elimination for player:', playerOutGame);
+                const gameIndex = games.findIndex((game) => game.playerId === playerOutGame);
+                if (gameIndex !== -1) {
+                    const game = games[gameIndex];
+                    const outAt = new Date();
+                    try {
+                        const outPlayersCount = games.filter(g => g.outAt).length;
+                        const position = initialPlayerCount - outPlayersCount;
+                        const points = outPlayersCount + 1;
+                        const gameResult = await api.put(`/gamesResults/${game.id}`, {
+                            ...game,
+                            outAt: outAt.toISOString(),
+                            position,
+                            points
+                        });
+                        const currentPartyId = gameResult.data?.partyId || game.partyId;
+                        await api.put("/playerStats/eliminate", {
+                            partyId: currentPartyId,
+                            playerId: playerOutGame,
+                            eliminatedById: killerPlayerId,
+                            points,
+                            position
+                        });
+                        const updatedGames = [...games];
+                        updatedGames[gameIndex] = {
+                            ...game,
+                            outAt,
+                            position,
+                            points
+                        };
+                        updatedGames.forEach((game, idx) => {
+                            if (game.playerId === killerPlayerId) {
+                                updatedGames[idx] = {
+                                    ...game,
+                                    kills: (game.kills || 0) + 1
+                                };
+                            }
+                        });
+                        setGames(updatedGames);
+                        const player = selectedPlayers.find((p) => p.id === playerOutGame);
+                        if (player) {
+                            const playerWithPosition = {
+                                ...player,
                                 position,
                                 points
                             };
-                            updatedGames.forEach((game, idx) => {
-                                if (game.playerId === killerPlayerId) {
-                                    updatedGames[idx] = {
-                                        ...game,
-                                        kills: (game.kills || 0) + 1
-                                    };
-                                }
-                            });
-                            setGames(updatedGames);
-                            const player = selectedPlayers.find((p) => p.id === playerOutGame);
-                            if (player) {
-                                const playerWithPosition = {
-                                    ...player,
-                                    position,
-                                    points
-                                };
-                                setOutPlayers(prev => [...prev, playerWithPosition]);
-                            }
-                            setSelectedPLayers(prev => prev.filter(p => p.id !== playerOutGame));
-                            setPositions(prev => ({
-                                ...prev,
-                                [playerOutGame]: position
-                            }));
-                            await saveGameState(timeLeft);
-                            toast.success(`Player eliminated and killer's stats updated!`);
+                            setOutPlayers(prev => [...prev, playerWithPosition]);
                         }
-                        catch (error) {
-                            console.error('Error updating backend:', error);
-                            throw new Error('Failed to update player elimination in backend');
-                        }
+                        setSelectedPLayers(prev => prev.filter(p => p.id !== playerOutGame));
+                        setPositions(prev => ({
+                            ...prev,
+                            [playerOutGame]: position
+                        }));
+                        await saveGameState(timeLeft);
+                        toast.success(`Player eliminated and killer's stats updated!`);
+                    }
+                    catch (error) {
+                        console.error('Error updating backend:', error);
+                        throw new Error('Failed to update player elimination in backend');
                     }
                 }
-                else {
-                    setGames((prevGames) => prevGames.map((game) => game.playerId === killerPlayerId ? { ...game, kills: (game.kills || 0) + 1 } : game));
-                    await saveGameState(timeLeft);
-                }
-                setKiller(false);
-                setPlayerOutGame(null);
-                setRebuyPlayerId(null);
             }
-            catch (error) {
-                console.error("Error in handlePlayerKillSelection:", error);
-                toast.error("Failed to update player stats. Please try again.");
-                setKiller(false);
-                setPlayerOutGame(null);
-                setRebuyPlayerId(null);
+            else {
+                setGames((prevGames) => prevGames.map((game) => game.playerId === killerPlayerId ? { ...game, kills: (game.kills || 0) + 1 } : game));
+                await saveGameState(timeLeft);
             }
+            setKiller(false);
+            setPlayerOutGame(null);
+            setRebuyPlayerId(null);
+            setPendingKillerId(null);
+        }
+        catch (error) {
+            console.error("Error in handlePlayerKillSelection:", error);
+            toast.error("Failed to update player stats. Please try again.");
+            setKiller(false);
+            setPlayerOutGame(null);
+            setRebuyPlayerId(null);
+            setPendingKillerId(null);
         }
     };
     const handleGameEnd = async () => {
@@ -481,7 +490,10 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, players, 
                 }, title: "Reset Game", description: "All game data will be lost. Are you sure?", confirmText: "Yes, Reset", cancelText: "Cancel", variant: "destructive" }), _jsx(ConfirmDialog, { isOpen: showEndGameConfirm, onClose: () => setShowEndGameConfirm(false), onConfirm: handleGameEnd, title: "End Game", description: "Are you sure you want to end the game?", confirmText: "Yes, End Game", cancelText: "Cancel", variant: "destructive" }), _jsx(ConfirmDialog, { isOpen: showEliminateConfirm, onClose: () => {
                     setShowEliminateConfirm(false);
                     setPendingEliminateData(null);
-                }, onConfirm: confirmElimination, title: "Confirm Elimination", description: `Are you sure ${selectedPlayers.find(p => p.id === pendingEliminateData?.playerId)?.name} is out of the game?`, confirmText: "Yes, Eliminate", cancelText: "Cancel", variant: "destructive" }), showConfig && (_jsx(GameConfiguration, { championnat: championnat, players: players, onStartGameConfiguration: handleStartGameConfiguration })), showReview && !partyId && (_jsx(ReviewSelectedPlayers, { selectedPlayers: selectedPlayers, selectedTournament: selectedTournament, onConfirm: confirmAndStartGame })), gameStarted && (_jsxs("div", { style: {
+                }, onConfirm: confirmElimination, title: "Confirm Elimination", description: `Are you sure ${selectedPlayers.find(p => p.id === pendingEliminateData?.playerId)?.name} is out of the game?`, confirmText: "Yes, Eliminate", cancelText: "Cancel", variant: "destructive" }), _jsx(ConfirmDialog, { isOpen: showKillerConfirm, onClose: () => {
+                    setShowKillerConfirm(false);
+                    setPendingKillerId(null);
+                }, onConfirm: confirmKillerSelection, title: "Confirm Killer Selection", description: `Are you sure you want to select ${selectedPlayers.find(p => p.id === pendingKillerId)?.name} as the killer?`, confirmText: `Yes, Select ${selectedPlayers.find(p => p.id === pendingKillerId)?.name}`, cancelText: "Cancel", variant: "warning" }), showConfig && (_jsx(GameConfiguration, { championnat: championnat, players: players, onStartGameConfiguration: handleStartGameConfiguration })), showReview && !partyId && (_jsx(ReviewSelectedPlayers, { selectedPlayers: selectedPlayers, selectedTournament: selectedTournament, onConfirm: confirmAndStartGame })), gameStarted && (_jsxs("div", { style: {
                     position: 'fixed',
                     top: 0,
                     left: 0,

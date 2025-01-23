@@ -128,6 +128,7 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
                         className={cn(
                             styles.confirmBtn,
                             "font-['DS-DIGI']",
+                            "border border-amber-400/70",
                             "text-lg",
                             "px-6 py-2",
                             "transition-all duration-200",
