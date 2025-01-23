@@ -49,7 +49,7 @@ const GameTimer: React.FC<GameTimerProps> = ({
             "bg-slate-950/95 p-2 sm:p-3",
 
             "shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)]",
-            "min-h-[150px] sm:min-h-[200px]"
+            "min-h-[170px] sm:min-h-[210px]"
           )}>
             <span className="font-['DS-DIGI'] text-amber-400/90 text-3xl sm:text-3xl shadow-md">
               Time Left
@@ -70,7 +70,7 @@ const GameTimer: React.FC<GameTimerProps> = ({
             "bg-slate-950/90 rounded-xl p-2 sm:p-3",
             "border border-slate-200/60",
             "shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)]",
-            "min-h-[150px] sm:min-h-[200px]"
+            "min-h-[170px] sm:min-h-[210px]"
           )}>
             <div className="space-y-1 sm:space-y-2">
               <div className="flex justify-between items-center">
@@ -95,7 +95,7 @@ const GameTimer: React.FC<GameTimerProps> = ({
             "bg-slate-950/90 rounded-xl p-2 sm:p-3",
             "border border-slate-200/60",
             "shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)]",
-            "min-h-[150px] sm:min-h-[200px]"
+            "min-h-[170px] sm:min-h-[210px]"
           )}>
             <div className="space-y-2 sm:space-y-4">
               <div className="flex justify-between items-center">

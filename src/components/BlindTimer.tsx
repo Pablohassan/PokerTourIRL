@@ -106,21 +106,18 @@ const BlindTimer: React.FC<BlindTimerProps> = ({
 
   // Effect for time updates
   useEffect(() => {
-    console.log('Timer Effect - Initial Setup:', { gameStarted, isPaused, timeLeft, initialTimeLeft });
+
 
     let timerId: NodeJS.Timeout | null = null;
 
     const startTimer = () => {
       if (timerId) return; // Prevent multiple timers
 
-      console.log('Starting new timer with:', { timeLeft, initialTimeLeft });
-
       timerId = setInterval(() => {
         setTimeLeft(prevTime => {
-          const newTime = prevTime - 1;
-          console.log('Timer tick:', { prevTime, newTime });
+          const newTime = prevTime - 1; console.log('Timer tick:', { prevTime, newTime });
           if (newTime <= 0) {
-            console.log('Timer reached 0 - Updating blinds');
+
             updateBlinds();
             return 0;
           }
@@ -130,7 +127,7 @@ const BlindTimer: React.FC<BlindTimerProps> = ({
     };
 
     const stopTimer = () => {
-      console.log('Stopping timer');
+
       if (timerId) {
         clearInterval(timerId);
         timerId = null;
@@ -144,15 +141,12 @@ const BlindTimer: React.FC<BlindTimerProps> = ({
     }
 
     return () => {
-      console.log('Cleanup - stopping timer');
+
       stopTimer();
     };
   }, [gameStarted, isPaused]); // Remove unnecessary dependencies
 
   // Debug time changes
-  useEffect(() => {
-    console.log('Time value changed:', { timeLeft, gameStarted, isPaused });
-  }, [timeLeft, gameStarted, isPaused]);
 
   // Notify parent of time changes
   useEffect(() => {

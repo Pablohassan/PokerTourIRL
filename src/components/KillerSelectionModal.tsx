@@ -23,12 +23,7 @@ const KillerSelectionModal: React.FC<KillerSelectionModalProps> = ({
 }) => {
   if (!killer) return null;
 
-  console.log('KillerSelectionModal render:', {
-    killer,
-    playersCount: currentlyPlayingPlayers.length,
-    rebuyPlayerId,
-    playerOutGame
-  });
+
 
   // Get the player being acted upon (either rebuy or elimination)
   const affectedPlayer = games.find(game =>

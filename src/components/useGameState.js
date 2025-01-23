@@ -45,7 +45,6 @@ const useGameState = (gameStarted, setGameStarted, selectedPlayers, setSelectedP
     };
     const saveGameState = async (currentTimeLeft = timeLeft) => {
         if (!initialGameStatePosted) {
-            console.log('Skipping save - initial game state not posted yet');
             return;
         }
         const now = Date.now();
@@ -89,7 +88,6 @@ const useGameState = (gameStarted, setGameStarted, selectedPlayers, setSelectedP
         try {
             setLoading(true);
             setInitialGameStatePosted(true);
-            console.log('Initial game state marked as posted');
             setLoading(false);
         }
         catch (error) {
@@ -101,16 +99,13 @@ const useGameState = (gameStarted, setGameStarted, selectedPlayers, setSelectedP
     };
     const restoreState = async () => {
         try {
-            console.log("Attempting to restore game state...");
             const response = await api.get("/gameState");
-            console.log("Game state response:", response);
             if (!response.data?.state) {
                 console.log('No saved game state found');
                 setLoading(false);
                 return;
             }
             const { state } = response.data;
-            console.log("Restored state:", state);
             const elapsedTime = (Date.now() - state.lastSavedTime) / 1000;
             const adjustedTimeLeft = Math.max(0, state.timeLeft - elapsedTime);
             // First, process the games to ensure eliminated players are handled correctly
@@ -157,13 +152,6 @@ const useGameState = (gameStarted, setGameStarted, selectedPlayers, setSelectedP
             setInitialPlayerCount(state.initialPlayerCount);
             setCurrentBlindDuration(state.currentBlindDuration || configBlindDuration);
             setStateRestored(true);
-            console.log("Game state restored successfully", {
-                activePlayerCount: activeSelectedPlayers.length,
-                eliminatedPlayerCount: restoredOutPlayers.length,
-                totalPlayers: state.selectedPlayers.length,
-                timeLeft: adjustedTimeLeft,
-                blindDuration: state.currentBlindDuration || configBlindDuration
-            });
         }
         catch (error) {
             if (error.response?.status === 404) {

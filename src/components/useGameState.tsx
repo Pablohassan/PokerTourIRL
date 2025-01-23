@@ -57,7 +57,7 @@ const useGameState = (
 
   const saveGameState = async (currentTimeLeft: number = timeLeft) => {
     if (!initialGameStatePosted) {
-      console.log('Skipping save - initial game state not posted yet');
+
       return;
     }
 
@@ -104,7 +104,7 @@ const useGameState = (
     try {
       setLoading(true);
       setInitialGameStatePosted(true);
-      console.log('Initial game state marked as posted');
+
       setLoading(false);
     } catch (error) {
       console.error('Error marking initial game state as posted:', error);
@@ -116,9 +116,9 @@ const useGameState = (
 
   const restoreState = async () => {
     try {
-      console.log("Attempting to restore game state...");
+
       const response = await api.get("/gameState");
-      console.log("Game state response:", response);
+
 
       if (!response.data?.state) {
         console.log('No saved game state found');
@@ -127,7 +127,7 @@ const useGameState = (
       }
 
       const { state } = response.data;
-      console.log("Restored state:", state);
+
 
       const elapsedTime = (Date.now() - state.lastSavedTime) / 1000;
       const adjustedTimeLeft = Math.max(0, state.timeLeft - elapsedTime);
@@ -187,13 +187,7 @@ const useGameState = (
       setCurrentBlindDuration(state.currentBlindDuration || configBlindDuration);
       setStateRestored(true);
 
-      console.log("Game state restored successfully", {
-        activePlayerCount: activeSelectedPlayers.length,
-        eliminatedPlayerCount: restoredOutPlayers.length,
-        totalPlayers: state.selectedPlayers.length,
-        timeLeft: adjustedTimeLeft,
-        blindDuration: state.currentBlindDuration || configBlindDuration
-      });
+
     } catch (error: any) {
       if (error.response?.status === 404) {
         console.log('No game state found (404)');

@@ -5,12 +5,6 @@ import { cn } from "../lib/utils";
 const KillerSelectionModal = ({ killer, games, currentlyPlayingPlayers, rebuyPlayerId, playerOutGame, handlePlayerKillSelection, }) => {
     if (!killer)
         return null;
-    console.log('KillerSelectionModal render:', {
-        killer,
-        playersCount: currentlyPlayingPlayers.length,
-        rebuyPlayerId,
-        playerOutGame
-    });
     // Get the player being acted upon (either rebuy or elimination)
     const affectedPlayer = games.find(game => game.playerId === (rebuyPlayerId || playerOutGame));
     // Filter out the affected player from the killer selection list
