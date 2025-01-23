@@ -38,7 +38,7 @@ export function Menu({ isOpen, onClose }) {
                         // Hover and active states
                         "hover:scale-[1.02] active:scale-[0.98]", "transition-all duration-200", 
                         // Shadow effects
-                        "shadow-sm hover:shadow-md", 
+                        "shadow-sm hover:shadow-md", "rounded-[5px]", 
                         // Mobile optimization
                         "tap-highlight-transparent"), onClick: () => handleNavigation(item.path), children: item.label }, item.path))) })] }) }));
 }

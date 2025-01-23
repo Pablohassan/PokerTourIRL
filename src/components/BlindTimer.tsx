@@ -191,7 +191,7 @@ const BlindTimer: React.FC<BlindTimerProps> = ({
                     transition={{ delay: 0.1, duration: 0.5 }}
                   >
                     <DialogTitle className={cn(
-                      "font-['DS-DIGI']",
+                      "font-ds-digital",
                       "text-4xl sm:text-5xl",
                       "text-center",
                       "text-amber-400",
@@ -201,7 +201,7 @@ const BlindTimer: React.FC<BlindTimerProps> = ({
                     )}>
                       Blind Change!
                     </DialogTitle>
-                    <p className="text-amber-400/80 text-center text-lg sm:text-xl font-['DS-DIGI']">
+                    <p className="text-amber-400/80 text-center text-lg sm:text-xl font-ds-digital">
                       New blinds for next hand
                     </p>
                   </motion.div>
@@ -221,8 +221,8 @@ const BlindTimer: React.FC<BlindTimerProps> = ({
                         animate={{ x: 0, opacity: 1 }}
                         transition={{ delay: 0.3, duration: 0.5 }}
                       >
-                        <span className="font-['DS-DIGI'] text-amber-400/80 text-2xl sm:text-3xl">Small Blind</span>
-                        <span className="font-['DS-DIGI'] text-amber-400 text-3xl sm:text-4xl">{displayBlinds.small}</span>
+                        <span className="font-ds-digital text-amber-400/80 text-2xl sm:text-3xl">Small Blind</span>
+                        <span className="font-ds-digital text-amber-400 text-3xl sm:text-4xl">{displayBlinds.small}</span>
                       </motion.div>
 
                       <motion.div
@@ -231,8 +231,8 @@ const BlindTimer: React.FC<BlindTimerProps> = ({
                         animate={{ x: 0, opacity: 1 }}
                         transition={{ delay: 0.4, duration: 0.5 }}
                       >
-                        <span className="font-['DS-DIGI'] text-amber-400/80 text-2xl sm:text-3xl">Big Blind</span>
-                        <span className="font-['DS-DIGI'] text-amber-400 text-3xl sm:text-4xl">{displayBlinds.big}</span>
+                        <span className="font-ds-digital text-amber-400/80 text-2xl sm:text-3xl">Big Blind</span>
+                        <span className="font-ds-digital text-amber-400 text-3xl sm:text-4xl">{displayBlinds.big}</span>
                       </motion.div>
 
                       <div className="h-px bg-amber-400/20 my-4" />
@@ -243,14 +243,14 @@ const BlindTimer: React.FC<BlindTimerProps> = ({
                         animate={{ x: 0, opacity: 1 }}
                         transition={{ delay: 0.5, duration: 0.5 }}
                       >
-                        <span className="font-['DS-DIGI'] text-amber-400/80 text-2xl sm:text-3xl">Ante</span>
-                        <span className="font-['DS-DIGI'] text-amber-400 text-3xl sm:text-4xl">{displayBlinds.ante}</span>
+                        <span className="font-ds-digital text-amber-400/80 text-2xl sm:text-3xl">Ante</span>
+                        <span className="font-ds-digital text-amber-400 text-3xl sm:text-4xl">{displayBlinds.ante}</span>
                       </motion.div>
                     </div>
                   </div>
 
                   <motion.div
-                    className="text-center text-amber-400/60 text-sm sm:text-base font-['DS-DIGI']"
+                    className="text-center text-amber-400/60 text-sm sm:text-base font-ds-digital"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.6, duration: 0.5 }}

@@ -505,15 +505,16 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, players, 
                             justifyContent: 'space-between',
                             alignItems: 'center',
                             gap: '16px',
-                            padding: '1rem'
+                            padding: '10px'
                         }, children: [_jsxs("div", { style: {
                                     display: 'flex',
                                     alignItems: 'center',
                                     gap: '16px'
                                 }, children: [_jsx("h1", { style: {
-                                            fontSize: '32px',
-                                            fontWeight: 'bold',
+                                            fontSize: '2.5em',
+                                            fontFamily: 'DS-DIGI',
                                             color: isPaused ? "red" : "green",
+                                            textShadow: "2px 2px 10px 2px rgba(0, 0, 0, 0.3)",
                                             margin: 0
                                         }, children: isPaused ? "Game Paused" : "Game in Progress" }), _jsx("div", { style: {
                                             display: 'flex',
@@ -521,17 +522,19 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, players, 
                                         }, children: _jsx(Button, { onClick: () => {
                                                 console.log('Opening edit modal');
                                                 setShowEditModal(true);
-                                            }, className: "bg-blue-600 hover:bg-blue-700 text-white font-['DS-DIGI'] text-lg", children: "Edit Game" }) })] }), _jsxs("div", { style: {
+                                            }, className: "bg-blue-600 hover:bg-blue-700 text-white font-['DS-DIGI'] text-lg text-shadow-sm shadow-md border border-slate-500/70 hover:border-slate-900 ", children: "Edit Game" }) })] }), _jsxs("div", { style: {
                                     display: 'flex',
                                     gap: '8px'
-                                }, children: [_jsx(Button, { onClick: () => setShowResetConfirm(true), className: "bg-amber-500 hover:bg-amber-600 text-white font-['DS-DIGI'] text-lg", children: "Reset Game" }), _jsx(Button, { onClick: () => {
+                                }, children: [_jsx(Button, { style: {
+                                            textShadow: "4px 2px 10px 2px rgba(0, 0, 0, 0.3)",
+                                        }, onClick: () => setShowResetConfirm(true), className: "bg-amber-500 hover:bg-amber-600 text-white font-['DS-DIGI'] text-lg  shadow-md border borderslate-200/80 hover:border-amber-600 ", children: "Reset Game" }), _jsx(Button, { onClick: () => {
                                             if (games.filter((game) => !game.outAt).length === 1) {
                                                 setShowEndGameConfirm(true);
                                             }
                                             else {
                                                 toast.error("The game cannot be ended yet as more than one player is still playing.");
                                             }
-                                        }, className: "bg-red-500 hover:bg-red-600 text-white font-['DS-DIGI'] text-lg mr-24", children: "End Game" })] })] }), _jsxs("div", { style: {
+                                        }, className: "bg-red-500 hover:bg-red-600 text-white font-['DS-DIGI'] text-lg mr-32 border border-red-200/80 hover:border-red-600 shadow-sm", children: "End Game" })] })] }), _jsxs("div", { style: {
                             flexGrow: 1,
                             overflowY: 'auto',
                             display: 'flex',
