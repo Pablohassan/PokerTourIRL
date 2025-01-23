@@ -13,7 +13,7 @@ export const PartyPage = () => {
     const [hasMore, setHasMore] = useState(true);
     const [isLoading, setIsLoading] = useState(false);
     const observer = useRef(null);
-    const limit = 15;
+    const limit = 10; // Match backend limit
     useEffect(() => {
         const fetchParties = async () => {
             if (isLoading)
@@ -31,23 +31,22 @@ export const PartyPage = () => {
                     };
                 }));
                 setParties(prevParties => {
-                    // Create a map of existing parties by ID
+                    // Create a map of existing parties by ID to avoid duplicates
                     const existingPartiesMap = new Map(prevParties.map(p => [p.id, p]));
-                    // Add new parties, avoiding duplicates
+                    // Add new parties
                     partiesWithStats.forEach(party => {
-                        if (!existingPartiesMap.has(party.id)) {
-                            existingPartiesMap.set(party.id, party);
-                        }
+                        existingPartiesMap.set(party.id, party);
                     });
                     // Convert map back to array and sort by date (most recent first)
                     return Array.from(existingPartiesMap.values())
                         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
                 });
+                // Update hasMore based on whether we received a full page of results
                 setHasMore(fetchedParties.length === limit);
-                console.log(`Fetched ${partiesWithStats.length} parties`);
             }
             catch (error) {
                 console.error('Error loading parties:', error);
+                toast.error('Failed to load parties');
             }
             finally {
                 setIsLoading(false);
