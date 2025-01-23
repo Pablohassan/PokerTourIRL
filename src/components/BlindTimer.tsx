@@ -70,7 +70,10 @@ const BlindTimer: React.FC<BlindTimerProps> = ({
     isUpdatingRef.current = true;
 
     try {
-      const nextIndex = blindIndex + 1;
+      // Get the current index and calculate next
+      const currentIndex = blindIndex;
+      const nextIndex = currentIndex + 1;
+      console.log('Updating blinds:', { currentIndex, nextIndex });
 
       if (nextIndex >= blinds.length) {
         toast.error("Maximum blind level reached!");
@@ -78,22 +81,24 @@ const BlindTimer: React.FC<BlindTimerProps> = ({
         return;
       }
 
-      nextBlindIndexRef.current = nextIndex;
-
-      // Update blinds immediately
+      // Get the next blind values
       const { small, big, ante } = blinds[nextIndex];
+      console.log('New blind values:', { small, big, ante });
+
+      // Update parent state first
       onBlindChange(small, big, ante);
+      // Then update the index
       setBlindIndex(nextIndex);
+      // Update the ref
+      nextBlindIndexRef.current = nextIndex;
 
       // Show modal and play alert
       setPlayAlert(true);
       setShowModal(true);
 
-      // Set a timeout to close modal and reset timer
       setTimeout(() => {
         setShowModal(false);
         setPlayAlert(false);
-        setTimeLeft(initialTimeLeft);
         isUpdatingRef.current = false;
       }, 5000);
 
@@ -102,24 +107,39 @@ const BlindTimer: React.FC<BlindTimerProps> = ({
       toast.error('Failed to update blinds');
       isUpdatingRef.current = false;
     }
-  }, [blindIndex, blinds.length, onBlindChange, initialTimeLeft, setBlindIndex]);
+  }, [blindIndex, blinds.length, onBlindChange, setBlindIndex]);
+
+  // Effect to sync nextBlindIndexRef with blindIndex
+  useEffect(() => {
+    nextBlindIndexRef.current = blindIndex;
+  }, [blindIndex]);
+
+  // Effect to sync timeLeft with initialTimeLeft
+  useEffect(() => {
+    setTimeLeft(initialTimeLeft);
+  }, [initialTimeLeft]);
 
   // Effect for time updates
   useEffect(() => {
-
-
+    console.log('Timer effect running:', { gameStarted, isPaused });
     let timerId: NodeJS.Timeout | null = null;
 
     const startTimer = () => {
-      if (timerId) return; // Prevent multiple timers
+      console.log('Starting timer');
+      if (timerId) {
+        console.log('Timer already running');
+        return;
+      }
 
       timerId = setInterval(() => {
         setTimeLeft(prevTime => {
+          console.log('Current time:', prevTime);
           const newTime = prevTime - 1;
-          if (newTime <= 0) {
-
+          if (newTime === 0) {
             updateBlinds();
-            return 0;
+          }
+          if (newTime < 0) {
+            return initialTimeLeft;
           }
           return newTime;
         });
@@ -127,8 +147,8 @@ const BlindTimer: React.FC<BlindTimerProps> = ({
     };
 
     const stopTimer = () => {
-
       if (timerId) {
+        console.log('Stopping timer');
         clearInterval(timerId);
         timerId = null;
       }
@@ -141,10 +161,9 @@ const BlindTimer: React.FC<BlindTimerProps> = ({
     }
 
     return () => {
-
       stopTimer();
     };
-  }, [gameStarted, isPaused]); // Remove unnecessary dependencies
+  }, [gameStarted, isPaused, initialTimeLeft]);
 
   // Debug time changes
 
