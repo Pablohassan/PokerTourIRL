@@ -85,8 +85,8 @@ const StartGame: React.FC<StartGameProps> = ({
     setLastUsedPosition,
     initialPlayerCount,
     setInitialPlayerCount,
-    currentBlindDuration,
-    initialGameStatePosted,
+    // currentBlindDuration,
+    // initialGameStatePosted,
   } = useGameState(
     gameStarted,
     setGameStarted,
