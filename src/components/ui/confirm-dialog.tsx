@@ -78,7 +78,7 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
                 "border-2",
                 "backdrop-blur-md",
                 "shadow-lg shadow-black/25",
-                "max-w-[90vw] sm:max-w-[500px]",
+                "max-w-[90vw] sm:max-w-[600px]",
                 "p-6"
             )}>
                 <DialogHeader className="space-y-3">
@@ -107,13 +107,13 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
 
                 <DialogFooter className="flex gap-4 justify-end mt-8">
                     <Button
-                        variant="outline"
+                        variant="default"
                         onClick={onClose}
                         className={cn(
                             "border-2",
                             styles.cancelBtn,
                             "font-['DS-DIGI']",
-                            "text-black",
+                            "text-white",
                             "text-lg",
                             "px-6 py-2",
                             "transition-all duration-200",
@@ -128,7 +128,7 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
                         className={cn(
                             styles.confirmBtn,
                             "font-['DS-DIGI']",
-                            "border border-amber-400/70",
+                            "border border-black",
                             "text-lg",
                             "px-6 py-2",
                             "transition-all duration-200",

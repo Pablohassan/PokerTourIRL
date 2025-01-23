@@ -40,24 +40,25 @@ const GameTimer: React.FC<GameTimerProps> = ({
     )}>
       <CardContent className="p-2 sm:p-2 rounded-2xl">
         {/* Main Grid */}
-        <div className="grid grid-cols-2 [&>*:first-child]:col-span-2 gap-2 sm:gap-3 [&>*:first-child]:min-[900px]:col-span-1 min-[900px]:grid-cols-3">
+        <div className="grid grid-cols-4 [&>*:first-child]:col-span-4 gap-2 sm:gap-3 min-[900px]:grid-cols-8 [&>*:first-child]:min-[900px]:col-span-4 [&>*:not(:first-child)]:min-[900px]:col-span-2">
           {/* Timer Display */}
           <div className={cn(
             "rounded-xl",
+
             "flex flex-col justify-center items-center",
             "border border-slate-200/60",
             "bg-slate-950/95 p-2 sm:p-3",
 
             "shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)]",
-            "min-h-[170px] sm:min-h-[210px]"
+            "min-h-[180px] sm:min-h-[220px]"
           )}>
             <span className="font-['DS-DIGI'] text-amber-400/90 text-3xl sm:text-3xl shadow-md">
               Time Left
             </span>
             <span className={cn(
               "font-['DS-DIGI'] text-amber-400/95",
-              "text-4xl sm:text-7xl min-[900px]:text-9xl",
-
+              "text-4xl sm:text-7xl min-[900px]:text-[170px]",
+              "text-center",
               "tabular-nums tracking-wider"
             )}>
               {formatTime(timeLeft)}
@@ -70,7 +71,7 @@ const GameTimer: React.FC<GameTimerProps> = ({
             "bg-slate-950/90 rounded-xl p-2 sm:p-3",
             "border border-slate-200/60",
             "shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)]",
-            "min-h-[170px] sm:min-h-[210px]"
+            "min-h-[180px] sm:min-h-[220px]"
           )}>
             <div className="space-y-1 sm:space-y-2">
               <div className="flex justify-between items-center">
@@ -95,7 +96,7 @@ const GameTimer: React.FC<GameTimerProps> = ({
             "bg-slate-950/90 rounded-xl p-2 sm:p-3",
             "border border-slate-200/60",
             "shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)]",
-            "min-h-[170px] sm:min-h-[210px]"
+            "min-h-[180px] sm:min-h-[220px]"
           )}>
             <div className="space-y-2 sm:space-y-4">
               <div className="flex justify-between items-center">
