@@ -29,11 +29,11 @@ const BlindTimer: React.FC<BlindTimerProps> = ({
   setBlindIndex,
   initialTimeLeft
 }) => {
-  const [timeLeft, setTimeLeft] = useState(initialTimeLeft);
-  const [playAlert, setPlayAlert] = useState(false);
-  const [showModal, setShowModal] = useState(false);
-  const isUpdatingRef = useRef(false);
-  const nextBlindIndexRef = useRef(blindIndex);
+  const [timeLeft, setTimeLeft] = useState<number>(initialTimeLeft);
+  const [playAlert, setPlayAlert] = useState<boolean>(false);
+  const [showModal, setShowModal] = useState<boolean>(false);
+  const isUpdatingRef = useRef<boolean>(false);
+  const nextBlindIndexRef = useRef<number>(blindIndex);
 
   const blinds = [
     { small: 10, big: 20, ante: 0 },
@@ -62,94 +62,105 @@ const BlindTimer: React.FC<BlindTimerProps> = ({
     { small: 3000, big: 6000, ante: 1000 },
     { small: 3000, big: 6000, ante: 1000 },
     { small: 3000, big: 6000, ante: 1000 },
-  ];
+  ] as const;
 
   const updateBlinds = useCallback(() => {
     if (isUpdatingRef.current) return;
     isUpdatingRef.current = true;
 
     try {
-      // Calculate next blind index
       const nextIndex = blindIndex + 1;
 
-      // Check if we've reached the maximum blind level
       if (nextIndex >= blinds.length) {
         toast.error("Maximum blind level reached!");
         isUpdatingRef.current = false;
         return;
       }
 
-      // Store the next index for use after the modal closes
       nextBlindIndexRef.current = nextIndex;
 
-      // Show the modal with current blinds
+      // Update blinds immediately
+      const { small, big, ante } = blinds[nextIndex];
+      onBlindChange(small, big, ante);
+      setBlindIndex(nextIndex);
+
+      // Show modal and play alert
       setPlayAlert(true);
       setShowModal(true);
 
-      // Reset timer
-      setTimeLeft(initialTimeLeft);
+      // Set a timeout to close modal and reset timer
+      setTimeout(() => {
+        setShowModal(false);
+        setPlayAlert(false);
+        setTimeLeft(initialTimeLeft);
+        isUpdatingRef.current = false;
+      }, 5000);
 
     } catch (error) {
       console.error('Error updating blinds:', error);
       toast.error('Failed to update blinds');
       isUpdatingRef.current = false;
     }
-  }, [blindIndex, blinds.length, initialTimeLeft]);
+  }, [blindIndex, blinds.length, onBlindChange, initialTimeLeft, setBlindIndex]);
 
   // Effect for time updates
   useEffect(() => {
-    let timerId: number | undefined;
+    console.log('Timer Effect - Initial Setup:', { gameStarted, isPaused, timeLeft, initialTimeLeft });
 
-    const updateTimer = () => {
-      if (!gameStarted || isPaused) return;
+    let timerId: NodeJS.Timeout | null = null;
 
-      setTimeLeft(prevTime => {
-        const newTime = prevTime - 1;
-        if (newTime === 0) {
-          updateBlinds();
-          return initialTimeLeft;
-        }
-        return newTime;
-      });
+    const startTimer = () => {
+      if (timerId) return; // Prevent multiple timers
+
+      console.log('Starting new timer with:', { timeLeft, initialTimeLeft });
+
+      timerId = setInterval(() => {
+        setTimeLeft(prevTime => {
+          const newTime = prevTime - 1;
+          console.log('Timer tick:', { prevTime, newTime });
+          if (newTime <= 0) {
+            console.log('Timer reached 0 - Updating blinds');
+            updateBlinds();
+            return 0;
+          }
+          return newTime;
+        });
+      }, 1000);
+    };
+
+    const stopTimer = () => {
+      console.log('Stopping timer');
+      if (timerId) {
+        clearInterval(timerId);
+        timerId = null;
+      }
     };
 
     if (gameStarted && !isPaused) {
-      timerId = window.setInterval(updateTimer, 1000);
+      startTimer();
+    } else {
+      stopTimer();
     }
 
     return () => {
-      if (timerId !== undefined) {
-        window.clearInterval(timerId);
-      }
+      console.log('Cleanup - stopping timer');
+      stopTimer();
     };
-  }, [gameStarted, isPaused, initialTimeLeft, updateBlinds]);
+  }, [gameStarted, isPaused]); // Remove unnecessary dependencies
 
-  // Effect for modal auto-close and blind update
+  // Debug time changes
   useEffect(() => {
-    if (showModal) {
-      const timer = window.setTimeout(() => {
-        // Update the actual blinds when the modal closes
-        const { small, big, ante } = blinds[nextBlindIndexRef.current];
-        onBlindChange(small, big, ante);
-        setBlindIndex(nextBlindIndexRef.current);
+    console.log('Time value changed:', { timeLeft, gameStarted, isPaused });
+  }, [timeLeft, gameStarted, isPaused]);
 
-        setShowModal(false);
-        setPlayAlert(false);
-        isUpdatingRef.current = false;
-      }, 5000);
-
-      return () => window.clearTimeout(timer);
-    }
-  }, [showModal, blinds, onBlindChange, setBlindIndex]);
-
-  // Effect for time change notification
+  // Notify parent of time changes
   useEffect(() => {
-    if (timeLeft !== 0) {
+    if (typeof timeLeft === 'number' && !isNaN(timeLeft)) {
       onTimeChange(timeLeft);
     }
   }, [timeLeft, onTimeChange]);
 
-  // Get the blinds to display (current blinds in the modal)
+  // Get the current blinds to display
   const displayBlinds = blinds[nextBlindIndexRef.current] || blinds[blindIndex];
 
   return (

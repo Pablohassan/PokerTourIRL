@@ -83,6 +83,8 @@ const GameControls: React.FC<GameControlsProps> = ({
           blindIndex={blindIndex}
           setBlindIndex={setBlindIndex}
           initialTimeLeft={initialTimeLeft}
+          timeLeft={timeLeft}
+          setTimeLeft={setTimeLeft}
         />
         <GameTimer
           timeLeft={timeLeft}
