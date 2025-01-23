@@ -54,6 +54,7 @@ const StartGame: React.FC<StartGameProps> = ({
   const [pendingEliminateData, setPendingEliminateData] = useState<{ playerId: number; partyId: number, playerName: string } | null>(null);
   const [showKillerConfirm, setShowKillerConfirm] = useState(false);
   const [pendingKillerId, setPendingKillerId] = useState<number | null>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   const {
     timeLeft,
@@ -159,6 +160,28 @@ const StartGame: React.FC<StartGameProps> = ({
     }
   }, [stateRestored]);
 
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
+  const toggleFullscreen = async () => {
+    try {
+      if (!document.fullscreenElement) {
+        await document.documentElement.requestFullscreen();
+      } else {
+        await document.exitFullscreen();
+      }
+    } catch (error) {
+      console.error('Error toggling fullscreen:', error);
+      toast.error('Failed to toggle fullscreen mode');
+    }
+  };
+
   const handleStartGameConfiguration = (selectedTournament: Tournaments | null, blindDuration: number, selectedPlayers: Player[]) => {
     setSelectedTournament(selectedTournament);
     setBlindDuration(blindDuration);
@@ -167,27 +190,13 @@ const StartGame: React.FC<StartGameProps> = ({
     setShowReview(true);
   };
 
-  const enableFullScreen = async () => {
-    try {
-      if (document.documentElement.requestFullscreen) {
-        await document.documentElement.requestFullscreen();
-      } else if ((document.documentElement as any).webkitRequestFullscreen) {
-        await (document.documentElement as any).webkitRequestFullscreen();
-      } else if ((document.documentElement as any).msRequestFullscreen) {
-        await (document.documentElement as any).msRequestFullscreen();
-      }
-    } catch (error) {
-      console.error('Error enabling fullscreen:', error);
-    }
-  };
-
   const onStartGame = async () => {
     if (gameStarted) {
       toast.error("A game is already in progress.");
       return;
     }
 
-    await enableFullScreen();
+    await toggleFullscreen();
 
     resetGameState();
 
@@ -752,7 +761,7 @@ const StartGame: React.FC<StartGameProps> = ({
             }}>
               <h1
                 style={{
-                  fontSize: '2.5em',
+                  fontSize: '2em',
 
                   fontFamily: 'DS-DIGI',
                   color: isPaused ? "red" : "green",
@@ -781,11 +790,17 @@ const StartGame: React.FC<StartGameProps> = ({
               gap: '8px'
             }}>
               <Button
+                onClick={toggleFullscreen}
+                className="bg-purple-500 hover:bg-purple-600 text-white font-['DS-DIGI'] text-lg shadow-md border border-purple-200/80 hover:border-purple-600"
+              >
+                {isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}
+              </Button>
+              <Button
                 style={{
                   textShadow: "4px 2px 10px 2px rgba(0, 0, 0, 0.3)",
                 }}
                 onClick={() => setShowResetConfirm(true)}
-                className="bg-amber-500 hover:bg-amber-600 text-white font-['DS-DIGI'] text-lg  shadow-md border borderslate-200/80 hover:border-amber-600 "
+                className="bg-amber-500 hover:bg-amber-600 text-white font-['DS-DIGI'] text-lg shadow-md border borderslate-200/80 hover:border-amber-600"
               >
                 Reset Game
               </Button>
