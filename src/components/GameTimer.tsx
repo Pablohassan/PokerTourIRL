@@ -36,9 +36,9 @@ const GameTimer: React.FC<GameTimerProps> = ({
       "border border-slate-200/80",
       "shadow-[0_0_25px_-5px_rgba(245,158,11,0.2)]",
       "overflow-hidden",
-      "min-h-[250px]"
+      "min-h-[260px]"
     )}>
-      <CardContent className="p-2 sm:p-3 rounded-2xl">
+      <CardContent className="p-2 sm:p-2 rounded-2xl">
         {/* Main Grid */}
         <div className="grid grid-cols-2 [&>*:first-child]:col-span-2 gap-2 sm:gap-3 [&>*:first-child]:min-[900px]:col-span-1 min-[900px]:grid-cols-3">
           {/* Timer Display */}
@@ -56,7 +56,7 @@ const GameTimer: React.FC<GameTimerProps> = ({
             </span>
             <span className={cn(
               "font-['DS-DIGI'] text-amber-400/95",
-              "text-4xl sm:text-6xl min-[900px]:text-9xl",
+              "text-4xl sm:text-6xl min-[900px]:text-8xl",
 
               "tabular-nums tracking-wider"
             )}>
@@ -140,7 +140,7 @@ const GameTimer: React.FC<GameTimerProps> = ({
               "rounded-[8px]",
               "bg-amber-500/80 hover:bg-amber-500/20",
               "text-slate-900 hover:text-slate-700",
-              "border border-slate-200/30"
+              "border border-slate-200/60"
             )}
           >
             {isPaused ? 'Resume' : 'Pause'}

@@ -45,7 +45,6 @@ const StartGame: React.FC<StartGameProps> = ({
   const [playerOutGame, setPlayerOutGame] = useState<number | null>(null);
   const [partyId, setPartyId] = useState<number | null>(null);
   const [isEnding, setIsEnding] = useState(false);
-  const initialTimeLeft = blindDuration * 60;
   const [showEditModal, setShowEditModal] = useState(false);
   const [showRebuyConfirm, setShowRebuyConfirm] = useState(false);
   const [pendingRebuyPlayerId, setPendingRebuyPlayerId] = useState<number | null>(null);
@@ -82,17 +81,24 @@ const StartGame: React.FC<StartGameProps> = ({
     loading,
     error,
     setPositions,
-    // outPlayers,
     setOutPlayers,
     setLastUsedPosition,
     initialPlayerCount,
     setInitialPlayerCount,
-  } = useGameState(gameStarted, setGameStarted, selectedPlayers, setSelectedPLayers, blindIndex, setBlindIndex, initialTimeLeft);
+    currentBlindDuration,
+    initialGameStatePosted,
+  } = useGameState(
+    gameStarted,
+    setGameStarted,
+    selectedPlayers,
+    setSelectedPLayers,
+    blindIndex,
+    setBlindIndex,
+    blindDuration  // Pass blindDuration directly instead of initialTimeLeft
+  );
 
-  // Add screen orientation effect here, with other hooks
   useEffect(() => {
     if (gameStarted) {
-      // Lock to portrait orientation if possible
       if ('screen' in window && 'orientation' in screen) {
         (screen.orientation as any).lock?.('portrait').catch((err: Error) => {
           console.error('Failed to lock screen orientation:', err);
@@ -159,7 +165,6 @@ const StartGame: React.FC<StartGameProps> = ({
     setShowReview(true);
   };
 
-  // Add new function to handle fullscreen
   const enableFullScreen = async () => {
     try {
       if (document.documentElement.requestFullscreen) {
@@ -180,7 +185,6 @@ const StartGame: React.FC<StartGameProps> = ({
       return;
     }
 
-    // Enable fullscreen when starting the game
     await enableFullScreen();
 
     resetGameState();
@@ -191,7 +195,6 @@ const StartGame: React.FC<StartGameProps> = ({
     }
 
     try {
-      // First create the player stats
       const playerStatsResponse = await api.post("/playerStats/start", {
         players: selectedPlayers.map((player) => player.id),
       });
@@ -200,27 +203,22 @@ const StartGame: React.FC<StartGameProps> = ({
         throw new Error("Invalid playerStats format in API response.");
       }
 
-      // Update local state with player stats
       const playerStats = playerStatsResponse.data.playerStats;
       const newPartyId = playerStatsResponse.data.partyId;
 
-      // Set party ID first to establish backend connection
       setPartyId(newPartyId);
 
-      // Update local state
       setGames(playerStats);
       setSelectedPLayers(selectedPlayers);
       setInitialPlayerCount(selectedPlayers.length);
 
-      // Calculate initial values
       const initialTotalStack = selectedPlayers.length * 5350;
       const initialPot = selectedPlayers.length * 5;
       setTotalStack(initialTotalStack);
       setPot(initialPot);
 
-      // Create initial game state
       const gameState = {
-        timeLeft: initialTimeLeft,
+        timeLeft: blindDuration * 60,
         smallBlind: 10,
         bigBlind: 20,
         ante: 0,
@@ -236,29 +234,24 @@ const StartGame: React.FC<StartGameProps> = ({
         outPlayers: [],
         lastSavedTime: Date.now(),
         initialPlayerCount: selectedPlayers.length,
-        partyId: newPartyId // Include partyId in the state
+        partyId: newPartyId
       };
 
-      // Post initial state
       await api.post(API_ENDPOINTS.GAME_STATE, {
         state: gameState,
-        partyId: newPartyId // Include partyId in the request
+        partyId: newPartyId
       });
 
-      // Verify state was saved
       const verifyState = await api.get(API_ENDPOINTS.GAME_STATE);
       if (!verifyState.data?.state) {
         throw new Error("Failed to verify game state");
       }
 
-      // Mark state as posted only after verification
       await postInitialGameState();
 
-      // Start the game
       setGameStarted(true);
       toast.success("Game started successfully!");
 
-      // Force a state refresh to ensure sync
       const refreshState = await api.get(API_ENDPOINTS.GAME_STATE);
       if (refreshState.data?.state) {
         setGames(refreshState.data.state.games);
@@ -274,7 +267,6 @@ const StartGame: React.FC<StartGameProps> = ({
         console.error("Unexpected error:", err);
         toast.error("An unexpected error occurred");
       }
-      // Clean up on error
       setGameStarted(false);
       setPartyId(null);
       resetGameState();
@@ -283,7 +275,7 @@ const StartGame: React.FC<StartGameProps> = ({
   };
 
   useEffect(() => {
-    if (gameStarted && !isEnding && timeLeft % 10 === 0) { // Only save every 10 seconds
+    if (gameStarted && !isEnding && timeLeft % 10 === 0) {
       saveGameState(timeLeft);
     }
   }, [gameStarted, timeLeft, isEnding]);
@@ -301,7 +293,6 @@ const StartGame: React.FC<StartGameProps> = ({
   const confirmRebuy = () => {
     if (pendingRebuyPlayerId === null) return;
 
-    // First update the game state for the rebuy
     setGames((prevGames) =>
       prevGames.map((game) =>
         game.playerId === pendingRebuyPlayerId
@@ -317,7 +308,6 @@ const StartGame: React.FC<StartGameProps> = ({
     setPot((prevPot) => prevPot + 4);
     setSavedTotalStack(totalStack);
 
-    // Then trigger killer selection
     setRebuyPlayerId(pendingRebuyPlayerId);
     setKiller(true);
     setPendingRebuyPlayerId(null);
@@ -333,7 +323,6 @@ const StartGame: React.FC<StartGameProps> = ({
     if (!pendingEliminateData) return;
 
     try {
-      // First trigger killer selection
       setPlayerOutGame(pendingEliminateData.playerId);
       setKiller(true);
     } catch (error) {
@@ -348,7 +337,6 @@ const StartGame: React.FC<StartGameProps> = ({
     console.log('handlePlayerKillSelection called with killer:', killerPlayerId);
     if (window.confirm("Do you want to select this player as the killer?")) {
       try {
-        // If this was from an elimination, process the elimination
         if (playerOutGame) {
           console.log('Processing elimination for player:', playerOutGame);
           const gameIndex = games.findIndex((game) => game.playerId === playerOutGame);
@@ -357,67 +345,63 @@ const StartGame: React.FC<StartGameProps> = ({
             const outAt = new Date();
 
             try {
-              // First update backend to ensure data consistency
+              const outPlayersCount = games.filter(g => g.outAt).length;
+              const position = initialPlayerCount - outPlayersCount;
+              const points = outPlayersCount + 1;
+
               const gameResult = await api.put(`/gamesResults/${game.id}`, {
                 ...game,
                 outAt: outAt.toISOString(),
-                position: initialPlayerCount - games.filter(g => g.outAt).length,
-                points: games.filter(g => g.outAt).length + 1
+                position,
+                points
               });
 
-              // Get the party ID from the game result
               const currentPartyId = gameResult.data?.partyId || game.partyId;
 
               await api.put("/playerStats/eliminate", {
                 partyId: currentPartyId,
                 playerId: playerOutGame,
                 eliminatedById: killerPlayerId,
-                points: games.filter(g => g.outAt).length + 1,
-                position: initialPlayerCount - games.filter(g => g.outAt).length
+                points,
+                position
               });
 
-              // Then update local state
               const updatedGames = [...games];
               updatedGames[gameIndex] = {
                 ...game,
                 outAt,
-                position: initialPlayerCount - games.filter(g => g.outAt).length,
-                points: games.filter(g => g.outAt).length + 1
+                position,
+                points
               };
 
-              // Update killer's stats in the same update
               updatedGames.forEach((game, idx) => {
                 if (game.playerId === killerPlayerId) {
                   updatedGames[idx] = {
                     ...game,
-                    kills: game.kills + 1
+                    kills: (game.kills || 0) + 1
                   };
                 }
               });
 
               setGames(updatedGames);
 
-              // Update out players list
               const player = selectedPlayers.find((p) => p.id === playerOutGame);
               if (player) {
                 const playerWithPosition = {
                   ...player,
-                  position: initialPlayerCount - games.filter(g => g.outAt).length,
-                  points: games.filter(g => g.outAt).length + 1
+                  position,
+                  points
                 };
                 setOutPlayers(prev => [...prev, playerWithPosition]);
               }
 
-              // Remove player from selected players
               setSelectedPLayers(prev => prev.filter(p => p.id !== playerOutGame));
 
-              // Update positions
               setPositions(prev => ({
                 ...prev,
-                [playerOutGame]: initialPlayerCount - games.filter(g => g.outAt).length
+                [playerOutGame]: position
               }));
 
-              // Save the game state
               await saveGameState(timeLeft);
 
               toast.success(`Player eliminated and killer's stats updated!`);
@@ -427,16 +411,14 @@ const StartGame: React.FC<StartGameProps> = ({
             }
           }
         } else {
-          // If this was just a rebuy, update killer's stats and save
           setGames((prevGames) =>
             prevGames.map((game) =>
-              game.playerId === killerPlayerId ? { ...game, kills: game.kills + 1 } : game
+              game.playerId === killerPlayerId ? { ...game, kills: (game.kills || 0) + 1 } : game
             )
           );
           await saveGameState(timeLeft);
         }
 
-        // Reset modal state
         setKiller(false);
         setPlayerOutGame(null);
         setRebuyPlayerId(null);
@@ -444,7 +426,6 @@ const StartGame: React.FC<StartGameProps> = ({
       } catch (error) {
         console.error("Error in handlePlayerKillSelection:", error);
         toast.error("Failed to update player stats. Please try again.");
-        // Reset states on error
         setKiller(false);
         setPlayerOutGame(null);
         setRebuyPlayerId(null);
@@ -492,19 +473,15 @@ const StartGame: React.FC<StartGameProps> = ({
     setIsEnding(false);
   };
 
-  // Add new function to handle game state updates
   const handleUpdateGameState = async (updatedGames: PlayerStats[]) => {
     try {
-      // Find players who are being returned to the game
       const returningPlayers = updatedGames.filter(updatedGame => {
         const originalGame = games.find(g => g.playerId === updatedGame.playerId);
         return originalGame?.outAt && !updatedGame.outAt;
       });
 
-      // Update the games state
       setGames(updatedGames);
 
-      // Add returning players back to selectedPlayers if they're not already there
       const updatedSelectedPlayers = [...selectedPlayers];
       returningPlayers.forEach(game => {
         const player = players.find(p => p.id === game.playerId);
@@ -514,14 +491,12 @@ const StartGame: React.FC<StartGameProps> = ({
       });
       setSelectedPLayers(updatedSelectedPlayers);
 
-      // Remove returning players from outPlayers list
       setOutPlayers(prevOutPlayers =>
         prevOutPlayers.filter(player =>
           !returningPlayers.find(game => game.playerId === player.id)
         )
       );
 
-      // Calculate new total stack and pot based on rebuys
       const totalRebuys = updatedGames.reduce((sum, game) => sum + (game.rebuys || 0), 0);
       const newTotalStack = initialPlayerCount * 5350 + (totalRebuys * 5350);
       const newPot = initialPlayerCount * 5 + (totalRebuys * 4);
@@ -529,10 +504,8 @@ const StartGame: React.FC<StartGameProps> = ({
       setTotalStack(newTotalStack);
       setPot(newPot);
 
-      // Save the updated state
       await saveGameState(timeLeft);
 
-      // Update positions for remaining out players
       const remainingOutPlayers = updatedGames.filter(game => game.outAt);
       remainingOutPlayers.sort((a, b) => {
         const dateA = new Date(a.outAt!);
@@ -540,14 +513,12 @@ const StartGame: React.FC<StartGameProps> = ({
         return dateB.getTime() - dateA.getTime();
       });
 
-      // Update positions
       remainingOutPlayers.forEach((game, index) => {
         const position = initialPlayerCount - remainingOutPlayers.length + index + 1;
         game.position = position;
         game.points = remainingOutPlayers.length - index;
       });
 
-      // Save again with updated positions
       await saveGameState(timeLeft);
 
       toast.success("Game state updated successfully!");
@@ -557,7 +528,6 @@ const StartGame: React.FC<StartGameProps> = ({
     }
   };
 
-  // Add debug logging at the start of the render function
   console.log('StartGame render state:', {
     gameStarted,
     showConfig,
@@ -593,14 +563,6 @@ const StartGame: React.FC<StartGameProps> = ({
       </div>
     );
   }
-
-  // Add debug logging before returning the main UI
-  console.log('StartGame main UI render:', {
-    showingConfig: showConfig,
-    showingReview: showReview && !partyId,
-    showingGameModal: gameStarted,
-    hasPlayers: selectedPlayers.length > 0 && games.length > 0
-  });
 
   return (
     <div style={{
@@ -644,11 +606,56 @@ const StartGame: React.FC<StartGameProps> = ({
       <ConfirmDialog
         isOpen={showResetConfirm}
         onClose={() => setShowResetConfirm(false)}
-        onConfirm={() => {
-          resetGameState();
-          setGameStarted(false);
-          setShowConfig(true);
-          toast.success('Game state reset successfully!');
+        onConfirm={async () => {
+          try {
+            // First delete the game state to prevent race conditions
+            try {
+              await api.delete("/gameState");
+              console.log('Game state deleted successfully');
+            } catch (error) {
+              console.error('Error deleting game state:', error);
+              toast.error('Failed to delete game state');
+              return;
+            }
+
+            // Then delete the party if we have a partyId
+            if (partyId) {
+              try {
+                await api.delete(`/parties/${partyId}`);
+                console.log('Party deleted successfully');
+              } catch (error: any) {
+                console.error('Error deleting party:', error);
+                // Continue even if party deletion fails, as game state is already deleted
+                toast.error('Warning: Failed to delete party, but game state was reset');
+              }
+            }
+
+            // Reset all local state
+            resetGameState();
+            setGameStarted(false);
+            setShowConfig(true);
+            setPartyId(null);
+
+            // Verify game state is deleted
+            try {
+              const stateCheck = await api.get("/gameState");
+              if (stateCheck.data?.state) {
+                console.error('Game state still exists after deletion');
+                // Force delete again
+                await api.delete("/gameState");
+              }
+            } catch (error: any) {
+              // 404 is expected here, as the state should be deleted
+              if (error.response?.status !== 404) {
+                console.error('Error verifying game state deletion:', error);
+              }
+            }
+
+            toast.success('Game state reset successfully!');
+          } catch (error: any) {
+            console.error('Error resetting game:', error);
+            toast.error('Failed to reset game state completely');
+          }
         }}
         title="Reset Game"
         description="All game data will be lost. Are you sure?"
@@ -781,7 +788,7 @@ const StartGame: React.FC<StartGameProps> = ({
             overflowY: 'auto',
             display: 'flex',
             flexDirection: 'column',
-            gap: '16px',
+            // gap: '16px',
             backgroundColor: '#ffffff'
           }}>
             <GameControls
@@ -801,7 +808,7 @@ const StartGame: React.FC<StartGameProps> = ({
               setTimeLeft={setTimeLeft}
               blindIndex={blindIndex}
               setBlindIndex={setBlindIndex}
-              initialTimeLeft={timeLeft || initialTimeLeft}
+              initialTimeLeft={timeLeft || blindDuration * 60}
               style={{
                 width: '100%',
                 maxWidth: '100%',

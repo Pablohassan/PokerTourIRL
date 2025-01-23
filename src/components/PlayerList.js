@@ -2,12 +2,6 @@ import { jsxs as _jsxs, jsx as _jsx } from "react/jsx-runtime";
 import { CardPlayer } from "./CardPlayer";
 import { cn } from "../lib/utils";
 const PlayerList = ({ players, games, handleRebuy, handleOutOfGame }) => {
-    console.log('PlayerList render:', {
-        playersCount: players.length,
-        gamesCount: games.length,
-        players,
-        games
-    });
     return (_jsx("div", { className: cn("w-full grid grid-cols-2 sm:grid-cols-3 md:grid-cols-8 lg:grid-cols-8 xl:grid-cols-8", "gap-1 ", "rounded-lg border border-amber-400/10", "shadow-[0_0_25px_-5px_rgba(245,158,11,0.15)]"), children: players.map((player) => {
             const gameForPlayer = games.find((game) => game.playerId === player.id);
             if (!gameForPlayer) {

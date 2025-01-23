@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { Player, PlayerStats } from "./interfaces";
-import { API_ENDPOINTS } from "../config";
 import api from "../api";
 
 const useGameState = (
@@ -10,10 +9,11 @@ const useGameState = (
   setSelectedPlayers: React.Dispatch<React.SetStateAction<Player[]>>,
   blindIndex: number,
   setBlindIndex: React.Dispatch<React.SetStateAction<number>>,
-  initialTimeLeft: number
+  configBlindDuration: number,
 ) => {
-  const [timeLeft, setTimeLeft] = useState<number>(initialTimeLeft);
+  const [timeLeft, setTimeLeft] = useState<number>(configBlindDuration * 60);
   const [smallBlind, setSmallBlind] = useState(10);
+  const [currentBlindDuration, setCurrentBlindDuration] = useState<number>(configBlindDuration);
   const [bigBlind, setBigBlind] = useState(20);
   const [ante, setAnte] = useState(0);
   const [games, setGames] = useState<PlayerStats[]>([]);
@@ -34,7 +34,7 @@ const useGameState = (
   const [lastSaveTime, setLastSaveTime] = useState(0);
 
   const resetGameState = () => {
-    setTimeLeft(initialTimeLeft);
+    setTimeLeft(configBlindDuration * 60);
     setSmallBlind(10);
     setBigBlind(20);
     setAnte(0);
@@ -51,7 +51,8 @@ const useGameState = (
     setOutPlayers([]);
     setLastUsedPosition(0);
     setInitialPlayerCount(0);
-    setStateRestored(false);
+    setCurrentBlindDuration(configBlindDuration);
+    setLastSaveTime(0);
   };
 
   const saveGameState = async (currentTimeLeft: number = timeLeft) => {
@@ -83,13 +84,18 @@ const useGameState = (
       outPlayers,
       lastSavedTime: now,
       initialPlayerCount,
+      currentBlindDuration,
     };
 
     try {
-      const response = await api.post(API_ENDPOINTS.GAME_STATE, { state: gameState });
-      console.log('Game state saved successfully:', response.data);
+      const response = await api.post("/gameState", { state: gameState });
+      if (response.status === 404) {
+        console.log('No game state found (404)');
+        setLoading(false);
+        return;
+      }
     } catch (error) {
-      console.error('Error saving game state:', error);
+      console.error('Error saving game state:', error,);
       setError('Failed to save game state');
     }
   };
@@ -97,7 +103,6 @@ const useGameState = (
   const postInitialGameState = async () => {
     try {
       setLoading(true);
-      // We no longer need to post the state here since it's already posted in onStartGame
       setInitialGameStatePosted(true);
       console.log('Initial game state marked as posted');
       setLoading(false);
@@ -112,7 +117,7 @@ const useGameState = (
   const restoreState = async () => {
     try {
       console.log("Attempting to restore game state...");
-      const response = await api.get(API_ENDPOINTS.GAME_STATE);
+      const response = await api.get("/gameState");
       console.log("Game state response:", response);
 
       if (!response.data?.state) {
@@ -127,26 +132,68 @@ const useGameState = (
       const elapsedTime = (Date.now() - state.lastSavedTime) / 1000;
       const adjustedTimeLeft = Math.max(0, state.timeLeft - elapsedTime);
 
+      // First, process the games to ensure eliminated players are handled correctly
+      const restoredGames = state.games.map((game: PlayerStats) => ({
+        ...game,
+        outAt: game.outAt ? new Date(game.outAt) : null
+      }));
+
+      // Filter out eliminated players from selectedPlayers
+      const activePlayerIds = new Set(
+        restoredGames
+          .filter((game: PlayerStats) => !game.outAt)
+          .map((game: PlayerStats) => game.playerId)
+      );
+
+      const activeSelectedPlayers = state.selectedPlayers.filter((player: Player) =>
+        activePlayerIds.has(player.id)
+      );
+
+      // Process out players
+      const eliminatedGames = restoredGames
+        .filter((game: PlayerStats) => game.outAt)
+        .sort((a: PlayerStats, b: PlayerStats) =>
+          new Date(a.outAt!).getTime() - new Date(b.outAt!).getTime()
+        );
+
+      const restoredOutPlayers = eliminatedGames.map((game: PlayerStats) => {
+        const player = state.selectedPlayers.find((p: Player) => p.id === game.playerId);
+        if (!player) return null;
+        return {
+          ...player,
+          position: game.position,
+          points: game.points
+        };
+      }).filter(Boolean);
+
+      // Restore all state values
       setTimeLeft(Math.floor(adjustedTimeLeft));
       setSmallBlind(state.smallBlind);
       setBigBlind(state.bigBlind);
       setAnte(state.ante);
-      setGames(state.games);
-      setSelectedPlayers(state.selectedPlayers);
+      setGames(restoredGames);
+      setSelectedPlayers(activeSelectedPlayers);
       setTotalStack(state.totalStack);
       setPot(state.pot);
       setRebuyPlayerId(state.rebuyPlayerId);
       setMiddleStack(state.middleStack);
       setBlindIndex(state.blindIndex);
       setPositions(state.positions);
-      setOutPlayers(state.outPlayers);
+      setOutPlayers(restoredOutPlayers);
       setLastUsedPosition(Math.max(...Object.values(state.positions) as number[], 0));
       setGameStarted(true);
       setInitialGameStatePosted(true);
       setInitialPlayerCount(state.initialPlayerCount);
+      setCurrentBlindDuration(state.currentBlindDuration || configBlindDuration);
       setStateRestored(true);
 
-      console.log("Game state restored successfully");
+      console.log("Game state restored successfully", {
+        activePlayerCount: activeSelectedPlayers.length,
+        eliminatedPlayerCount: restoredOutPlayers.length,
+        totalPlayers: state.selectedPlayers.length,
+        timeLeft: adjustedTimeLeft,
+        blindDuration: state.currentBlindDuration || configBlindDuration
+      });
     } catch (error: any) {
       if (error.response?.status === 404) {
         console.log('No game state found (404)');
@@ -193,6 +240,16 @@ const useGameState = (
     }
   }, [totalStack, selectedPlayers.length]);
 
+  // Save game state periodically
+  useEffect(() => {
+    if (gameStarted) {
+      const interval = setInterval(() => {
+        saveGameState(timeLeft);
+      }, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [gameStarted, timeLeft]);
+
   return {
     timeLeft,
     setTimeLeft,
@@ -219,6 +276,8 @@ const useGameState = (
     killer,
     setKiller,
     stateRestored,
+    currentBlindDuration,
+    setCurrentBlindDuration,
     loading,
     error,
     positions,
@@ -229,6 +288,8 @@ const useGameState = (
     setLastUsedPosition,
     initialPlayerCount,
     setInitialPlayerCount,
+    initialGameStatePosted,
+    setInitialGameStatePosted,
   };
 };
 
