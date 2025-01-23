@@ -28,6 +28,6 @@ const GameControls = ({ gameStarted, isPaused, timeLeft, smallBlind, bigBlind, a
                         if (isUpdatingRef.current)
                             return;
                         setTimeLeft(time);
-                    }, blindIndex: blindIndex, setBlindIndex: setBlindIndex, initialTimeLeft: initialTimeLeft }), _jsx(GameTimer, { timeLeft: timeLeft, smallBlind: smallBlind, bigBlind: bigBlind, ante: ante, handleGameEnd: handleGameEnd, isPaused: isPaused, setIsPaused: setIsPaused, totalPot: pot, middleStack: middleStack, formatTime: formatTime })] }) }));
+                    }, blindIndex: blindIndex, setBlindIndex: setBlindIndex, initialTimeLeft: initialTimeLeft, timeLeft: timeLeft, setTimeLeft: setTimeLeft }), _jsx(GameTimer, { timeLeft: timeLeft, smallBlind: smallBlind, bigBlind: bigBlind, ante: ante, handleGameEnd: handleGameEnd, isPaused: isPaused, setIsPaused: setIsPaused, totalPot: pot, middleStack: middleStack, formatTime: formatTime })] }) }));
 };
 export default GameControls;

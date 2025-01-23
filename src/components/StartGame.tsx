@@ -538,15 +538,6 @@ const StartGame: React.FC<StartGameProps> = ({
     }
   };
 
-  console.log('StartGame render state:', {
-    gameStarted,
-    showConfig,
-    showReview,
-    loading,
-    error,
-    selectedPlayers: selectedPlayers.length,
-    games: games.length
-  });
 
   if (loading) {
     return (

@@ -404,15 +404,6 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, players, 
             toast.error("Failed to update game state");
         }
     };
-    console.log('StartGame render state:', {
-        gameStarted,
-        showConfig,
-        showReview,
-        loading,
-        error,
-        selectedPlayers: selectedPlayers.length,
-        games: games.length
-    });
     if (loading) {
         return (_jsx("div", { style: {
                 display: 'flex',
