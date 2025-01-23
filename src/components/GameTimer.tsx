@@ -31,11 +31,12 @@ const GameTimer: React.FC<GameTimerProps> = ({
   return (
     <Card className={cn(
       "w-full max-w-full mx-auto",
-      "bg-gradient-to-b from-slate-950/90 to-slate-800/95 backdrop-blur-md border-amber-400/20",
+      "bg-gradient-to-b from-slate-700/80 via-slate-100/95 to-slate-900/90 backdrop-blur-md border-amber-400/20",
       "rounded-2xl",
+      "border border-slate-200/80",
       "shadow-[0_0_25px_-5px_rgba(245,158,11,0.2)]",
       "overflow-hidden",
-      "min-h-[200px]"
+      "min-h-[250px]"
     )}>
       <CardContent className="p-2 sm:p-3 rounded-2xl">
         {/* Main Grid */}
@@ -44,17 +45,19 @@ const GameTimer: React.FC<GameTimerProps> = ({
           <div className={cn(
             "rounded-xl",
             "flex flex-col justify-center items-center",
-            "bg-slate-950/90 p-2 sm:p-3",
-            "border border-amber-400/20",
+            "border border-slate-200/60",
+            "bg-slate-950/95 p-2 sm:p-3",
+
             "shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)]",
-            "min-h-[120px] sm:min-h-[160px]"
+            "min-h-[150px] sm:min-h-[200px]"
           )}>
-            <span className="font-['DS-DIGI'] text-amber-400/80 text-2xl sm:text-3xl mb-1">
+            <span className="font-['DS-DIGI'] text-amber-400/90 text-3xl sm:text-3xl mb-1">
               Time Left
             </span>
             <span className={cn(
-              "font-['DS-DIGI'] text-amber-400",
-              "text-4xl sm:text-6xl min-[900px]:text-7xl",
+              "font-['DS-DIGI'] text-amber-400/95",
+              "text-4xl sm:text-6xl min-[900px]:text-9xl",
+
               "tabular-nums tracking-wider"
             )}>
               {formatTime(timeLeft)}
@@ -65,23 +68,23 @@ const GameTimer: React.FC<GameTimerProps> = ({
           <div className={cn(
             "flex flex-col justify-between",
             "bg-slate-950/90 rounded-xl p-2 sm:p-3",
-            "border border-amber-400/20",
+            "border border-slate-200/60",
             "shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)]",
-            "min-h-[120px] sm:min-h-[160px]"
+            "min-h-[150px] sm:min-h-[200px]"
           )}>
             <div className="space-y-1 sm:space-y-2">
               <div className="flex justify-between items-center">
-                <span className="font-['DS-DIGI'] text-amber-400/80 text-xl sm:text-2xl">Small</span>
-                <span className="font-['DS-DIGI'] text-amber-400 text-2xl sm:text-4xl">{smallBlind}</span>
+                <span className="font-['DS-DIGI'] text-amber-400/90 text-xl sm:text-3xl">Small</span>
+                <span className="font-['DS-DIGI'] text-amber-400/95 text-2xl sm:text-5xl">{smallBlind}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="font-['DS-DIGI'] text-amber-400/80 text-xl sm:text-2xl">Big</span>
-                <span className="font-['DS-DIGI'] text-amber-400 text-2xl sm:text-4xl">{bigBlind}</span>
+                <span className="font-['DS-DIGI'] text-amber-400/90 text-xl sm:text-3xl">Big</span>
+                <span className="font-['DS-DIGI'] text-amber-400/95 text-2xl sm:text-5xl">{bigBlind}</span>
               </div>
               <div className="h-px bg-amber-400/20 my-1 sm:my-2" />
               <div className="flex justify-between items-center">
-                <span className="font-['DS-DIGI'] text-amber-400/80 text-xl sm:text-2xl">Ante</span>
-                <span className="font-['DS-DIGI'] text-amber-400 text-2xl sm:text-4xl">{ante}</span>
+                <span className="font-['DS-DIGI'] text-amber-400/90 text-xl sm:text-3xl">Ante</span>
+                <span className="font-['DS-DIGI'] text-amber-400/95 text-2xl sm:text-5xl">{ante}</span>
               </div>
             </div>
           </div>
@@ -90,17 +93,17 @@ const GameTimer: React.FC<GameTimerProps> = ({
           <div className={cn(
             "flex flex-col justify-between",
             "bg-slate-950/90 rounded-xl p-2 sm:p-3",
-            "border border-amber-400/20",
+            "border border-slate-200/60",
             "shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)]",
-            "min-h-[120px] sm:min-h-[160px]"
+            "min-h-[150px] sm:min-h-[200px]"
           )}>
             <div className="space-y-2 sm:space-y-4">
               <div className="flex justify-between items-center">
-                <span className="font-['DS-DIGI'] text-amber-400/80 text-xl sm:text-2xl">Pot</span>
+                <span className="font-['DS-DIGI'] text-amber-400/90 text-xl sm:text-2xl">Pot</span>
                 <span className="font-['DS-DIGI'] text-amber-400 text-2xl sm:text-4xl">{totalPot}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="font-['DS-DIGI'] text-amber-400/80 text-xl sm:text-2xl">M-Stack</span>
+                <span className="font-['DS-DIGI'] text-amber-400/90 text-xl sm:text-2xl">M-Stack</span>
                 <span className="font-['DS-DIGI'] text-amber-400 text-2xl sm:text-4xl">{middleStack}</span>
               </div>
             </div>
@@ -108,7 +111,7 @@ const GameTimer: React.FC<GameTimerProps> = ({
         </div>
 
         {/* Control Buttons */}
-        <div className="flex justify-center gap-2 mt-2 pt-2 border-t border-amber-400/20">
+        <div className="flex justify-center gap-2 mt-2 pt-2 border-t border-slate-100/30">
           {/* <Button
             variant="destructive"
             size="lg"
@@ -129,12 +132,15 @@ const GameTimer: React.FC<GameTimerProps> = ({
             onClick={() => setIsPaused(!isPaused)}
             className={cn(
               "font-['DS-DIGI'] text-base sm:text-lg",
-              "px-4 sm:px-6",
+              "px-4 sm:px-8",
+              "text-2xl",
+              "font-bold",
+              "text-shadow-lg",
               "h-8 sm:h-10",
-              "rounded-xl",
+              "rounded-[8px]",
               "bg-amber-500/80 hover:bg-amber-500/20",
               "text-slate-900 hover:text-slate-700",
-              "border border-amber-400/20"
+              "border border-slate-200/30"
             )}
           >
             {isPaused ? 'Resume' : 'Pause'}
