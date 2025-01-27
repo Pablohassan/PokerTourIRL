@@ -31,10 +31,12 @@ const BlindTimer: React.FC<BlindTimerProps> = ({
 }) => {
   // @ts-ignore - Local state needed for immediate updates while staying in sync with parent
   const [timeLeft, setTimeLeft] = useState<number>(initialTimeLeft);
-  const [playAlert, setPlayAlert] = useState<boolean>(false);
   const [showModal, setShowModal] = useState<boolean>(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const isUpdatingRef = useRef<boolean>(false);
   const nextBlindIndexRef = useRef<number>(blindIndex);
+  const isInitialMount = useRef(true);
+  const wakeLockRef = useRef<any>(null);
 
   const blinds = [
     { small: 10, big: 20, ante: 0 },
@@ -57,20 +59,119 @@ const BlindTimer: React.FC<BlindTimerProps> = ({
     { small: 1600, big: 3200, ante: 400 },
     { small: 1800, big: 3600, ante: 400 },
     { small: 2000, big: 4000, ante: 500 },
+    { small: 2200, big: 4400, ante: 500 },
     { small: 2500, big: 5000, ante: 500 },
     { small: 3000, big: 6000, ante: 1000 },
-    { small: 3000, big: 6000, ante: 1000 },
-    { small: 3000, big: 6000, ante: 1000 },
-    { small: 3000, big: 6000, ante: 1000 },
-    { small: 3000, big: 6000, ante: 1000 },
+    { small: 3500, big: 7000, ante: 1000 },
+    { small: 4000, big: 8000, ante: 2000 },
+    { small: 5000, big: 10000, ante: 2000 },
+    { small: 6000, big: 12000, ante: 3000 },
+    { small: 7000, big: 14000, ante: 3000 },
+    { small: 8000, big: 16000, ante: 4000 },
+    { small: 9000, big: 18000, ante: 4000 },
+    { small: 10000, big: 20000, ante: 5000 },
   ] as const;
+
+  // Initialize audio on component mount
+  useEffect(() => {
+    audioRef.current = new Audio(alerteSon);
+    // Preload the audio
+    audioRef.current.load();
+    // Set audio properties
+    audioRef.current.volume = 1.0;
+
+    // Add click listener to document to enable audio
+    const enableAudio = () => {
+      if (audioRef.current) {
+        // Create and immediately pause a play promise
+        audioRef.current.play().then(() => {
+          audioRef.current?.pause();
+          audioRef.current!.currentTime = 0;
+        }).catch(() => {
+          // Ignore error - this is just for enabling audio
+        });
+      }
+    };
+
+    document.addEventListener('click', enableAudio, { once: true });
+
+    return () => {
+      document.removeEventListener('click', enableAudio);
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, []);
+
+  // Effect to handle sound playing when modal shows
+  useEffect(() => {
+    if (showModal && audioRef.current) {
+      console.log('Attempting to play sound...');
+      audioRef.current.currentTime = 0;
+      audioRef.current.play()
+        .then(() => {
+          console.log('Sound playing successfully');
+        })
+        .catch(error => {
+          console.warn('Could not play sound:', error);
+        });
+    }
+  }, [showModal]);
+
+  // Initialize Screen Wake Lock
+  useEffect(() => {
+    const requestWakeLock = async () => {
+      try {
+        if ('wakeLock' in navigator && gameStarted && !isPaused) {
+          wakeLockRef.current = await navigator.wakeLock.request('screen');
+          console.log('Wake Lock is active');
+        }
+      } catch (err) {
+        console.log('Wake Lock request failed:', err);
+      }
+    };
+
+    const releaseWakeLock = async () => {
+      if (wakeLockRef.current) {
+        try {
+          await wakeLockRef.current.release();
+          wakeLockRef.current = null;
+          console.log('Wake Lock released');
+        } catch (err) {
+          console.log('Wake Lock release failed:', err);
+        }
+      }
+    };
+
+    // Request wake lock when game starts
+    if (gameStarted && !isPaused) {
+      requestWakeLock();
+    } else {
+      releaseWakeLock();
+    }
+
+    // Re-request wake lock on visibility change
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && gameStarted && !isPaused) {
+        requestWakeLock();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // Cleanup
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      releaseWakeLock();
+    };
+  }, [gameStarted, isPaused]);
 
   const updateBlinds = useCallback(() => {
     if (isUpdatingRef.current) return;
     isUpdatingRef.current = true;
 
     try {
-      // Get the current index and calculate next
       const currentIndex = blindIndex;
       const nextIndex = currentIndex + 1;
       console.log('Updating blinds:', { currentIndex, nextIndex });
@@ -81,26 +182,19 @@ const BlindTimer: React.FC<BlindTimerProps> = ({
         return;
       }
 
-      // Get the next blind values
       const { small, big, ante } = blinds[nextIndex];
       console.log('New blind values:', { small, big, ante });
 
-      // Update parent state first
       onBlindChange(small, big, ante);
-      // Then update the index
       setBlindIndex(nextIndex);
-      // Update the ref
       nextBlindIndexRef.current = nextIndex;
 
-      // Show modal and play alert
-      setPlayAlert(true);
       setShowModal(true);
 
       setTimeout(() => {
         setShowModal(false);
-        setPlayAlert(false);
         isUpdatingRef.current = false;
-      }, 5000);
+      }, 8000);
 
     } catch (error) {
       console.error('Error updating blinds:', error);
@@ -165,7 +259,19 @@ const BlindTimer: React.FC<BlindTimerProps> = ({
     };
   }, [gameStarted, isPaused, initialTimeLeft]);
 
-  // Debug time changes
+  // Effect to handle sound and modal on game state restoration
+  useEffect(() => {
+    // Skip on initial mount
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+
+    // If we're restoring state and timeLeft is 0, trigger sound and modal
+    if (gameStarted && timeLeft === 0 && !isUpdatingRef.current) {
+      setShowModal(true);
+    }
+  }, [gameStarted, timeLeft]);
 
   // Notify parent of time changes
   useEffect(() => {
@@ -179,10 +285,9 @@ const BlindTimer: React.FC<BlindTimerProps> = ({
 
   return (
     <>
-      {playAlert && <audio src={alerteSon} autoPlay />}
       <AnimatePresence>
         {showModal && (
-          <Dialog open={showModal} onOpenChange={setShowModal}>
+          <Dialog open={showModal} onOpenChange={setShowModal} >
             <DialogContent className={cn(
               "bg-zinc-950/95 border-amber-500/50",
               "backdrop-blur-lg",

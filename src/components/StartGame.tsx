@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api";
 import GameConfiguration from './GameConfiguration';
@@ -56,6 +56,40 @@ const StartGame: React.FC<StartGameProps> = ({
   const [pendingKillerId, setPendingKillerId] = useState<number | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
+  const blinds = [
+    { small: 10, big: 20, ante: 0 },
+    { small: 25, big: 50, ante: 0 },
+    { small: 50, big: 100, ante: 0 },
+    { small: 100, big: 200, ante: 0 },
+    { small: 150, big: 300, ante: 0 },
+    { small: 200, big: 400, ante: 10 },
+    { small: 250, big: 500, ante: 10 },
+    { small: 300, big: 600, ante: 25 },
+    { small: 400, big: 800, ante: 25 },
+    { small: 500, big: 1000, ante: 50 },
+    { small: 600, big: 1200, ante: 50 },
+    { small: 700, big: 1400, ante: 100 },
+    { small: 800, big: 1600, ante: 100 },
+    { small: 900, big: 1800, ante: 200 },
+    { small: 1000, big: 2000, ante: 200 },
+    { small: 1200, big: 2400, ante: 300 },
+    { small: 1400, big: 2800, ante: 300 },
+    { small: 1600, big: 3200, ante: 400 },
+    { small: 1800, big: 3600, ante: 400 },
+    { small: 2000, big: 4000, ante: 500 },
+    { small: 2200, big: 4400, ante: 500 },
+    { small: 2500, big: 5000, ante: 500 },
+    { small: 3000, big: 6000, ante: 1000 },
+    { small: 3500, big: 7000, ante: 1000 },
+    { small: 4000, big: 8000, ante: 2000 },
+    { small: 5000, big: 10000, ante: 2000 },
+    { small: 6000, big: 12000, ante: 3000 },
+    { small: 7000, big: 14000, ante: 3000 },
+    { small: 8000, big: 16000, ante: 4000 },
+    { small: 9000, big: 18000, ante: 4000 },
+    { small: 10000, big: 20000, ante: 5000 },
+  ] as const;
+
   const {
     timeLeft,
     setTimeLeft,
@@ -80,7 +114,8 @@ const StartGame: React.FC<StartGameProps> = ({
     killer,
     setKiller,
     stateRestored,
-    postInitialGameState,
+    currentBlindDuration,
+    setCurrentBlindDuration,
     loading,
     error,
     setPositions,
@@ -88,8 +123,7 @@ const StartGame: React.FC<StartGameProps> = ({
     setLastUsedPosition,
     initialPlayerCount,
     setInitialPlayerCount,
-    // currentBlindDuration,
-    // initialGameStatePosted,
+    postInitialGameState,
   } = useGameState(
     gameStarted,
     setGameStarted,
@@ -97,8 +131,34 @@ const StartGame: React.FC<StartGameProps> = ({
     setSelectedPLayers,
     blindIndex,
     setBlindIndex,
-    blindDuration  // Pass blindDuration directly instead of initialTimeLeft
+    blindDuration
   );
+
+  const updateBlinds = useCallback(() => {
+    try {
+      const nextIndex = blindIndex + 1;
+      if (nextIndex >= blinds.length) {
+        toast.error("Maximum blind level reached!");
+        return;
+      }
+
+      const { small, big, ante } = blinds[nextIndex];
+      setSmallBlind(small);
+      setBigBlind(big);
+      setAnte(ante);
+      setBlindIndex(nextIndex);
+      toast.success("Blinds updated successfully!");
+    } catch (error) {
+      console.error('Error updating blinds:', error);
+      toast.error('Failed to update blinds');
+    }
+  }, [blindIndex, setSmallBlind, setBigBlind, setAnte, setBlindIndex]);
+
+  useEffect(() => {
+    if (stateRestored && currentBlindDuration) {
+      setBlindDuration(currentBlindDuration);
+    }
+  }, [stateRestored, currentBlindDuration]);
 
   useEffect(() => {
     if (gameStarted) {
@@ -198,7 +258,7 @@ const StartGame: React.FC<StartGameProps> = ({
 
     await toggleFullscreen();
 
-    resetGameState();
+    resetGameState(blindDuration);
 
     if (selectedPlayers.length < 4) {
       toast.error("You need at least 4 players to start a game.");
@@ -245,7 +305,8 @@ const StartGame: React.FC<StartGameProps> = ({
         outPlayers: [],
         lastSavedTime: Date.now(),
         initialPlayerCount: selectedPlayers.length,
-        partyId: newPartyId
+        partyId: newPartyId,
+        currentBlindDuration: blindDuration,
       };
 
       await api.post(API_ENDPOINTS.GAME_STATE, {
@@ -591,6 +652,20 @@ const StartGame: React.FC<StartGameProps> = ({
         selectedPlayers={selectedPlayers}
         players={players}
         onUpdateStats={handleUpdateGameState}
+        blindIndex={blindIndex}
+        setBlindIndex={setBlindIndex}
+        timeLeft={timeLeft}
+        setTimeLeft={setTimeLeft}
+        currentBlindDuration={currentBlindDuration}
+        setCurrentBlindDuration={setCurrentBlindDuration}
+        smallBlind={smallBlind}
+        bigBlind={bigBlind}
+        ante={ante}
+        setSmallBlind={setSmallBlind}
+        setBigBlind={setBigBlind}
+        setAnte={setAnte}
+        isPaused={isPaused}
+        setIsPaused={setIsPaused}
       />
 
       <KillerSelectionModal
@@ -783,6 +858,13 @@ const StartGame: React.FC<StartGameProps> = ({
                 >
                   Edit Game
                 </Button>
+                <Button
+                  onClick={updateBlinds}
+                  className="bg-amber-500 hover:bg-amber-600 text-white font-['DS-DIGI'] text-lg shadow-md border border-amber-200/80 hover:border-amber-600"
+                  disabled={!gameStarted || blindIndex >= blinds.length - 1}
+                >
+                  Next Blind Level
+                </Button>
               </div>
             </div>
             <div style={{
@@ -844,7 +926,7 @@ const StartGame: React.FC<StartGameProps> = ({
               setTimeLeft={setTimeLeft}
               blindIndex={blindIndex}
               setBlindIndex={setBlindIndex}
-              initialTimeLeft={timeLeft || blindDuration * 60}
+              initialTimeLeft={timeLeft || currentBlindDuration * 60}
               style={{
                 width: '100%',
                 maxWidth: '100%',
