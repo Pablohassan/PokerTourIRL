@@ -13,7 +13,7 @@ import { API_ENDPOINTS } from '../config';
 import EditGameStateModal from './EditGameStateModal';
 import { Button } from "./ui/button";
 import ConfirmDialog from "./ui/confirm-dialog";
-const StartGame = ({ outPlayers, championnat, selectedPlayers, setSelectedPLayers, players, updateAfterGameEnd, blindIndex, setBlindIndex }) => {
+const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, players, updateAfterGameEnd, blindIndex, setBlindIndex }) => {
     const navigate = useNavigate();
     const [gameStarted, setGameStarted] = useState(false);
     const [showReview, setShowReview] = useState(false);
@@ -598,7 +598,7 @@ const StartGame = ({ outPlayers, championnat, selectedPlayers, setSelectedPLayer
                             flexDirection: 'column',
                             // gap: '16px',
                             backgroundColor: '#ffffff'
-                        }, children: [_jsx(GameControls, { gameStarted: gameStarted, isPaused: isPaused, timeLeft: timeLeft, smallBlind: smallBlind, bigBlind: bigBlind, ante: ante, handleGameEnd: handleGameEnd, setIsPaused: setIsPaused, pot: pot, middleStack: middleStack, setSmallBlind: setSmallBlind, setBigBlind: setBigBlind, setAnte: setAnte, setTimeLeft: setTimeLeft, blindIndex: blindIndex, setBlindIndex: setBlindIndex, initialTimeLeft: timeLeft || currentBlindDuration * 60, outPlayers: outPlayers, style: {
+                        }, children: [_jsx(GameControls, { gameStarted: gameStarted, isPaused: isPaused, timeLeft: timeLeft, smallBlind: smallBlind, bigBlind: bigBlind, ante: ante, handleGameEnd: handleGameEnd, setIsPaused: setIsPaused, pot: pot, middleStack: middleStack, setSmallBlind: setSmallBlind, setBigBlind: setBigBlind, setAnte: setAnte, setTimeLeft: setTimeLeft, blindIndex: blindIndex, setBlindIndex: setBlindIndex, initialTimeLeft: timeLeft || currentBlindDuration * 60, style: {
                                     width: '100%',
                                     maxWidth: '100%',
                                     position: 'sticky',

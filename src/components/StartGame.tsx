@@ -16,7 +16,6 @@ import ConfirmDialog from "./ui/confirm-dialog";
 
 interface StartGameProps {
   players: Player[];
-  outPlayers: Player[];
   handlePlayerSelect: (playerId: number) => void;
   selectedPlayers: Player[];
   setSelectedPLayers: React.Dispatch<React.SetStateAction<Player[]>>;
@@ -28,7 +27,6 @@ interface StartGameProps {
 }
 
 const StartGame: React.FC<StartGameProps> = ({
-  outPlayers,
   championnat,
   selectedPlayers,
   setSelectedPLayers,
@@ -929,7 +927,6 @@ const StartGame: React.FC<StartGameProps> = ({
               blindIndex={blindIndex}
               setBlindIndex={setBlindIndex}
               initialTimeLeft={timeLeft || currentBlindDuration * 60}
-              outPlayers={outPlayers}
               style={{
                 width: '100%',
                 maxWidth: '100%',

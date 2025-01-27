@@ -1,9 +1,8 @@
-import React, { useRef, useState, useEffect } from "react";
+import React from "react";
 import { Card, CardContent } from "./ui/card";
 import { Button } from "./ui/button";
 import { cn } from "../lib/utils";
-import { Player } from "./interfaces";
-import { AnimatePresence, motion } from "framer-motion";
+
 
 interface GameTimerProps {
   formatTime: (time: number) => string;
@@ -16,7 +15,6 @@ interface GameTimerProps {
   handleGameEnd: () => void;
   isPaused: boolean;
   setIsPaused: React.Dispatch<React.SetStateAction<boolean>>;
-  outPlayers?: Player[];
 }
 
 const GameTimer: React.FC<GameTimerProps> = ({
@@ -29,20 +27,8 @@ const GameTimer: React.FC<GameTimerProps> = ({
   // handleGameEnd,
   isPaused,
   setIsPaused,
-  ante,
-  outPlayers = []
+  ante
 }) => {
-  const [showOutPlayers, setShowOutPlayers] = useState(false);
-  const intervalRef = useRef<NodeJS.Timeout>();
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setShowOutPlayers(prev => !prev);
-    }, 30000);
-
-    return () => clearInterval(interval);
-  }, [outPlayers]);
-
   const handleClick = () => {
     // Add vibration feedback (50ms)
     if (navigator.vibrate) {
@@ -50,9 +36,6 @@ const GameTimer: React.FC<GameTimerProps> = ({
     }
     setIsPaused(!isPaused);
   };
-
-  console.log('OutPlayers:', outPlayers);
-  console.log('ShowOutPlayers:', showOutPlayers);
 
   return (
     <Card className={cn(
@@ -129,44 +112,9 @@ const GameTimer: React.FC<GameTimerProps> = ({
                 <span className="font-['DS-DIGI'] text-amber-400/90 text-xl sm:text-2xl">Pot</span>
                 <span className="font-['DS-DIGI'] text-amber-400 text-2xl sm:text-4xl">{totalPot}</span>
               </div>
-              <div className="flex justify-between items-center relative">
+              <div className="flex justify-between items-center">
                 <span className="font-['DS-DIGI'] text-amber-400/90 text-xl sm:text-2xl">M-Stack</span>
-                <div className="relative">
-                  <span className="font-['DS-DIGI'] text-amber-400 text-2xl sm:text-4xl">
-                    {middleStack}
-                  </span>
-
-                  <AnimatePresence>
-                    {showOutPlayers && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        className="absolute top-full right-0 mt-2 w-48 bg-slate-950/95 rounded-lg shadow-xl border border-amber-500/20 z-50"
-                      >
-                        <div className="p-2 max-h-40 overflow-y-auto">
-                          <h4 className="font-['DS-DIGI'] text-amber-400 text-sm mb-1">
-                            Eliminated Players:
-                          </h4>
-                          {outPlayers.length > 0 ? (
-                            outPlayers.map(player => (
-                              <div
-                                key={player.id}
-                                className="text-amber-400/80 font-['DS-DIGI'] text-xs py-1 border-b border-amber-500/10"
-                              >
-                                {player.name}
-                              </div>
-                            ))
-                          ) : (
-                            <div className="text-amber-400/50 font-['DS-DIGI'] text-xs py-1 italic">
-                              No players eliminated yet
-                            </div>
-                          )}
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
+                <span className="font-['DS-DIGI'] text-amber-400 text-2xl sm:text-4xl">{middleStack}</span>
               </div>
             </div>
           </div>
