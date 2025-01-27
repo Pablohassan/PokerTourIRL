@@ -38,8 +38,6 @@ const EditGameStateModal: React.FC<EditGameStateModalProps> = ({
     setBlindIndex,
     timeLeft,
     setTimeLeft,
-    currentBlindDuration,
-    setCurrentBlindDuration,
     smallBlind,
     bigBlind,
     ante,

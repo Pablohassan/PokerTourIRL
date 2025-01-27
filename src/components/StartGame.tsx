@@ -875,7 +875,7 @@ const StartGame: React.FC<StartGameProps> = ({
                 onClick={toggleFullscreen}
                 className="bg-purple-500 hover:bg-purple-600 text-white font-['DS-DIGI'] text-lg shadow-md border border-purple-200/80 hover:border-purple-600"
               >
-                {isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}
+                {isFullscreen ? 'Fullscreen OFF' : 'Fullscreen ON'}
               </Button>
               <Button
                 style={{

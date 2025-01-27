@@ -3,7 +3,7 @@ import React, { useEffect } from 'react';
 import { Button } from "./ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 import { cn } from "../lib/utils";
-const EditGameStateModal = ({ isOpen, onClose, games, selectedPlayers, players, onUpdateStats, blindIndex, setBlindIndex, timeLeft, setTimeLeft, currentBlindDuration, setCurrentBlindDuration, smallBlind, bigBlind, ante, setSmallBlind, setBigBlind, setAnte, isPaused, setIsPaused, }) => {
+const EditGameStateModal = ({ isOpen, onClose, games, selectedPlayers, players, onUpdateStats, blindIndex, setBlindIndex, timeLeft, setTimeLeft, smallBlind, bigBlind, ante, setSmallBlind, setBigBlind, setAnte, isPaused, setIsPaused, }) => {
     const [editedGames, setEditedGames] = React.useState(games);
     const [editedTimeLeft, setEditedTimeLeft] = React.useState(Math.floor(timeLeft / 60));
     const wasPausedRef = React.useRef(isPaused);

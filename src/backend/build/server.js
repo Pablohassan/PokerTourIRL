@@ -541,70 +541,53 @@ app.put("/parties/:id", async (req, res) => {
             .json({ error: "An error occurred while updating the party date" });
     }
 });
+// sais pas comment ça fonctionne
 app.put("/playerStats/eliminate", async (req, res) => {
-    const { playerId, eliminatedById, partyId, points, position } = req.body;
-    if (!playerId || !partyId) {
-        return res
-            .status(400)
-            .json({ error: "Player ID and Party ID are required" });
+    const { playerId, eliminatedById, partyId } = req.body;
+    if (!playerId) {
+        return res.status(400).json({ error: "Player ID is required" });
     }
-    try {
-        const playerStatRecord = await prisma.playerStats.findFirst({
-            where: {
-                playerId: playerId,
-                partyId: partyId,
-            },
+    const playerStatRecord = await prisma.playerStats.findFirst({
+        where: {
+            playerId: playerId,
+            partyId: partyId,
+        },
+    });
+    if (!playerStatRecord) {
+        return res
+            .status(404)
+            .json({ error: `PlayerStats record with ID ${playerId} not found` });
+    }
+    // Database transaction ensures that if one operation fails, all fail (for data consistency)
+    const updatedStats = await prisma.$transaction(async (prisma) => {
+        // Mark the player as eliminated (out)
+        const updatedPlayerStat = await prisma.playerStats.update({
+            where: { id: playerStatRecord.id },
+            data: { outAt: new Date() },
         });
-        if (!playerStatRecord) {
-            return res.status(404).json({
-                error: `PlayerStats record not found for player ${playerId} in party ${partyId}`,
-            });
-        }
-        // Database transaction ensures that if one operation fails, all fail (for data consistency)
-        const updatedStats = await prisma.$transaction(async (prisma) => {
-            // Mark the player as eliminated (out) with points and position
-            const updatedPlayerStat = await prisma.playerStats.update({
-                where: { id: playerStatRecord.id },
-                data: {
-                    outAt: new Date(),
-                    points: points || 0,
-                    position: position || 0,
+        // If a killer (eliminator) is provided, increase their kill count
+        if (eliminatedById) {
+            const killerStats = await prisma.playerStats.findFirst({
+                where: {
+                    playerId: eliminatedById,
+                    // Add more conditions if necessary, e.g. partyId
                 },
             });
-            // If a killer (eliminator) is provided, increase their kill count
-            if (eliminatedById) {
-                const killerStats = await prisma.playerStats.findFirst({
-                    where: {
-                        playerId: eliminatedById,
-                        partyId: partyId,
-                    },
-                });
-                if (!killerStats) {
-                    throw new Error(`Killer stats not found for player ${eliminatedById} in party ${partyId}`);
-                }
-                await prisma.playerStats.update({
-                    where: {
-                        id: killerStats.id,
-                    },
-                    data: {
-                        kills: (killerStats.kills || 0) + 1,
-                    },
-                });
+            if (!killerStats) {
+                throw new Error("Killer stats not found");
             }
-            return updatedPlayerStat;
-        });
-        res.json({
-            message: "Player stats updated successfully",
-            updatedStats,
-        });
-    }
-    catch (error) {
-        console.error("Error in playerStats/eliminate:", error);
-        res.status(500).json({
-            error: "Failed to update player stats",
-            details: error.message,
-        });
-    }
+            await prisma.playerStats.update({
+                where: {
+                    id: killerStats.id,
+                },
+                data: {
+                    kills: killerStats.kills + 1,
+                },
+            });
+        }
+        return updatedPlayerStat;
+    });
+    res.json({ message: "Player stats updated successfully", updatedStats });
 });
 app.put("/playerStats/out/:playerId", async (req, res) => {
     const { playerId } = req.params;
