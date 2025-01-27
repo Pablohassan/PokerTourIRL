@@ -1,5 +1,5 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api";
 import GameConfiguration from './GameConfiguration';
@@ -34,11 +34,64 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, players, 
     const [showKillerConfirm, setShowKillerConfirm] = useState(false);
     const [pendingKillerId, setPendingKillerId] = useState(null);
     const [isFullscreen, setIsFullscreen] = useState(false);
-    const { timeLeft, setTimeLeft, smallBlind, setSmallBlind, bigBlind, setBigBlind, ante, setAnte, games, setGames, pot, setPot, middleStack, setSavedTotalStack, totalStack, setTotalStack, saveGameState, resetGameState, rebuyPlayerId, setRebuyPlayerId, killer, setKiller, stateRestored, postInitialGameState, loading, error, setPositions, setOutPlayers, setLastUsedPosition, initialPlayerCount, setInitialPlayerCount,
-    // currentBlindDuration,
-    // initialGameStatePosted,
-     } = useGameState(gameStarted, setGameStarted, selectedPlayers, setSelectedPLayers, blindIndex, setBlindIndex, blindDuration // Pass blindDuration directly instead of initialTimeLeft
-    );
+    const blinds = [
+        { small: 10, big: 20, ante: 0 },
+        { small: 25, big: 50, ante: 0 },
+        { small: 50, big: 100, ante: 0 },
+        { small: 100, big: 200, ante: 0 },
+        { small: 150, big: 300, ante: 0 },
+        { small: 200, big: 400, ante: 10 },
+        { small: 250, big: 500, ante: 10 },
+        { small: 300, big: 600, ante: 25 },
+        { small: 400, big: 800, ante: 25 },
+        { small: 500, big: 1000, ante: 50 },
+        { small: 600, big: 1200, ante: 50 },
+        { small: 700, big: 1400, ante: 100 },
+        { small: 800, big: 1600, ante: 100 },
+        { small: 900, big: 1800, ante: 200 },
+        { small: 1000, big: 2000, ante: 200 },
+        { small: 1200, big: 2400, ante: 300 },
+        { small: 1400, big: 2800, ante: 300 },
+        { small: 1600, big: 3200, ante: 400 },
+        { small: 1800, big: 3600, ante: 400 },
+        { small: 2000, big: 4000, ante: 500 },
+        { small: 2200, big: 4400, ante: 500 },
+        { small: 2500, big: 5000, ante: 500 },
+        { small: 3000, big: 6000, ante: 1000 },
+        { small: 3500, big: 7000, ante: 1000 },
+        { small: 4000, big: 8000, ante: 2000 },
+        { small: 5000, big: 10000, ante: 2000 },
+        { small: 6000, big: 12000, ante: 3000 },
+        { small: 7000, big: 14000, ante: 3000 },
+        { small: 8000, big: 16000, ante: 4000 },
+        { small: 9000, big: 18000, ante: 4000 },
+        { small: 10000, big: 20000, ante: 5000 },
+    ];
+    const { timeLeft, setTimeLeft, smallBlind, setSmallBlind, bigBlind, setBigBlind, ante, setAnte, games, setGames, pot, setPot, middleStack, setSavedTotalStack, totalStack, setTotalStack, saveGameState, resetGameState, rebuyPlayerId, setRebuyPlayerId, killer, setKiller, stateRestored, currentBlindDuration, setCurrentBlindDuration, loading, error, setPositions, setOutPlayers, setLastUsedPosition, initialPlayerCount, setInitialPlayerCount, postInitialGameState, } = useGameState(gameStarted, setGameStarted, selectedPlayers, setSelectedPLayers, blindIndex, setBlindIndex, blindDuration);
+    const updateBlinds = useCallback(() => {
+        try {
+            const nextIndex = blindIndex + 1;
+            if (nextIndex >= blinds.length) {
+                toast.error("Maximum blind level reached!");
+                return;
+            }
+            const { small, big, ante } = blinds[nextIndex];
+            setSmallBlind(small);
+            setBigBlind(big);
+            setAnte(ante);
+            setBlindIndex(nextIndex);
+            toast.success("Blinds updated successfully!");
+        }
+        catch (error) {
+            console.error('Error updating blinds:', error);
+            toast.error('Failed to update blinds');
+        }
+    }, [blindIndex, setSmallBlind, setBigBlind, setAnte, setBlindIndex]);
+    useEffect(() => {
+        if (stateRestored && currentBlindDuration) {
+            setBlindDuration(currentBlindDuration);
+        }
+    }, [stateRestored, currentBlindDuration]);
     useEffect(() => {
         if (gameStarted) {
             if ('screen' in window && 'orientation' in screen) {
@@ -122,7 +175,7 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, players, 
             return;
         }
         await toggleFullscreen();
-        resetGameState();
+        resetGameState(blindDuration);
         if (selectedPlayers.length < 4) {
             toast.error("You need at least 4 players to start a game.");
             return;
@@ -161,7 +214,8 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, players, 
                 outPlayers: [],
                 lastSavedTime: Date.now(),
                 initialPlayerCount: selectedPlayers.length,
-                partyId: newPartyId
+                partyId: newPartyId,
+                currentBlindDuration: blindDuration,
             };
             await api.post(API_ENDPOINTS.GAME_STATE, {
                 state: gameState,
@@ -432,7 +486,7 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, players, 
             display: 'flex',
             flexDirection: 'column',
             position: 'relative'
-        }, children: [_jsx(EditGameStateModal, { isOpen: showEditModal, onClose: () => setShowEditModal(false), games: games, selectedPlayers: selectedPlayers, players: players, onUpdateStats: handleUpdateGameState }), _jsx(KillerSelectionModal, { killer: killer, games: games, currentlyPlayingPlayers: selectedPlayers.filter((p) => !games.find((g) => g.playerId === p.id && g.outAt)), rebuyPlayerId: rebuyPlayerId, playerOutGame: playerOutGame, handlePlayerKillSelection: handlePlayerKillSelection }), _jsx(ConfirmDialog, { isOpen: showRebuyConfirm, onClose: () => setShowRebuyConfirm(false), onConfirm: confirmRebuy, title: "Confirm Rebuy", description: "Has this player paid for the rebuy?", confirmText: "Yes, Paid", cancelText: "Cancel", variant: "warning" }), _jsx(ConfirmDialog, { isOpen: showResetConfirm, onClose: () => setShowResetConfirm(false), onConfirm: async () => {
+        }, children: [_jsx(EditGameStateModal, { isOpen: showEditModal, onClose: () => setShowEditModal(false), games: games, selectedPlayers: selectedPlayers, players: players, onUpdateStats: handleUpdateGameState, blindIndex: blindIndex, setBlindIndex: setBlindIndex, timeLeft: timeLeft, setTimeLeft: setTimeLeft, currentBlindDuration: currentBlindDuration, setCurrentBlindDuration: setCurrentBlindDuration, smallBlind: smallBlind, bigBlind: bigBlind, ante: ante, setSmallBlind: setSmallBlind, setBigBlind: setBigBlind, setAnte: setAnte, isPaused: isPaused, setIsPaused: setIsPaused }), _jsx(KillerSelectionModal, { killer: killer, games: games, currentlyPlayingPlayers: selectedPlayers.filter((p) => !games.find((g) => g.playerId === p.id && g.outAt)), rebuyPlayerId: rebuyPlayerId, playerOutGame: playerOutGame, handlePlayerKillSelection: handlePlayerKillSelection }), _jsx(ConfirmDialog, { isOpen: showRebuyConfirm, onClose: () => setShowRebuyConfirm(false), onConfirm: confirmRebuy, title: "Confirm Rebuy", description: "Has this player paid for the rebuy?", confirmText: "Yes, Paid", cancelText: "Cancel", variant: "warning" }), _jsx(ConfirmDialog, { isOpen: showResetConfirm, onClose: () => setShowResetConfirm(false), onConfirm: async () => {
                     try {
                         // First delete the game state to prevent race conditions
                         try {
@@ -519,16 +573,16 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, players, 
                                             color: isPaused ? "red" : "green",
                                             textShadow: "2px 2px 10px 2px rgba(0, 0, 0, 0.3)",
                                             margin: 0
-                                        }, children: isPaused ? "Game Paused" : "Game in Progress" }), _jsx("div", { style: {
+                                        }, children: isPaused ? "Game Paused" : "Game in Progress" }), _jsxs("div", { style: {
                                             display: 'flex',
                                             gap: '8px'
-                                        }, children: _jsx(Button, { onClick: () => {
-                                                console.log('Opening edit modal');
-                                                setShowEditModal(true);
-                                            }, className: "bg-blue-600 hover:bg-blue-700 text-white font-['DS-DIGI'] text-lg text-shadow-sm shadow-md border border-slate-500/70 hover:border-slate-900 ", children: "Edit Game" }) })] }), _jsxs("div", { style: {
+                                        }, children: [_jsx(Button, { onClick: () => {
+                                                    console.log('Opening edit modal');
+                                                    setShowEditModal(true);
+                                                }, className: "bg-blue-600 hover:bg-blue-700 text-white font-['DS-DIGI'] text-lg text-shadow-sm shadow-md border border-slate-500/70 hover:border-slate-900 ", children: "Edit Game" }), _jsx(Button, { onClick: updateBlinds, className: "bg-amber-500 hover:bg-amber-600 text-white font-['DS-DIGI'] text-lg shadow-md border border-amber-200/80 hover:border-amber-600", disabled: !gameStarted || blindIndex >= blinds.length - 1, children: "Next Blind Level" })] })] }), _jsxs("div", { style: {
                                     display: 'flex',
                                     gap: '8px'
-                                }, children: [_jsx(Button, { onClick: toggleFullscreen, className: "bg-purple-500 hover:bg-purple-600 text-white font-['DS-DIGI'] text-lg shadow-md border border-purple-200/80 hover:border-purple-600", children: isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen' }), _jsx(Button, { style: {
+                                }, children: [_jsx(Button, { onClick: toggleFullscreen, className: "bg-purple-500 hover:bg-purple-600 text-white font-['DS-DIGI'] text-lg shadow-md border border-purple-200/80 hover:border-purple-600", children: isFullscreen ? 'Fullscreen OFF' : 'Fullscreen ON' }), _jsx(Button, { style: {
                                             textShadow: "4px 2px 10px 2px rgba(0, 0, 0, 0.3)",
                                         }, onClick: () => setShowResetConfirm(true), className: "bg-amber-500 hover:bg-amber-600 text-white font-['DS-DIGI'] text-lg shadow-md border borderslate-200/80 hover:border-amber-600", children: "Reset Game" }), _jsx(Button, { onClick: () => {
                                             if (games.filter((game) => !game.outAt).length === 1) {
@@ -544,7 +598,7 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, players, 
                             flexDirection: 'column',
                             // gap: '16px',
                             backgroundColor: '#ffffff'
-                        }, children: [_jsx(GameControls, { gameStarted: gameStarted, isPaused: isPaused, timeLeft: timeLeft, smallBlind: smallBlind, bigBlind: bigBlind, ante: ante, handleGameEnd: handleGameEnd, setIsPaused: setIsPaused, pot: pot, middleStack: middleStack, setSmallBlind: setSmallBlind, setBigBlind: setBigBlind, setAnte: setAnte, setTimeLeft: setTimeLeft, blindIndex: blindIndex, setBlindIndex: setBlindIndex, initialTimeLeft: timeLeft || blindDuration * 60, style: {
+                        }, children: [_jsx(GameControls, { gameStarted: gameStarted, isPaused: isPaused, timeLeft: timeLeft, smallBlind: smallBlind, bigBlind: bigBlind, ante: ante, handleGameEnd: handleGameEnd, setIsPaused: setIsPaused, pot: pot, middleStack: middleStack, setSmallBlind: setSmallBlind, setBigBlind: setBigBlind, setAnte: setAnte, setTimeLeft: setTimeLeft, blindIndex: blindIndex, setBlindIndex: setBlindIndex, initialTimeLeft: timeLeft || currentBlindDuration * 60, style: {
                                     width: '100%',
                                     maxWidth: '100%',
                                     position: 'sticky',

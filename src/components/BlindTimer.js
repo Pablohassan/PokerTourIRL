@@ -8,10 +8,12 @@ import { cn } from "../lib/utils";
 const BlindTimer = ({ gameStarted, isPaused, onBlindChange, onTimeChange, blindIndex, setBlindIndex, initialTimeLeft }) => {
     // @ts-ignore - Local state needed for immediate updates while staying in sync with parent
     const [timeLeft, setTimeLeft] = useState(initialTimeLeft);
-    const [playAlert, setPlayAlert] = useState(false);
     const [showModal, setShowModal] = useState(false);
+    const audioRef = useRef(null);
     const isUpdatingRef = useRef(false);
     const nextBlindIndexRef = useRef(blindIndex);
+    const isInitialMount = useRef(true);
+    const wakeLockRef = useRef(null);
     const blinds = [
         { small: 10, big: 20, ante: 0 },
         { small: 25, big: 50, ante: 0 },
@@ -33,19 +35,110 @@ const BlindTimer = ({ gameStarted, isPaused, onBlindChange, onTimeChange, blindI
         { small: 1600, big: 3200, ante: 400 },
         { small: 1800, big: 3600, ante: 400 },
         { small: 2000, big: 4000, ante: 500 },
+        { small: 2200, big: 4400, ante: 500 },
         { small: 2500, big: 5000, ante: 500 },
         { small: 3000, big: 6000, ante: 1000 },
-        { small: 3000, big: 6000, ante: 1000 },
-        { small: 3000, big: 6000, ante: 1000 },
-        { small: 3000, big: 6000, ante: 1000 },
-        { small: 3000, big: 6000, ante: 1000 },
+        { small: 3500, big: 7000, ante: 1000 },
+        { small: 4000, big: 8000, ante: 2000 },
+        { small: 5000, big: 10000, ante: 2000 },
+        { small: 6000, big: 12000, ante: 3000 },
+        { small: 7000, big: 14000, ante: 3000 },
+        { small: 8000, big: 16000, ante: 4000 },
+        { small: 9000, big: 18000, ante: 4000 },
+        { small: 10000, big: 20000, ante: 5000 },
     ];
+    // Initialize audio on component mount
+    useEffect(() => {
+        audioRef.current = new Audio(alerteSon);
+        // Preload the audio
+        audioRef.current.load();
+        // Set audio properties
+        audioRef.current.volume = 1.0;
+        // Add click listener to document to enable audio
+        const enableAudio = () => {
+            if (audioRef.current) {
+                // Create and immediately pause a play promise
+                audioRef.current.play().then(() => {
+                    audioRef.current?.pause();
+                    audioRef.current.currentTime = 0;
+                }).catch(() => {
+                    // Ignore error - this is just for enabling audio
+                });
+            }
+        };
+        document.addEventListener('click', enableAudio, { once: true });
+        return () => {
+            document.removeEventListener('click', enableAudio);
+            if (audioRef.current) {
+                audioRef.current.pause();
+                audioRef.current = null;
+            }
+        };
+    }, []);
+    // Effect to handle sound playing when modal shows
+    useEffect(() => {
+        if (showModal && audioRef.current) {
+            console.log('Attempting to play sound...');
+            audioRef.current.currentTime = 0;
+            audioRef.current.play()
+                .then(() => {
+                console.log('Sound playing successfully');
+            })
+                .catch(error => {
+                console.warn('Could not play sound:', error);
+            });
+        }
+    }, [showModal]);
+    // Initialize Screen Wake Lock
+    useEffect(() => {
+        const requestWakeLock = async () => {
+            try {
+                if ('wakeLock' in navigator && gameStarted && !isPaused) {
+                    wakeLockRef.current = await navigator.wakeLock.request('screen');
+                    console.log('Wake Lock is active');
+                }
+            }
+            catch (err) {
+                console.log('Wake Lock request failed:', err);
+            }
+        };
+        const releaseWakeLock = async () => {
+            if (wakeLockRef.current) {
+                try {
+                    await wakeLockRef.current.release();
+                    wakeLockRef.current = null;
+                    console.log('Wake Lock released');
+                }
+                catch (err) {
+                    console.log('Wake Lock release failed:', err);
+                }
+            }
+        };
+        // Request wake lock when game starts
+        if (gameStarted && !isPaused) {
+            requestWakeLock();
+        }
+        else {
+            releaseWakeLock();
+        }
+        // Re-request wake lock on visibility change
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible' && gameStarted && !isPaused) {
+                requestWakeLock();
+            }
+        };
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        // Cleanup
+        return () => {
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+            releaseWakeLock();
+        };
+    }, [gameStarted, isPaused]);
     const updateBlinds = useCallback(() => {
         if (isUpdatingRef.current)
             return;
         isUpdatingRef.current = true;
         try {
-            // Get the current index and calculate next
             const currentIndex = blindIndex;
             const nextIndex = currentIndex + 1;
             console.log('Updating blinds:', { currentIndex, nextIndex });
@@ -54,23 +147,16 @@ const BlindTimer = ({ gameStarted, isPaused, onBlindChange, onTimeChange, blindI
                 isUpdatingRef.current = false;
                 return;
             }
-            // Get the next blind values
             const { small, big, ante } = blinds[nextIndex];
             console.log('New blind values:', { small, big, ante });
-            // Update parent state first
             onBlindChange(small, big, ante);
-            // Then update the index
             setBlindIndex(nextIndex);
-            // Update the ref
             nextBlindIndexRef.current = nextIndex;
-            // Show modal and play alert
-            setPlayAlert(true);
             setShowModal(true);
             setTimeout(() => {
                 setShowModal(false);
-                setPlayAlert(false);
                 isUpdatingRef.current = false;
-            }, 5000);
+            }, 8000);
         }
         catch (error) {
             console.error('Error updating blinds:', error);
@@ -127,7 +213,18 @@ const BlindTimer = ({ gameStarted, isPaused, onBlindChange, onTimeChange, blindI
             stopTimer();
         };
     }, [gameStarted, isPaused, initialTimeLeft]);
-    // Debug time changes
+    // Effect to handle sound and modal on game state restoration
+    useEffect(() => {
+        // Skip on initial mount
+        if (isInitialMount.current) {
+            isInitialMount.current = false;
+            return;
+        }
+        // If we're restoring state and timeLeft is 0, trigger sound and modal
+        if (gameStarted && timeLeft === 0 && !isUpdatingRef.current) {
+            setShowModal(true);
+        }
+    }, [gameStarted, timeLeft]);
     // Notify parent of time changes
     useEffect(() => {
         if (typeof timeLeft === 'number' && !isNaN(timeLeft)) {
@@ -136,6 +233,6 @@ const BlindTimer = ({ gameStarted, isPaused, onBlindChange, onTimeChange, blindI
     }, [timeLeft, onTimeChange]);
     // Get the current blinds to display
     const displayBlinds = blinds[nextBlindIndexRef.current] || blinds[blindIndex];
-    return (_jsxs(_Fragment, { children: [playAlert && _jsx("audio", { src: alerteSon, autoPlay: true }), _jsx(AnimatePresence, { children: showModal && (_jsx(Dialog, { open: showModal, onOpenChange: setShowModal, children: _jsx(DialogContent, { className: cn("bg-zinc-950/95 border-amber-500/50", "backdrop-blur-lg", "shadow-[0_0_50px_-5px_rgba(245,158,11,0.3)]", "max-w-[95vw] sm:max-w-[700px]", "p-6 sm:p-8", "border-2"), children: _jsxs(motion.div, { initial: { opacity: 0, scale: 0.9 }, animate: { opacity: 1, scale: 1 }, exit: { opacity: 0, scale: 0.9 }, transition: { duration: 0.3, ease: "easeOut" }, children: [_jsx(DialogHeader, { className: "mb-6", children: _jsxs(motion.div, { initial: { y: -20, opacity: 0 }, animate: { y: 0, opacity: 1 }, transition: { delay: 0.1, duration: 0.5 }, children: [_jsx(DialogTitle, { className: cn("font-ds-digital", "text-4xl sm:text-5xl", "text-center", "text-amber-400", "tracking-wider", "font-bold", "mb-2"), children: "Blind Change!" }), _jsx("p", { className: "text-amber-400/80 text-center text-lg sm:text-xl font-ds-digital", children: "Changement de blind a la prochaine main" })] }) }), _jsxs(motion.div, { className: "space-y-6", initial: { opacity: 0, y: 20 }, animate: { opacity: 1, y: 0 }, transition: { delay: 0.2, duration: 0.5 }, children: [_jsx("div", { className: "bg-zinc-900/80 rounded-xl p-4 sm:p-6 border border-amber-500/20", children: _jsxs("div", { className: "space-y-4", children: [_jsxs(motion.div, { className: "flex justify-between items-center", initial: { x: -20, opacity: 0 }, animate: { x: 0, opacity: 1 }, transition: { delay: 0.3, duration: 0.5 }, children: [_jsx("span", { className: "font-ds-digital text-amber-400/80 text-2xl sm:text-3xl", children: "Small Blind" }), _jsx("span", { className: "font-ds-digital text-amber-400 text-3xl sm:text-4xl", children: displayBlinds.small })] }), _jsxs(motion.div, { className: "flex justify-between items-center", initial: { x: -20, opacity: 0 }, animate: { x: 0, opacity: 1 }, transition: { delay: 0.4, duration: 0.5 }, children: [_jsx("span", { className: "font-ds-digital text-amber-400/80 text-2xl sm:text-3xl", children: "Big Blind" }), _jsx("span", { className: "font-ds-digital text-amber-400 text-3xl sm:text-4xl", children: displayBlinds.big })] }), _jsx("div", { className: "h-px bg-amber-400/20 my-4" }), _jsxs(motion.div, { className: "flex justify-between items-center", initial: { x: -20, opacity: 0 }, animate: { x: 0, opacity: 1 }, transition: { delay: 0.5, duration: 0.5 }, children: [_jsx("span", { className: "font-ds-digital text-amber-400/80 text-2xl sm:text-3xl", children: "Ante" }), _jsx("span", { className: "font-ds-digital text-amber-400 text-3xl sm:text-4xl", children: displayBlinds.ante })] })] }) }), _jsx(motion.div, { className: "text-center text-amber-400/60 text-sm sm:text-base font-ds-digital", initial: { opacity: 0 }, animate: { opacity: 1 }, transition: { delay: 0.6, duration: 0.5 }, children: "Modal will close automatically in a few seconds..." })] })] }) }) })) })] }));
+    return (_jsx(_Fragment, { children: _jsx(AnimatePresence, { children: showModal && (_jsx(Dialog, { open: showModal, onOpenChange: setShowModal, children: _jsx(DialogContent, { className: cn("bg-zinc-950/95 border-amber-500/50", "backdrop-blur-lg", "shadow-[0_0_50px_-5px_rgba(245,158,11,0.3)]", "max-w-[95vw] sm:max-w-[700px]", "p-6 sm:p-8", "border-2"), children: _jsxs(motion.div, { initial: { opacity: 0, scale: 0.9 }, animate: { opacity: 1, scale: 1 }, exit: { opacity: 0, scale: 0.9 }, transition: { duration: 0.3, ease: "easeOut" }, children: [_jsx(DialogHeader, { className: "mb-6", children: _jsxs(motion.div, { initial: { y: -20, opacity: 0 }, animate: { y: 0, opacity: 1 }, transition: { delay: 0.1, duration: 0.5 }, children: [_jsx(DialogTitle, { className: cn("font-ds-digital", "text-4xl sm:text-5xl", "text-center", "text-amber-400", "tracking-wider", "font-bold", "mb-2"), children: "Blind Change!" }), _jsx("p", { className: "text-amber-400/80 text-center text-lg sm:text-xl font-ds-digital", children: "Changement de blind a la prochaine main" })] }) }), _jsxs(motion.div, { className: "space-y-6", initial: { opacity: 0, y: 20 }, animate: { opacity: 1, y: 0 }, transition: { delay: 0.2, duration: 0.5 }, children: [_jsx("div", { className: "bg-zinc-900/80 rounded-xl p-4 sm:p-6 border border-amber-500/20", children: _jsxs("div", { className: "space-y-4", children: [_jsxs(motion.div, { className: "flex justify-between items-center", initial: { x: -20, opacity: 0 }, animate: { x: 0, opacity: 1 }, transition: { delay: 0.3, duration: 0.5 }, children: [_jsx("span", { className: "font-ds-digital text-amber-400/80 text-2xl sm:text-3xl", children: "Small Blind" }), _jsx("span", { className: "font-ds-digital text-amber-400 text-3xl sm:text-4xl", children: displayBlinds.small })] }), _jsxs(motion.div, { className: "flex justify-between items-center", initial: { x: -20, opacity: 0 }, animate: { x: 0, opacity: 1 }, transition: { delay: 0.4, duration: 0.5 }, children: [_jsx("span", { className: "font-ds-digital text-amber-400/80 text-2xl sm:text-3xl", children: "Big Blind" }), _jsx("span", { className: "font-ds-digital text-amber-400 text-3xl sm:text-4xl", children: displayBlinds.big })] }), _jsx("div", { className: "h-px bg-amber-400/20 my-4" }), _jsxs(motion.div, { className: "flex justify-between items-center", initial: { x: -20, opacity: 0 }, animate: { x: 0, opacity: 1 }, transition: { delay: 0.5, duration: 0.5 }, children: [_jsx("span", { className: "font-ds-digital text-amber-400/80 text-2xl sm:text-3xl", children: "Ante" }), _jsx("span", { className: "font-ds-digital text-amber-400 text-3xl sm:text-4xl", children: displayBlinds.ante })] })] }) }), _jsx(motion.div, { className: "text-center text-amber-400/60 text-sm sm:text-base font-ds-digital", initial: { opacity: 0 }, animate: { opacity: 1 }, transition: { delay: 0.6, duration: 0.5 }, children: "Modal will close automatically in a few seconds..." })] })] }) }) })) }) }));
 };
 export default BlindTimer;

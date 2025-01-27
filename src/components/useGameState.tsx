@@ -33,8 +33,12 @@ const useGameState = (
   const [initialPlayerCount, setInitialPlayerCount] = useState(selectedPlayers.length);
   const [lastSaveTime, setLastSaveTime] = useState(0);
 
-  const resetGameState = () => {
-    setTimeLeft(configBlindDuration * 60);
+  const resetGameState = (newBlindDuration?: number) => {
+    const finalDuration = typeof newBlindDuration === "number"
+      ? newBlindDuration
+      : configBlindDuration;
+    setTimeLeft(finalDuration * 60);
+    setCurrentBlindDuration(finalDuration);
     setSmallBlind(10);
     setBigBlind(20);
     setAnte(0);
@@ -51,7 +55,6 @@ const useGameState = (
     setOutPlayers([]);
     setLastUsedPosition(0);
     setInitialPlayerCount(0);
-    setCurrentBlindDuration(configBlindDuration);
     setLastSaveTime(0);
   };
 
@@ -62,7 +65,7 @@ const useGameState = (
     }
 
     const now = Date.now();
-    if (now - lastSaveTime < 5000) {
+    if (now - lastSaveTime < 2000) {
       return;
     }
     setLastSaveTime(now);
@@ -116,9 +119,7 @@ const useGameState = (
 
   const restoreState = async () => {
     try {
-
       const response = await api.get("/gameState");
-
 
       if (!response.data?.state) {
         console.log('No saved game state found');
@@ -127,10 +128,21 @@ const useGameState = (
       }
 
       const { state } = response.data;
+      console.log('restoreState', response.data);
 
-
+      // Calculate elapsed time since last save
       const elapsedTime = (Date.now() - state.lastSavedTime) / 1000;
-      const adjustedTimeLeft = Math.max(0, state.timeLeft - elapsedTime);
+      const restoredBlindDuration = state.currentBlindDuration || configBlindDuration;
+
+      // Calculate remaining time for current blind level
+      let adjustedTimeLeft = Math.max(0, state.timeLeft - elapsedTime);
+
+      // If time has elapsed past the current blind level
+      if (adjustedTimeLeft <= 0) {
+        // Reset to the blind duration but account for overflow time
+        const overflowTime = Math.abs(adjustedTimeLeft);
+        adjustedTimeLeft = restoredBlindDuration * 60 - (overflowTime % (restoredBlindDuration * 60));
+      }
 
       // First, process the games to ensure eliminated players are handled correctly
       const restoredGames = state.games.map((game: PlayerStats) => ({
@@ -166,8 +178,9 @@ const useGameState = (
         };
       }).filter(Boolean);
 
-      // Restore all state values
+      // Update state with adjusted time
       setTimeLeft(Math.floor(adjustedTimeLeft));
+      setCurrentBlindDuration(restoredBlindDuration);
       setSmallBlind(state.smallBlind);
       setBigBlind(state.bigBlind);
       setAnte(state.ante);
@@ -184,9 +197,7 @@ const useGameState = (
       setGameStarted(true);
       setInitialGameStatePosted(true);
       setInitialPlayerCount(state.initialPlayerCount);
-      setCurrentBlindDuration(state.currentBlindDuration || configBlindDuration);
       setStateRestored(true);
-
 
     } catch (error: any) {
       if (error.response?.status === 404) {
