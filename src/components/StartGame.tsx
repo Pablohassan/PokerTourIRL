@@ -16,6 +16,7 @@ import ConfirmDialog from "./ui/confirm-dialog";
 
 interface StartGameProps {
   players: Player[];
+  outPlayers: Player[];
   handlePlayerSelect: (playerId: number) => void;
   selectedPlayers: Player[];
   setSelectedPLayers: React.Dispatch<React.SetStateAction<Player[]>>;
@@ -27,6 +28,7 @@ interface StartGameProps {
 }
 
 const StartGame: React.FC<StartGameProps> = ({
+  outPlayers,
   championnat,
   selectedPlayers,
   setSelectedPLayers,
@@ -832,11 +834,11 @@ const StartGame: React.FC<StartGameProps> = ({
             <div style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '16px'
+              gap: '8px'
             }}>
               <h1
                 style={{
-                  fontSize: '2em',
+                  fontSize: '1.5em',
 
                   fontFamily: 'DS-DIGI',
                   color: isPaused ? "red" : "green",
@@ -860,10 +862,10 @@ const StartGame: React.FC<StartGameProps> = ({
                 </Button>
                 <Button
                   onClick={updateBlinds}
-                  className="bg-amber-500 hover:bg-amber-600 text-white font-['DS-DIGI'] text-lg shadow-md border border-amber-200/80 hover:border-amber-600"
+                  className="bg-green-500  hover:bg-amber-600 text-white font-['DS-DIGI'] text-lg shadow-md border border-1 border-green-500/30 hover:border-amber-600"
                   disabled={!gameStarted || blindIndex >= blinds.length - 1}
                 >
-                  Next Blind Level
+                  {`>> Next Blind`}
                 </Button>
               </div>
             </div>
@@ -927,6 +929,7 @@ const StartGame: React.FC<StartGameProps> = ({
               blindIndex={blindIndex}
               setBlindIndex={setBlindIndex}
               initialTimeLeft={timeLeft || currentBlindDuration * 60}
+              outPlayers={outPlayers}
               style={{
                 width: '100%',
                 maxWidth: '100%',

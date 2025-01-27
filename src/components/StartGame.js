@@ -13,7 +13,7 @@ import { API_ENDPOINTS } from '../config';
 import EditGameStateModal from './EditGameStateModal';
 import { Button } from "./ui/button";
 import ConfirmDialog from "./ui/confirm-dialog";
-const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, players, updateAfterGameEnd, blindIndex, setBlindIndex }) => {
+const StartGame = ({ outPlayers, championnat, selectedPlayers, setSelectedPLayers, players, updateAfterGameEnd, blindIndex, setBlindIndex }) => {
     const navigate = useNavigate();
     const [gameStarted, setGameStarted] = useState(false);
     const [showReview, setShowReview] = useState(false);
@@ -566,9 +566,9 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, players, 
                         }, children: [_jsxs("div", { style: {
                                     display: 'flex',
                                     alignItems: 'center',
-                                    gap: '16px'
+                                    gap: '8px'
                                 }, children: [_jsx("h1", { style: {
-                                            fontSize: '2em',
+                                            fontSize: '1.5em',
                                             fontFamily: 'DS-DIGI',
                                             color: isPaused ? "red" : "green",
                                             textShadow: "2px 2px 10px 2px rgba(0, 0, 0, 0.3)",
@@ -579,7 +579,7 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, players, 
                                         }, children: [_jsx(Button, { onClick: () => {
                                                     console.log('Opening edit modal');
                                                     setShowEditModal(true);
-                                                }, className: "bg-blue-600 hover:bg-blue-700 text-white font-['DS-DIGI'] text-lg text-shadow-sm shadow-md border border-slate-500/70 hover:border-slate-900 ", children: "Edit Game" }), _jsx(Button, { onClick: updateBlinds, className: "bg-amber-500 hover:bg-amber-600 text-white font-['DS-DIGI'] text-lg shadow-md border border-amber-200/80 hover:border-amber-600", disabled: !gameStarted || blindIndex >= blinds.length - 1, children: "Next Blind Level" })] })] }), _jsxs("div", { style: {
+                                                }, className: "bg-blue-600 hover:bg-blue-700 text-white font-['DS-DIGI'] text-lg text-shadow-sm shadow-md border border-slate-500/70 hover:border-slate-900 ", children: "Edit Game" }), _jsx(Button, { onClick: updateBlinds, className: "bg-green-500  hover:bg-amber-600 text-white font-['DS-DIGI'] text-lg shadow-md border border-1 border-green-500/30 hover:border-amber-600", disabled: !gameStarted || blindIndex >= blinds.length - 1, children: `>> Next Blind` })] })] }), _jsxs("div", { style: {
                                     display: 'flex',
                                     gap: '8px'
                                 }, children: [_jsx(Button, { onClick: toggleFullscreen, className: "bg-purple-500 hover:bg-purple-600 text-white font-['DS-DIGI'] text-lg shadow-md border border-purple-200/80 hover:border-purple-600", children: isFullscreen ? 'Fullscreen OFF' : 'Fullscreen ON' }), _jsx(Button, { style: {
@@ -598,7 +598,7 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, players, 
                             flexDirection: 'column',
                             // gap: '16px',
                             backgroundColor: '#ffffff'
-                        }, children: [_jsx(GameControls, { gameStarted: gameStarted, isPaused: isPaused, timeLeft: timeLeft, smallBlind: smallBlind, bigBlind: bigBlind, ante: ante, handleGameEnd: handleGameEnd, setIsPaused: setIsPaused, pot: pot, middleStack: middleStack, setSmallBlind: setSmallBlind, setBigBlind: setBigBlind, setAnte: setAnte, setTimeLeft: setTimeLeft, blindIndex: blindIndex, setBlindIndex: setBlindIndex, initialTimeLeft: timeLeft || currentBlindDuration * 60, style: {
+                        }, children: [_jsx(GameControls, { gameStarted: gameStarted, isPaused: isPaused, timeLeft: timeLeft, smallBlind: smallBlind, bigBlind: bigBlind, ante: ante, handleGameEnd: handleGameEnd, setIsPaused: setIsPaused, pot: pot, middleStack: middleStack, setSmallBlind: setSmallBlind, setBigBlind: setBigBlind, setAnte: setAnte, setTimeLeft: setTimeLeft, blindIndex: blindIndex, setBlindIndex: setBlindIndex, initialTimeLeft: timeLeft || currentBlindDuration * 60, outPlayers: outPlayers, style: {
                                     width: '100%',
                                     maxWidth: '100%',
                                     position: 'sticky',

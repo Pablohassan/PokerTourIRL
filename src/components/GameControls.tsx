@@ -2,7 +2,7 @@ import React, { useRef } from "react";
 import BlindTimer from "./BlindTimer";
 import GameTimer from "./GameTimer";
 import { cn } from "../lib/utils";
-
+import { Player } from "./interfaces";
 interface GameControlsProps {
   gameStarted: boolean;
   isPaused: boolean;
