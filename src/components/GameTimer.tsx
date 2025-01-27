@@ -3,6 +3,7 @@ import { Card, CardContent } from "./ui/card";
 import { Button } from "./ui/button";
 import { cn } from "../lib/utils";
 
+
 interface GameTimerProps {
   formatTime: (time: number) => string;
   totalPot: number;
@@ -28,6 +29,14 @@ const GameTimer: React.FC<GameTimerProps> = ({
   setIsPaused,
   ante
 }) => {
+  const handleClick = () => {
+    // Add vibration feedback (50ms)
+    if (navigator.vibrate) {
+      navigator.vibrate(50);
+    }
+    setIsPaused(!isPaused);
+  };
+
   return (
     <Card className={cn(
       "w-full max-w-full mx-auto",
@@ -112,7 +121,7 @@ const GameTimer: React.FC<GameTimerProps> = ({
         </div>
 
         {/* Control Buttons */}
-        <div className="flex justify-center gap-2 mt-2 pt-2 border-t border-slate-100/30">
+        <div className="flex justify-center  mb-4 pt-2 border-t border-slate-100/30">
           {/* <Button
             variant="destructive"
             size="lg"
@@ -130,21 +139,33 @@ const GameTimer: React.FC<GameTimerProps> = ({
           <Button
             variant="secondary"
             size="sm"
-            onClick={() => setIsPaused(!isPaused)}
+            onClick={handleClick}
             className={cn(
-              "font-['DS-DIGI'] text-base sm:text-lg",
-              "px-4 sm:px-8",
-              "text-2xl",
-              "font-bold",
-              "text-shadow-lg",
-              "h-8 sm:h-10",
-              "rounded-[8px]",
-              "bg-amber-500/80 hover:bg-amber-500/20",
-              "text-slate-900 hover:text-slate-700",
-              "border border-slate-200/60"
+              "font-['DS-DIGI'] text-lg sm:text-2xl",
+              "translate-y-[-37px]",
+              "z-10",
+              "px-8 sm:px-10",
+              "py-8 sm:py-10",
+              "h-12 sm:h-14",
+              "rounded-[80px]",
+              "relative overflow-hidden",
+              "bg-gradient-to-br from-amber-400/90 to-amber-700/80",
+              "text-shadow-[0_2px_2px_rgba(0,0,0,0.5)]",
+              "shadow-[0_4px_12px_rgba(245,158,11,0.4)]",
+              "transform transition-all duration-1000 ease-in-out",
+              "border-2 border-amber-950/50",
+              "before:content-[''] before:absolute before:inset-0",
+              "before:bg-gradient-to-r before:from-white/20 before:to-transparent",
+              "before:opacity-40 before:-rotate-45 before:translate-x-[-30%]",
+              "hover:before:animate-shine",
+              "hover:bg-gradient-to-br hover:from-amber-500 hover:to-amber-700",
+              "focus:!bg-gradient-to-br focus:!from-amber-400/90 focus:!to-amber-600",
+              "active:scale-95 focus:outline-none"
             )}
           >
-            {isPaused ? 'Resume' : 'Pause'}
+            <span className="relative z-10 drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)]">
+              {isPaused ? 'Resume' : 'Pause'}
+            </span>
           </Button>
         </div>
       </CardContent>

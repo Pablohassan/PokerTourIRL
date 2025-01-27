@@ -9,6 +9,8 @@ import {
   DialogTitle,
 } from "./ui/dialog";
 import { cn } from "../lib/utils";
+import { Player } from "./interfaces";
+
 
 interface BlindTimerProps {
   gameStarted: boolean;
@@ -18,6 +20,7 @@ interface BlindTimerProps {
   blindIndex: number;
   setBlindIndex: React.Dispatch<React.SetStateAction<number>>;
   initialTimeLeft: number;
+  outPlayers: Player[];
 }
 
 const BlindTimer: React.FC<BlindTimerProps> = ({
@@ -27,7 +30,8 @@ const BlindTimer: React.FC<BlindTimerProps> = ({
   onTimeChange,
   blindIndex,
   setBlindIndex,
-  initialTimeLeft
+  initialTimeLeft,
+  outPlayers
 }) => {
   // @ts-ignore - Local state needed for immediate updates while staying in sync with parent
   const [timeLeft, setTimeLeft] = useState<number>(initialTimeLeft);
@@ -37,6 +41,8 @@ const BlindTimer: React.FC<BlindTimerProps> = ({
   const nextBlindIndexRef = useRef<number>(blindIndex);
   const isInitialMount = useRef(true);
   const wakeLockRef = useRef<any>(null);
+  const [showOutPlayers, setShowOutPlayers] = useState(false);
+  const intervalRef = useRef<NodeJS.Timeout>();
 
   const blinds = [
     { small: 10, big: 20, ante: 0 },
@@ -283,6 +289,19 @@ const BlindTimer: React.FC<BlindTimerProps> = ({
   // Get the current blinds to display
   const displayBlinds = blinds[nextBlindIndexRef.current] || blinds[blindIndex];
 
+  // Add this useEffect for the automated dropdown
+  useEffect(() => {
+    if (showModal) {
+      intervalRef.current = setInterval(() => {
+        setShowOutPlayers(prev => !prev);
+      }, 30000);
+    }
+
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [showModal]);
+
   return (
     <>
       <AnimatePresence>
@@ -292,7 +311,7 @@ const BlindTimer: React.FC<BlindTimerProps> = ({
               "bg-zinc-950/95 border-amber-500/50",
               "backdrop-blur-lg",
               "shadow-[0_0_50px_-5px_rgba(245,158,11,0.3)]",
-              "max-w-[95vw] sm:max-w-[700px]",
+              "max-w-[95vw] sm:max-w-[800px]",
               "p-6 sm:p-8",
               "border-2"
             )}>
@@ -300,13 +319,13 @@ const BlindTimer: React.FC<BlindTimerProps> = ({
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
-                transition={{ duration: 0.3, ease: "easeOut" }}
+                transition={{ duration: 0.5, ease: "easeOut" }}
               >
                 <DialogHeader className="mb-6">
                   <motion.div
-                    initial={{ y: -20, opacity: 0 }}
+                    initial={{ y: -30, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: 0.1, duration: 0.5 }}
+                    transition={{ delay: 0.1, duration: 0.7 }}
                   >
                     <DialogTitle className={cn(
                       "font-ds-digital",
@@ -362,7 +381,34 @@ const BlindTimer: React.FC<BlindTimerProps> = ({
                         transition={{ delay: 0.5, duration: 0.5 }}
                       >
                         <span className="font-ds-digital text-amber-400/80 text-2xl sm:text-3xl">Ante</span>
-                        <span className="font-ds-digital text-amber-400 text-3xl sm:text-4xl">{displayBlinds.ante}</span>
+                        <div className="relative">
+                          <span className="font-ds-digital text-amber-400 text-3xl sm:text-4xl">
+                            {displayBlinds.ante}
+                          </span>
+
+                          <AnimatePresence>
+                            {showOutPlayers && outPlayers.length > 0 && (
+                              <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10 }}
+                                className="absolute top-full right-0 mt-2 w-48 bg-zinc-900 rounded-lg shadow-xl border border-amber-500/20"
+                              >
+                                <div className="p-2 max-h-40 overflow-y-auto">
+                                  <h4 className="font-ds-digital text-amber-400 text-sm mb-1">Eliminated Players:</h4>
+                                  {outPlayers.map(player => (
+                                    <div
+                                      key={player.id}
+                                      className="text-amber-400/80 font-ds-digital text-xs py-1 border-b border-amber-500/10"
+                                    >
+                                      {player.name}
+                                    </div>
+                                  ))}
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
                       </motion.div>
                     </div>
                   </div>
@@ -373,7 +419,7 @@ const BlindTimer: React.FC<BlindTimerProps> = ({
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.6, duration: 0.5 }}
                   >
-                    Modal will close automatically in a few seconds...
+                    Reapparition du compoteur dans quelques secondes...
                   </motion.div>
                 </motion.div>
               </motion.div>
