@@ -141,7 +141,7 @@ export default function App() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               className={cn(
-                "mx-auto mt-8 block px-6 py-3",
+                "mx-auto mt-4 block px-6 py-2",
                 "bg-green-900/40 text-green-100 rounded-md",
                 "hover:bg-green-800/60 transition-colors",
                 "border border-green-800/30",
