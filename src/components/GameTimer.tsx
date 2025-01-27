@@ -142,9 +142,9 @@ const GameTimer: React.FC<GameTimerProps> = ({
             onClick={handleClick}
             className={cn(
               "font-['DS-DIGI'] text-lg sm:text-2xl",
-              "translate-y-[-20px]",
+              "translate-y-[-5px]",
               "z-10",
-              "px-8 sm:px-10",
+              "px-8 sm:px-12",
               "py-8 sm:py-10",
               "h-12 sm:h-14",
               "rounded-[80px]",
