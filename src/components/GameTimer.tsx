@@ -2,6 +2,7 @@ import React from "react";
 import { Card, CardContent } from "./ui/card";
 import { Button } from "./ui/button";
 import { cn } from "../lib/utils";
+import metaltexture from "../../public/texturemetaluse.jpg";
 
 
 interface GameTimerProps {
@@ -40,38 +41,64 @@ const GameTimer: React.FC<GameTimerProps> = ({
   return (
     <Card className={cn(
       "w-full max-w-full mx-auto",
-      "bg-gradient-to-b from-slate-700/80 via-slate-100/95 to-slate-900/90 backdrop-blur-md border-amber-400/20",
+
       "rounded-2xl",
       "border border-slate-200/80",
       "shadow-[0_0_25px_-5px_rgba(245,158,11,0.2)]",
       "overflow-hidden",
       "min-h-[300px]"
-    )}>
+    )}
+      style={{
+        backgroundImage: `url(${metaltexture})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+      }}>
+
+
+
+
       <CardContent className="p-2 sm:p-2 rounded-2xl">
         {/* Main Grid */}
         <div className="grid grid-cols-4 [&>*:first-child]:col-span-4 gap-2 sm:gap-3 min-[900px]:grid-cols-8 [&>*:first-child]:min-[900px]:col-span-4 [&>*:not(:first-child)]:min-[900px]:col-span-2">
           {/* Timer Display */}
           <div className={cn(
             "rounded-xl",
-
             "flex flex-col justify-center items-center",
             "border border-slate-200/60",
             "bg-slate-950/95 p-2 sm:p-3",
-
             "shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)]",
-            "min-h-[180px] sm:min-h-[220px]"
+            "min-h-[180px] sm:min-h-[230px]",
+            "relative",
+            "overflow-hidden",
+            "before:content-['']",
+            "before:absolute before:inset-0",
+            "before:bg-gradient-to-b before:from-amber-400/5 before:via-amber-400/10 before:to-amber-400/5",
+            "before:animate-pulse before:duration-[3000ms]",
+            "after:content-['']",
+            "after:absolute after:inset-0",
+            "after:bg-[radial-gradient(ellipse_at_center,rgba(245,158,11,0.10)_0%,transparent_60%)]"
           )}>
-            <span className="font-['DS-DIGI'] text-amber-400/90 text-3xl sm:text-3xl shadow-md">
-              Time Left
-            </span>
-            <span className={cn(
-              "font-['DS-DIGI'] text-amber-400/95",
-              "text-4xl sm:text-7xl min-[900px]:text-[170px]",
-              "text-center",
-              "tabular-nums tracking-wider"
-            )}>
-              {formatTime(timeLeft)}
-            </span>
+            {/* LCD Screen Lines Effect */}
+            <div className="absolute inset-0 bg-[linear-gradient(transparent_0px,rgba(0,0,0,.1)_1px)] bg-[size:100%_2px]" />
+
+            <div className="relative z-10 flex flex-col items-center">
+              <span className="font-['DS-DIGI'] text-amber-400/90 text-3xl sm:text-3xl shadow-md filter drop-shadow-[0_0_8px_rgba(245,158,11,0.6)]">
+                Time Left
+              </span>
+              <span className={cn(
+                "font-['DS-DIGI'] text-amber-400/95",
+                "text-4xl sm:text-7xl min-[900px]:text-[180px]",
+                "text-center",
+                "tabular-nums tracking-wider",
+                "filter drop-shadow-[0_0_15px_rgba(245,158,11,0.4)]"
+              )}>
+                {formatTime(timeLeft)}
+              </span>
+            </div>
+
+            {/* LCD Glare Effect */}
+            <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
           </div>
 
           {/* Blinds Display */}
@@ -80,7 +107,7 @@ const GameTimer: React.FC<GameTimerProps> = ({
             "bg-slate-950/90 rounded-xl p-2 sm:p-3",
             "border border-slate-200/60",
             "shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)]",
-            "min-h-[180px] sm:min-h-[220px]"
+            "min-h-[180px] sm:min-h-[230px]"
           )}>
             <div className="space-y-1 sm:space-y-2">
               <div className="flex justify-between items-center">
@@ -105,7 +132,7 @@ const GameTimer: React.FC<GameTimerProps> = ({
             "bg-slate-950/90 rounded-xl p-2 sm:p-3",
             "border border-slate-200/60",
             "shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)]",
-            "min-h-[180px] sm:min-h-[220px]"
+            "min-h-[190px] sm:min-h-[230px]"
           )}>
             <div className="space-y-2 sm:space-y-4">
               <div className="flex justify-between items-center">
@@ -121,7 +148,7 @@ const GameTimer: React.FC<GameTimerProps> = ({
         </div>
 
         {/* Control Buttons */}
-        <div className="flex justify-center  mb-4 pt-2 border-t border-slate-100/30">
+        <div className="flex justify-center mt-1  mb-4 pt-2 border-t border-slate-100/30">
           {/* <Button
             variant="destructive"
             size="lg"
@@ -142,7 +169,7 @@ const GameTimer: React.FC<GameTimerProps> = ({
             onClick={handleClick}
             className={cn(
               "font-['DS-DIGI'] text-lg sm:text-2xl",
-              "translate-y-[-5px]",
+              "translate-y-[-10px]",
               "z-10",
               "px-8 sm:px-12",
               "py-8 sm:py-10",
