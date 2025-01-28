@@ -84,7 +84,7 @@ export default function App() {
         {
             path: "/",
             element: (_jsxs("div", { className: cn("relative w-full min-h-screen"), children: [_jsxs("div", { className: cn("absolute inset-0"), children: [_jsx("img", { src: bourlyimage, alt: "pokercouv", className: cn("w-full h-full object-cover") }), _jsx("div", { className: cn("absolute inset-0 bg-black/50") }), " "] }), _jsxs("div", { className: cn("relative z-10 container mx-auto pt-8"), children: [_jsxs("h1", { className: cn("text-red-200 text-4xl font-bold text-center mt-20 mb-6", "font-['DS-DIGI']" // Using your custom font
-                                ), children: ["Welcome to the BoulyPokerTour", _jsx("p", { className: cn("text-xl mt-2 text-gray-300"), children: "This app is in beta version, so be nice please" })] }), _jsx(motion.button, { onClick: () => setIsMenuOpen(true), whileHover: { scale: 1.05 }, whileTap: { scale: 0.95 }, className: cn("mx-auto mt-8 block px-6 py-3", "bg-green-900/40 text-green-100 rounded-md", "hover:bg-green-800/60 transition-colors", "border border-green-800/30", "text-2xl font-['DS-DIGI']"), children: "Enter the Game" })] })] })),
+                                ), children: ["Welcome to the BoulyPokerTour", _jsx("p", { className: cn("text-xl mt-2 text-gray-300"), children: "This app is in beta version, so be nice please" })] }), _jsx(motion.button, { onClick: () => setIsMenuOpen(true), whileHover: { scale: 1.05 }, whileTap: { scale: 0.95 }, className: cn("mx-auto block px-6 py-2", "bg-green-900/40 text-green-100 rounded-md", "hover:bg-green-800/60 transition-colors", "border border-green-800/30", "text-2xl font-['DS-DIGI']"), children: "Enter the Game" })] })] })),
         },
         {
             path: "/partypage",
