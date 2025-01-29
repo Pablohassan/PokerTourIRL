@@ -55,7 +55,7 @@ const GameControls: React.FC<GameControlsProps> = ({
 
   return (
     <div className={cn(
-      "w-full max-w-[1000px] min-h-[300px] mx-auto",
+      "w-full max-w-[1010px] min-h-[300px] mx-auto",
       "bg-slate-950/95 backdrop-blur-md",
       "border border-amber-400/10",
       "shadow-[0_0_35px_-5px_rgba(245,158,11,0.15)]",

@@ -25,13 +25,15 @@ export const CardPlayer: React.FC<CardPlayerProps> = ({
 
       "aspect-[3/5]",
       "bg-gradient-to-b from-slate-900/90 via-slate-900/80 to-slate-900/95 backdrop-blur-md",
-      "border border-amber-400/20",
-      "shadow-[0_0_15px_-3px_rgba(245,158,11,0.15)]",
+      "border border-2 border-slate-500/20",
+      "shadow-[0_2px_15px_-3px_rgba(245,158,11,0.15)]",
       "overflow-hidden",
       "transition-all duration-300",
       "hover:shadow-[0_0_25px_-5px_rgba(245,158,11,0.25)]",
-      "hover:scale-[1.02]",
-      "relative"
+      "hover:scale-[1.05]",
+      "relative",
+      "text-shadow-lg"
+
     )}>
       {/* Background Image with Gradient */}
       <div className="absolute inset-0 z-0">
@@ -56,7 +58,7 @@ export const CardPlayer: React.FC<CardPlayerProps> = ({
           <h3 className={cn(
             "font-['DS-DIGI'] text-base text-center",
             "text-shadow-md",
-            "text-xl sm:text-xl",
+            "text-lg sm:text-lg",
             "text-amber-400 tracking-wide",
             "truncate"
           )}>
