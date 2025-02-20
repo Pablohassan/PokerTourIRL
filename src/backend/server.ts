@@ -215,12 +215,26 @@ app.get(
 );
 // @ts-ignore
 app.get("/parties", async (req: Request, res: Response, next: NextFunction) => {
-  const { page = 1, limit = 10 } = req.query;
+  const { page = 1, limit = 10, year } = req.query;
   const skip = (Number(page) - 1) * Number(limit);
+
   try {
+    const whereClause = year
+      ? {
+          date: {
+            gte: new Date(`${year}-01-01`),
+            lt: new Date(`${Number(year) + 1}-01-01`),
+          },
+        }
+      : {};
+
     const parties = await prisma.party.findMany({
       skip,
       take: Number(limit),
+      where: whereClause,
+      orderBy: {
+        date: "desc",
+      },
       select: {
         id: true,
         date: true,
