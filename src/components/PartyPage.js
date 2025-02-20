@@ -24,7 +24,7 @@ export const PartyPage = () => {
             try {
                 setIsLoading(true);
                 console.log(`Fetching parties for page ${page}`);
-                const response = await api.get(`/parties?page=${page}&limit=${limit}`);
+                const response = await api.get(`/parties?page=${page}&limit=${limit}&year=${selectedYear}`);
                 const fetchedParties = response.data;
                 const partiesWithStats = await Promise.all(fetchedParties.map(async (party) => {
                     const statsResponse = await api.get(`/parties/${party.id}/stats`);
