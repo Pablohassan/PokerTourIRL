@@ -5,7 +5,7 @@ import ReactDOM from 'react-dom';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import { cn } from '../lib/utils';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "../components/ui/tabs";
 
 // Add CSS styles
 
