@@ -200,7 +200,7 @@ const BlindTimer: React.FC<BlindTimerProps> = ({
       setTimeout(() => {
         setShowModal(false);
         isUpdatingRef.current = false;
-      }, 8000);
+      }, 4000);
 
     } catch (error) {
       console.error('Error updating blinds:', error);
