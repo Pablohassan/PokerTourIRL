@@ -36,40 +36,47 @@ export const PartyPage = () => {
   const [selectedYear, setSelectedYear] = useState(2025);
   const years = [2023, 2024, 2025];
 
+  // Reset pagination when year changes
+  useEffect(() => {
+    setPage(1);
+    setParties([]);
+    setHasMore(true);
+  }, [selectedYear]);
+
   useEffect(() => {
     const fetchParties = async () => {
       if (isLoading) return;
 
       try {
         setIsLoading(true);
-        console.log(`Fetching parties for page ${page}`);
-
         const response = await api.get(`/parties?page=${page}&limit=${limit}&year=${selectedYear}`);
         const fetchedParties = response.data;
 
-        const partiesWithStats = await Promise.all(fetchedParties.map(async (party: Party) => {
-          const statsResponse = await api.get(`/parties/${party.id}/stats`);
-          return {
-            ...party,
-            playerStats: statsResponse.data,
-          };
-        }));
+        // Add year filtering to the backend query
+        const partiesWithStats = await Promise.all(
+          fetchedParties
+            .filter((party: Party) =>
+              new Date(party.date).getFullYear() === selectedYear
+            )
+            .map(async (party: Party) => {
+              const statsResponse = await api.get(`/parties/${party.id}/stats`);
+              return {
+                ...party,
+                playerStats: statsResponse.data,
+              };
+            })
+        );
 
         setParties(prevParties => {
-          // Create a map of existing parties by ID to avoid duplicates
-          const existingPartiesMap = new Map(prevParties.map(p => [p.id, p]));
-
-          // Add new parties
-          partiesWithStats.forEach(party => {
-            existingPartiesMap.set(party.id, party);
-          });
-
-          // Convert map back to array and sort by date (most recent first)
-          return Array.from(existingPartiesMap.values())
+          const filtered = [...prevParties, ...partiesWithStats]
+            .filter((party, index, self) =>
+              index === self.findIndex(p => p.id === party.id)
+            )
             .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+          return filtered;
         });
 
-        // Update hasMore based on whether we received a full page of results
         setHasMore(fetchedParties.length === limit);
       } catch (error) {
         console.error('Error loading parties:', error);
@@ -80,7 +87,7 @@ export const PartyPage = () => {
     };
 
     fetchParties();
-  }, [page]);
+  }, [page, selectedYear]); // Add selectedYear to dependencies
 
   const lastPartyElementRef = useCallback((node: HTMLDivElement) => {
     if (observer.current) observer.current.disconnect();
