@@ -5,6 +5,7 @@ import ReactDOM from 'react-dom';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import { cn } from '../lib/utils';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 
 // Add CSS styles
 
@@ -32,6 +33,8 @@ export const PartyPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const observer = useRef<IntersectionObserver | null>(null);
   const limit = 10; // Match backend limit
+  const [selectedYear, setSelectedYear] = useState(2025);
+  const years = [2023, 2024, 2025];
 
   useEffect(() => {
     const fetchParties = async () => {
@@ -179,75 +182,105 @@ export const PartyPage = () => {
     }
   };
 
+  const filterPartiesByYear = (parties: Party[], year: number) => {
+    return parties.filter(party =>
+      new Date(party.date).getFullYear() === year
+    );
+  };
+
   return (
     <div className="p-5 min-h-screen bg-slate-900">
-      {isLoading && parties.length === 0 && (
-        <div className="text-center p-5 text-amber-400">
-          Loading parties...
-        </div>
-      )}
-
-      {parties.map((party, i) => (
-        <div
-          key={party.id}
-          ref={parties.length === i + 1 ? lastPartyElementRef : undefined}
-          className="mb-5"
-        >
-          <div className="px-2 ml-10 flex items-center gap-3">
-            <span className="text-amber-400">{new Date(party.date).toLocaleDateString()}</span>
-            <button
-              onClick={() => deleteParty(party.id)}
-              className="px-4 py-2 text-sm font-semibold text-white bg-red-700 hover:bg-red-800 rounded-[5px] border border-red-300/70 transition-all duration-200 hover:shadow-[0_0_10px_rgba(251,191,36,0.3)]"
+      <Tabs defaultValue="2025" className="mb-4">
+        <TabsList className="grid w-full grid-cols-3 bg-slate-800/50 p-0.5 rounded-lg">
+          {years.map(year => (
+            <TabsTrigger
+              key={year}
+              value={year.toString()}
+              onClick={() => setSelectedYear(year)}
+              className={cn(
+                "font-['DS-DIGI']",
+                "text-3xl xl:text-base",
+                "h-8",
+                "data-[state=active]:bg-amber-500/10",
+                "data-[state=active]:text-amber-400",
+                "data-[state=active]:shadow-[0_0_10px_rgba(245,158,11,0.1)]",
+                "text-slate-400",
+                "transition-all"
+              )}
             >
-              Delete
-            </button>
-          </div>
+              {year}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+      </Tabs>
 
-          <div className="mt-2 overflow-hidden rounded-[5px] border border-amber-400 bg-slate-900 shadow-[0_0_20px_rgba(251,191,36,0.1)]">
-            <table className="w-full">
-              <thead>
-                <tr>
-                  <th className="px-3 py-3 text-left text-sm font-semibold bg-blue-900/90 text-amber-400 border-b border-amber-400">Player</th>
-                  <th className="px-3 py-3 text-left text-sm font-semibold bg-blue-900/90 text-amber-400 border-b border-amber-400">Position</th>
-                  <th className="px-3 py-3 text-left text-sm font-semibold bg-blue-900/90 text-amber-400 border-b border-amber-400">Points</th>
-                  <th className="px-3 py-3 text-left text-sm font-semibold bg-blue-900/90 text-amber-400 border-b border-amber-400">Rebuys</th>
-                  <th className="px-3 py-3 text-left text-sm font-semibold bg-blue-900/90 text-amber-400 border-b border-amber-400">Out Time</th>
-                  <th className="px-3 py-3 text-left text-sm font-semibold bg-blue-900/90 text-amber-400 border-b border-amber-400">Gains</th>
-                </tr>
-              </thead>
-              <tbody>
-                {party.playerStats.map((stat, statIndex) => (
-                  <tr
-                    key={`${party.id}-${stat.player.id}-${statIndex}`}
-                    className="hover:bg-blue-900/80 transition-colors"
-                  >
-                    <td className="px-3 py-3 text-sm text-amber-400 border-b border-amber-400/20">{stat.player.name}</td>
-                    <td className="px-3 py-3 text-sm text-amber-400 border-b border-amber-400/20">{stat.position}</td>
-                    <td className="px-3 py-3 text-sm text-amber-400 border-b border-amber-400/20">{stat.points}</td>
-                    <td className="px-3 py-3 text-sm text-amber-400 border-b border-amber-400/20">{stat.rebuys}</td>
-                    <td className="px-3 py-3 text-sm text-amber-400 border-b border-amber-400/20">
-                      {stat.outAt
-                        ? `${new Date(stat.outAt).getHours().toString().padStart(2, '0')}:${new Date(stat.outAt).getMinutes().toString().padStart(2, '0')}:${new Date(stat.outAt).getSeconds().toString().padStart(2, '0')}`
-                        : 'N/A'}
-                    </td>
-                    <td className={cn(
-                      "px-3 py-3 text-sm font-semibold border-b border-amber-400/20",
-                      stat.gains >= 0 ? "text-green-400" : "text-red-400"
-                    )}>
-                      {stat.gains >= 0 ? `+${stat.gains}` : stat.gains}€
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-
-            <button
-              onClick={() => openModal(party)}
-              className="m-3 px-4 py-2 text-sm font-semibold text-white bg-slate-700 hover:bg-blue-800 rounded-[5px] border border-slate-400/70 transition-all duration-200 hover:shadow-[0_0_10px_rgba(251,191,36,0.3)]"
+      {years.map(year => (
+        <div key={year} className={cn(
+          selectedYear === year ? "block" : "hidden"
+        )}>
+          {filterPartiesByYear(parties, year).map((party, i) => (
+            <div
+              key={party.id}
+              ref={parties.length === i + 1 ? lastPartyElementRef : undefined}
+              className="mb-5"
             >
-              Edit
-            </button>
-          </div>
+              <div className="px-2 ml-10 flex items-center gap-3">
+                <span className="text-amber-400">{new Date(party.date).toLocaleDateString()}</span>
+                <button
+                  onClick={() => deleteParty(party.id)}
+                  className="px-4 py-2 text-sm font-semibold text-white bg-red-700 hover:bg-red-800 rounded-[5px] border border-red-300/70 transition-all duration-200 hover:shadow-[0_0_10px_rgba(251,191,36,0.3)]"
+                >
+                  Delete
+                </button>
+              </div>
+
+              <div className="mt-2 overflow-hidden rounded-[5px] border border-amber-400 bg-slate-900 shadow-[0_0_20px_rgba(251,191,36,0.1)]">
+                <table className="w-full">
+                  <thead>
+                    <tr>
+                      <th className="px-3 py-3 text-left text-sm font-semibold bg-blue-900/90 text-amber-400 border-b border-amber-400">Player</th>
+                      <th className="px-3 py-3 text-left text-sm font-semibold bg-blue-900/90 text-amber-400 border-b border-amber-400">Position</th>
+                      <th className="px-3 py-3 text-left text-sm font-semibold bg-blue-900/90 text-amber-400 border-b border-amber-400">Points</th>
+                      <th className="px-3 py-3 text-left text-sm font-semibold bg-blue-900/90 text-amber-400 border-b border-amber-400">Rebuys</th>
+                      <th className="px-3 py-3 text-left text-sm font-semibold bg-blue-900/90 text-amber-400 border-b border-amber-400">Out Time</th>
+                      <th className="px-3 py-3 text-left text-sm font-semibold bg-blue-900/90 text-amber-400 border-b border-amber-400">Gains</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {party.playerStats.map((stat, statIndex) => (
+                      <tr
+                        key={`${party.id}-${stat.player.id}-${statIndex}`}
+                        className="hover:bg-blue-900/80 transition-colors"
+                      >
+                        <td className="px-3 py-3 text-sm text-amber-400 border-b border-amber-400/20">{stat.player.name}</td>
+                        <td className="px-3 py-3 text-sm text-amber-400 border-b border-amber-400/20">{stat.position}</td>
+                        <td className="px-3 py-3 text-sm text-amber-400 border-b border-amber-400/20">{stat.points}</td>
+                        <td className="px-3 py-3 text-sm text-amber-400 border-b border-amber-400/20">{stat.rebuys}</td>
+                        <td className="px-3 py-3 text-sm text-amber-400 border-b border-amber-400/20">
+                          {stat.outAt
+                            ? `${new Date(stat.outAt).getHours().toString().padStart(2, '0')}:${new Date(stat.outAt).getMinutes().toString().padStart(2, '0')}:${new Date(stat.outAt).getSeconds().toString().padStart(2, '0')}`
+                            : 'N/A'}
+                        </td>
+                        <td className={cn(
+                          "px-3 py-3 text-sm font-semibold border-b border-amber-400/20",
+                          stat.gains >= 0 ? "text-green-400" : "text-red-400"
+                        )}>
+                          {stat.gains >= 0 ? `+${stat.gains}` : stat.gains}€
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+
+                <button
+                  onClick={() => openModal(party)}
+                  className="m-3 px-4 py-2 text-sm font-semibold text-white bg-slate-700 hover:bg-blue-800 rounded-[5px] border border-slate-400/70 transition-all duration-200 hover:shadow-[0_0_10px_rgba(251,191,36,0.3)]"
+                >
+                  Edit
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
       ))}
 
