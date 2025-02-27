@@ -93,7 +93,7 @@ const useGameState = (
     try {
       const response = await api.post("/gameState", { state: gameState });
       if (response.status === 404) {
-        console.log('No game state found (404)');
+
         setLoading(false);
         return;
       }
@@ -128,7 +128,7 @@ const useGameState = (
       }
 
       const { state } = response.data;
-      console.log('restoreState', response.data);
+
 
       // Calculate elapsed time since last save
       const elapsedTime = (Date.now() - state.lastSavedTime) / 1000;

@@ -5,13 +5,43 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
 import { cn } from "../lib/utils";
 
 function calculateGains(playerStats: PlayerStats[]): number {
-  return playerStats.reduce((sum, game) => {
-    let gain = 0;
-    if (game.position === 1) gain = game.totalCost * 0.6;
-    else if (game.position === 2) gain = game.totalCost * 0.3;
-    else if (game.position === 3) gain = game.totalCost * 0.1;
-    return sum + Math.round(gain);
-  }, 0);
+  // Group stats by party
+  const statsByParty: { [partyId: string]: PlayerStats[] } = {};
+
+  playerStats.forEach(stat => {
+    const partyId = stat.partyId || 'unknown';
+    if (!statsByParty[partyId]) {
+      statsByParty[partyId] = [];
+    }
+    statsByParty[partyId].push(stat);
+  });
+
+  // Calculate gains for each party
+  let totalGains = 0;
+
+  Object.values(statsByParty).forEach(partyStats => {
+    // Calculate total pot for this party
+    const totalPot = partyStats.reduce((sum, player) => sum + player.totalCost, 0);
+    const playerCount = partyStats.length;
+
+    // Determine gains based on position and player count
+    partyStats.forEach(player => {
+      if (playerCount > 7) {
+        // More than 7 players: pay 4 positions with 50/30/20/10 split
+        if (player.position === 1) totalGains += Math.round(totalPot * 0.5);
+        else if (player.position === 2) totalGains += Math.round(totalPot * 0.3);
+        else if (player.position === 3) totalGains += Math.round(totalPot * 0.2);
+        else if (player.position === 4) totalGains += Math.round(totalPot * 0.1);
+      } else {
+        // 7 or fewer players: pay 3 positions with 60/30/10 split
+        if (player.position === 1) totalGains += Math.round(totalPot * 0.6);
+        else if (player.position === 2) totalGains += Math.round(totalPot * 0.3);
+        else if (player.position === 3) totalGains += Math.round(totalPot * 0.1);
+      }
+    });
+  });
+
+  return totalGains;
 }
 
 const PartyResults: React.FC<PartyResultsProps> = ({ players }) => {

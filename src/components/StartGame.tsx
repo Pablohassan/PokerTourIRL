@@ -707,7 +707,7 @@ const StartGame: React.FC<StartGameProps> = ({
             if (partyId) {
               try {
                 await api.delete(`/parties/${partyId}`);
-                console.log('Party deleted successfully');
+
               } catch (error: any) {
                 console.error('Error deleting party:', error);
                 // Continue even if party deletion fails, as game state is already deleted
@@ -851,7 +851,7 @@ const StartGame: React.FC<StartGameProps> = ({
               }}>
                 <Button
                   onClick={() => {
-                    console.log('Opening edit modal');
+
                     setShowEditModal(true);
                   }}
                   className="bg-blue-600 hover:bg-blue-700 text-white font-['DS-DIGI'] text-lg text-shadow-sm shadow-md border border-slate-500/70 hover:border-slate-900 "
