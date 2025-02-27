@@ -185,7 +185,7 @@ export const PartyPage = () => {
     }
   };
 
-  const filterPartiesByYear = (parties: Party[], year: number) => {
+  const filterPartiesByYear = (parties: Party[], _year: number) => {
     return parties; // Just return all parties since they're already filtered by year
   };
 
