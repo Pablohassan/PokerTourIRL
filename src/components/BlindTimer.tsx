@@ -122,6 +122,22 @@ const BlindTimer: React.FC<BlindTimerProps> = ({
         .catch(error => {
           console.warn('Could not play sound:', error);
         });
+      const soundDuration = 6000; // 3 seconds (adjust as needed)
+      const soundTimer = setTimeout(() => {
+        if (audioRef.current) {
+          audioRef.current.pause();
+          audioRef.current.currentTime = 0;
+        }
+      }, soundDuration);
+
+      return () => {
+        clearTimeout(soundTimer);
+        // Also stop sound when component unmounts or effect reruns
+        if (audioRef.current) {
+          audioRef.current.pause();
+          audioRef.current.currentTime = 0;
+        }
+      };
     }
   }, [showModal]);
 
@@ -200,7 +216,7 @@ const BlindTimer: React.FC<BlindTimerProps> = ({
       setTimeout(() => {
         setShowModal(false);
         isUpdatingRef.current = false;
-      }, 4000);
+      }, 6000);
 
     } catch (error) {
       console.error('Error updating blinds:', error);

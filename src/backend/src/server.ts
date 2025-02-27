@@ -215,12 +215,33 @@ app.get(
 );
 // @ts-ignore
 app.get("/parties", async (req: Request, res: Response, next: NextFunction) => {
-  const { page = 1, limit = 10 } = req.query;
+  const { page = 1, limit = 50, year } = req.query;
   const skip = (Number(page) - 1) * Number(limit);
+
   try {
+    // Create base query conditions
+    let whereCondition = {};
+
+    // Add year filter if provided
+    if (year) {
+      const yearStart = new Date(`${year}-01-01T00:00:00.000Z`);
+      const yearEnd = new Date(`${year}-12-31T23:59:59.999Z`);
+
+      whereCondition = {
+        date: {
+          gte: yearStart,
+          lte: yearEnd,
+        },
+      };
+    }
+
     const parties = await prisma.party.findMany({
+      where: whereCondition,
       skip,
       take: Number(limit),
+      orderBy: {
+        date: "desc",
+      },
       select: {
         id: true,
         date: true,
@@ -233,6 +254,7 @@ app.get("/parties", async (req: Request, res: Response, next: NextFunction) => {
         },
       },
     });
+
     res.json(parties);
   } catch (err) {
     next(err);

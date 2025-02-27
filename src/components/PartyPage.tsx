@@ -52,19 +52,15 @@ export const PartyPage = () => {
         const response = await api.get(`/parties?page=${page}&limit=${limit}&year=${selectedYear}`);
         const fetchedParties = response.data;
 
-        // Add year filtering to the backend query
+        // No need to filter by year again since the backend handles it
         const partiesWithStats = await Promise.all(
-          fetchedParties
-            .filter((party: Party) =>
-              new Date(party.date).getFullYear() === selectedYear
-            )
-            .map(async (party: Party) => {
-              const statsResponse = await api.get(`/parties/${party.id}/stats`);
-              return {
-                ...party,
-                playerStats: statsResponse.data,
-              };
-            })
+          fetchedParties.map(async (party: Party) => {
+            const statsResponse = await api.get(`/parties/${party.id}/stats`);
+            return {
+              ...party,
+              playerStats: statsResponse.data,
+            };
+          })
         );
 
         setParties(prevParties => {
@@ -87,7 +83,7 @@ export const PartyPage = () => {
     };
 
     fetchParties();
-  }, [page, selectedYear]); // Add selectedYear to dependencies
+  }, [page, selectedYear]);
 
   const lastPartyElementRef = useCallback((node: HTMLDivElement) => {
     if (observer.current) observer.current.disconnect();
@@ -190,9 +186,7 @@ export const PartyPage = () => {
   };
 
   const filterPartiesByYear = (parties: Party[], year: number) => {
-    return parties.filter(party =>
-      new Date(party.date).getFullYear() === year
-    );
+    return parties; // Just return all parties since they're already filtered by year
   };
 
   return (
