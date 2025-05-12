@@ -16,32 +16,53 @@ function calculateGains(playerStats: PlayerStats[]): number {
     statsByParty[partyId].push(stat);
   });
 
-  // Calculate gains for each party
+  // Calculate total gains across all parties
   let totalGains = 0;
 
   Object.values(statsByParty).forEach(partyStats => {
     // Calculate total pot for this party
-    const totalPot = partyStats.reduce((sum, player) => sum + player.totalCost, 0);
     const playerCount = partyStats.length;
+    const totalBuyins = playerCount * 5; // Initial buy-in is 5€ per player
+    const totalRebuys = partyStats.reduce((sum, player) => sum + player.rebuys, 0) * 4; // Each rebuy adds 4€
+    const totalPot = totalBuyins + totalRebuys;
 
-    // Determine gains based on position and player count
-    partyStats.forEach(player => {
-      if (playerCount > 7) {
-        // More than 7 players: pay 4 positions with 50/30/20/10 split
-        if (player.position === 1) totalGains += Math.round(totalPot * 0.5);
-        else if (player.position === 2) totalGains += Math.round(totalPot * 0.3);
-        else if (player.position === 3) totalGains += Math.round(totalPot * 0.2);
-        else if (player.position === 4) totalGains += Math.round(totalPot * 0.1);
-      } else {
-        // 7 or fewer players: pay 3 positions with 60/30/10 split
-        if (player.position === 1) totalGains += Math.round(totalPot * 0.6);
-        else if (player.position === 2) totalGains += Math.round(totalPot * 0.3);
-        else if (player.position === 3) totalGains += Math.round(totalPot * 0.1);
-      }
-    });
+    // Find this player's stats
+    const playerStat = partyStats.find(stat => stat.playerId === playerStats[0].playerId);
+    if (!playerStat) return;
+
+    // Calculate player's cost
+    const playerCost = 5 + (playerStat.rebuys * 4); // Initial buy-in (5€) + rebuys (4€ each)
+
+    // Calculate gain based on position and player count
+    let percentage = 0;
+    const position = playerStat.position;
+
+    if (!position || position > 4) {
+      // Player didn't finish in money - just subtract their costs
+      totalGains -= playerCost;
+      return;
+    }
+
+    if (playerCount <= 6) {
+      // 6 players or less: 1st (65%), 2nd (35%)
+      const percentages = [0.65, 0.35, 0, 0];
+      percentage = percentages[position - 1];
+    } else if (playerCount === 7) {
+      // 7 players: 1st (55%), 2nd (30%), 3rd (15%)
+      const percentages = [0.55, 0.30, 0.15, 0];
+      percentage = percentages[position - 1];
+    } else {
+      // 8 or more players: 1st (50%), 2nd (28%), 3rd (15%), 4th (7%)
+      const percentages = [0.50, 0.28, 0.15, 0.07];
+      percentage = percentages[position - 1];
+    }
+
+    // Calculate prize money
+    const prize = totalPot * percentage;
+    totalGains += prize - playerCost;
   });
 
-  return totalGains;
+  return Math.round(totalGains * 100) / 100; // Round to 2 decimal places
 }
 
 const PartyResults: React.FC<PartyResultsProps> = ({ players }) => {

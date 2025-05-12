@@ -501,7 +501,6 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, players, 
                         if (partyId) {
                             try {
                                 await api.delete(`/parties/${partyId}`);
-                                console.log('Party deleted successfully');
                             }
                             catch (error) {
                                 console.error('Error deleting party:', error);
@@ -577,7 +576,6 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, players, 
                                             display: 'flex',
                                             gap: '8px'
                                         }, children: [_jsx(Button, { onClick: () => {
-                                                    console.log('Opening edit modal');
                                                     setShowEditModal(true);
                                                 }, className: "bg-blue-600 hover:bg-blue-700 text-white font-['DS-DIGI'] text-lg text-shadow-sm shadow-md border border-slate-500/70 hover:border-slate-900 ", children: "Edit Game" }), _jsx(Button, { onClick: updateBlinds, className: "bg-green-500  hover:bg-amber-600 text-white font-['DS-DIGI'] text-lg shadow-md border border-1 border-green-500/30 hover:border-amber-600", disabled: !gameStarted || blindIndex >= blinds.length - 1, children: `>> Next Blind` })] })] }), _jsxs("div", { style: {
                                     display: 'flex',

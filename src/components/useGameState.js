@@ -77,7 +77,6 @@ const useGameState = (gameStarted, setGameStarted, selectedPlayers, setSelectedP
         try {
             const response = await api.post("/gameState", { state: gameState });
             if (response.status === 404) {
-                console.log('No game state found (404)');
                 setLoading(false);
                 return;
             }
@@ -109,7 +108,6 @@ const useGameState = (gameStarted, setGameStarted, selectedPlayers, setSelectedP
                 return;
             }
             const { state } = response.data;
-            console.log('restoreState', response.data);
             // Calculate elapsed time since last save
             const elapsedTime = (Date.now() - state.lastSavedTime) / 1000;
             const restoredBlindDuration = state.currentBlindDuration || configBlindDuration;

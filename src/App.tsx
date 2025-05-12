@@ -5,6 +5,7 @@ import { PlayerRanking } from "./components/PLayerRanking";
 import PartyResults from "./components/PartyResults";
 import StartGame from "./components/StartGame";
 import PartyPage from "./components/PartyPage";
+import PlayerPage from "./components/PlayerPage";
 import bourlyimage from "./assets/bourlypoker3.webp"
 import { Menu } from "./components/Menu";
 import { cn } from "./lib/utils";
@@ -156,11 +157,11 @@ export default function App() {
     },
     {
       path: "/partypage",
-      element: (<PartyPage
-
-      />)
-
-
+      element: (<PartyPage />)
+    },
+    {
+      path: "/player/:playerId",
+      element: (<PlayerPage />)
     },
     {
       path: "/ranking",

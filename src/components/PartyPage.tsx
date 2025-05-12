@@ -6,6 +6,7 @@ import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import { cn } from '../lib/utils';
 import { Tabs, TabsList, TabsTrigger } from "../components/ui/tabs";
+import { useNavigate } from 'react-router-dom';
 
 // Add CSS styles
 
@@ -35,6 +36,7 @@ export const PartyPage = () => {
   const limit = 10; // Match backend limit
   const [selectedYear, setSelectedYear] = useState(2025);
   const years = [2023, 2024, 2025];
+  const navigate = useNavigate();
 
   // Reset pagination when year changes
   useEffect(() => {
@@ -189,6 +191,10 @@ export const PartyPage = () => {
     return parties; // Just return all parties since they're already filtered by year
   };
 
+  const navigateToPlayerPage = (playerId: number) => {
+    navigate(`/player/${playerId}`);
+  };
+
   return (
     <div className="p-5 min-h-screen bg-slate-900">
       <Tabs defaultValue="2025" className="mb-4">
@@ -243,6 +249,7 @@ export const PartyPage = () => {
                       <th className="px-3 py-3 text-left text-sm font-semibold bg-blue-900/90 text-amber-400 border-b border-amber-400">Position</th>
                       <th className="px-3 py-3 text-left text-sm font-semibold bg-blue-900/90 text-amber-400 border-b border-amber-400">Points</th>
                       <th className="px-3 py-3 text-left text-sm font-semibold bg-blue-900/90 text-amber-400 border-b border-amber-400">Rebuys</th>
+                      <th className="px-3 py-3 text-left text-sm font-semibold bg-blue-900/90 text-amber-400 border-b border-amber-400">Kills</th>
                       <th className="px-3 py-3 text-left text-sm font-semibold bg-blue-900/90 text-amber-400 border-b border-amber-400">Out Time</th>
                       <th className="px-3 py-3 text-left text-sm font-semibold bg-blue-900/90 text-amber-400 border-b border-amber-400">Gains</th>
                     </tr>
@@ -253,10 +260,16 @@ export const PartyPage = () => {
                         key={`${party.id}-${stat.player.id}-${statIndex}`}
                         className="hover:bg-blue-900/80 transition-colors"
                       >
-                        <td className="px-3 py-3 text-sm text-amber-400 border-b border-amber-400/20">{stat.player.name}</td>
+                        <td
+                          className="px-3 py-3 text-sm text-amber-400 border-b border-amber-400/20 cursor-pointer hover:text-amber-300"
+                          onClick={() => navigateToPlayerPage(stat.player.id)}
+                        >
+                          {stat.player.name}
+                        </td>
                         <td className="px-3 py-3 text-sm text-amber-400 border-b border-amber-400/20">{stat.position}</td>
                         <td className="px-3 py-3 text-sm text-amber-400 border-b border-amber-400/20">{stat.points}</td>
                         <td className="px-3 py-3 text-sm text-amber-400 border-b border-amber-400/20">{stat.rebuys}</td>
+                        <td className="px-3 py-3 text-sm text-amber-400 border-b border-amber-400/20">{stat.kills}</td>
                         <td className="px-3 py-3 text-sm text-amber-400 border-b border-amber-400/20">
                           {stat.outAt
                             ? `${new Date(stat.outAt).getHours().toString().padStart(2, '0')}:${new Date(stat.outAt).getMinutes().toString().padStart(2, '0')}:${new Date(stat.outAt).getSeconds().toString().padStart(2, '0')}`
@@ -311,6 +324,8 @@ export const PartyPage = () => {
                     <th className="px-3 py-3 text-left text-sm font-semibold bg-blue-900 text-amber-400 border-b border-amber-400">Position</th>
                     <th className="px-3 py-3 text-left text-sm font-semibold bg-blue-900 text-amber-400 border-b border-amber-400">Points</th>
                     <th className="px-3 py-3 text-left text-sm font-semibold bg-blue-900 text-amber-400 border-b border-amber-400">Rebuys</th>
+                    <th className="px-3 py-3 text-left text-sm font-semibold bg-blue-900 text-amber-400 border-b border-amber-400">Kills</th>
+
                   </tr>
                 </thead>
                 <tbody>
@@ -341,6 +356,15 @@ export const PartyPage = () => {
                           className="w-16 px-2 py-1 bg-slate-900 border border-amber-400 rounded text-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-400/30"
                         />
                       </td>
+                      <td className="px-3 py-3 text-sm text-amber-400 border-b border-amber-400/20">
+                        <input
+                          type="number"
+                          value={stat.kills}
+                          onChange={(e) => editStat(index, 'kills', parseInt(e.target.value))}
+                          className="w-16 px-2 py-1 bg-slate-900 border border-amber-400 rounded text-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-400/30"
+                        />
+                      </td>
+
                     </tr>
                   ))}
                 </tbody>
