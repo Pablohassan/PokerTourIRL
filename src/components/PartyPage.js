@@ -7,6 +7,7 @@ import { toast } from 'react-hot-toast';
 import { cn } from '../lib/utils';
 import { Tabs, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { useNavigate } from 'react-router-dom';
+import { calculatePartyGains } from '../utils/gainsCalculator';
 export const PartyPage = () => {
     const [parties, setParties] = useState([]);
     const [isModalOpen, setModalOpen] = useState(false);
@@ -36,9 +37,14 @@ export const PartyPage = () => {
                 // No need to filter by year again since the backend handles it
                 const partiesWithStats = await Promise.all(fetchedParties.map(async (party) => {
                     const statsResponse = await api.get(`/parties/${party.id}/stats`);
+                    // Add calculated gains using our utility function
+                    const playerStats = statsResponse.data.map((stat) => ({
+                        ...stat,
+                        gains: calculatePartyGains(statsResponse.data, stat.playerId || stat.player?.id)
+                    }));
                     return {
                         ...party,
-                        playerStats: statsResponse.data,
+                        playerStats,
                     };
                 }));
                 setParties(prevParties => {

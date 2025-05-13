@@ -63,12 +63,12 @@ const StatCard = ({ title, value, className = "" }: { title: string; value: any;
 );
 
 // Helper function for position suffixes
-const getPositionSuffix = (position: number): string => {
-    if (position === 1) return 'st';
-    if (position === 2) return 'nd';
-    if (position === 3) return 'rd';
-    return 'th';
-};
+// const getPositionSuffix = (position: number): string => {
+//     if (position === 1) return 'st';
+//     if (position === 2) return 'nd';
+//     if (position === 3) return 'rd';
+//     return 'th';
+// };
 
 export const PlayerPage = () => {
     const { playerId } = useParams<{ playerId: string }>();
@@ -87,7 +87,7 @@ export const PlayerPage = () => {
 
                 // Fetch player stats
                 const response = await api.get(`/playerStats/${playerId}`);
-                const { stats, totalPoints: apiTotalPoints, totalKills: apiTotalKills } = response.data;
+                const { stats, } = response.data;
 
                 if (!stats.length) {
                     setError('No stats found for this player');
