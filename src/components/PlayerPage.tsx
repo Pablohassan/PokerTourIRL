@@ -63,7 +63,7 @@ export const PlayerPage = () => {
 
         Object.values(statsByParty).forEach(partyStats => {
             // Get all players in this party to determine player count
-            const partyId = partyStats[0].partyId;
+
             let allPlayersInParty: PlayerStats[] = partyStats;
 
             // If we don't have all players from this party in our stats, we need to calculate pot differently
@@ -295,7 +295,7 @@ export const PlayerPage = () => {
         );
     }
 
-    const { player, yearlyStats, totalPoints, totalGains, totalKills, totalGames, winRate, averagePosition } = playerStats;
+    const { player, totalPoints, totalGains, totalKills, totalGames, winRate, averagePosition } = playerStats;
 
     return (
         <div className="min-h-screen bg-slate-900 p-5">
@@ -446,7 +446,7 @@ export const PlayerPage = () => {
                                             <tbody>
                                                 {yearStat.stats.map((stat) => {
                                                     // Get player count from the enhanced data
-                                                    const playerCount = (stat as any).playerCount || 8;
+                                                    //           const playerCount = (stat as any).playerCount || 8;
 
                                                     // Get the gain directly from the enhanced data
                                                     const gain = stat.gains !== undefined ? stat.gains : 0;

@@ -3,7 +3,7 @@ import { AxiosError } from "axios";
 import { useNavigate } from "react-router-dom";
 import api from '../api';
 import { UIContext } from '../components/UiProvider';
-import { cn } from "../lib/utils";
+
 
 interface Player {
   id: number;
