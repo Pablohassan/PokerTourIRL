@@ -6,10 +6,12 @@ import { PlayerRanking } from "./components/PLayerRanking";
 import PartyResults from "./components/PartyResults";
 import StartGame from "./components/StartGame";
 import PartyPage from "./components/PartyPage";
+import PlayerPage from "./components/PlayerPage";
 import bourlyimage from "./assets/bourlypoker3.webp";
 import { Menu } from "./components/Menu";
 import { cn } from "./lib/utils";
 import { motion } from "framer-motion";
+import runTests from "./utils/testGainsCalculator";
 // import Ak from "./components/PokerLogo";
 import { ClerkProvider, SignedIn, SignedOut, RedirectToSignIn, SignIn, SignUp, } from "@clerk/clerk-react";
 import AddPlayer from "./components/AddPlayer";
@@ -26,6 +28,7 @@ export default function App() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [blindIndex, setBlindIndex] = useState(0);
+    const [testResults, setTestResults] = useState(null);
     useEffect(() => {
         const fetchChampionnat = async () => {
             try {
@@ -45,6 +48,11 @@ export default function App() {
         };
         fetchChampionnat();
     }, []); // Runs only on the first render
+    const runGainsCalculationTest = () => {
+        const results = runTests();
+        setTestResults(results);
+        console.log("Test results:", results);
+    };
     const fetchPlayersAndParties = async () => {
         try {
             // Exécuter les appels API en parallèle
@@ -91,6 +99,10 @@ export default function App() {
             element: (_jsx(PartyPage, {}))
         },
         {
+            path: "/player/:playerId",
+            element: (_jsx(PlayerPage, {}))
+        },
+        {
             path: "/ranking",
             element: (_jsx(PlayerRanking, { players: players, playerScores: stats, selectedPlayers: selectedPlayers, handlePlayerSelect: handlePlayerSelect })),
         },
@@ -110,5 +122,5 @@ export default function App() {
     if (isLoading) {
         return _jsx("div", { className: cn("flex items-center justify-center min-h-screen"), children: "Loading..." });
     }
-    return (_jsx("div", { className: cn("min-h-screen bg-background"), children: _jsxs(ClerkProvider, { publishableKey: clerkPubKey, children: [element, _jsx(Menu, { isOpen: isMenuOpen, onClose: () => setIsMenuOpen(false) }), _jsx(SignedIn, {}), _jsxs(SignedOut, { children: [_jsx(RedirectToSignIn, {}), _jsx(SignIn, {}), _jsx(SignUp, {})] })] }) }));
+    return (_jsxs("div", { className: cn("min-h-screen bg-background"), children: [_jsxs(ClerkProvider, { publishableKey: clerkPubKey, children: [element, _jsx(Menu, { isOpen: isMenuOpen, onClose: () => setIsMenuOpen(false) }), _jsx(SignedIn, {}), _jsxs(SignedOut, { children: [_jsx(RedirectToSignIn, {}), _jsx(SignIn, {}), _jsx(SignUp, {})] })] }), _jsx("div", { className: cn("fixed bottom-4 right-4 z-50"), children: _jsx("button", { onClick: runGainsCalculationTest, className: cn("px-4 py-2", "bg-amber-600 text-white rounded shadow", "hover:bg-amber-500 transition-colors"), children: "Test Gains Calculation" }) }), testResults && (_jsx("div", { className: cn("fixed inset-0 bg-black/70 flex items-center justify-center z-50"), onClick: () => setTestResults(null), children: _jsxs("div", { className: cn("bg-slate-900 p-6 rounded-lg", "max-w-2xl w-[90%] max-h-[90vh] overflow-auto"), onClick: (e) => e.stopPropagation(), children: [_jsx("h2", { className: cn("text-2xl font-semibold mb-4 text-amber-400"), children: "Gains Calculation Test Results" }), _jsxs("div", { className: cn("mb-4"), children: [_jsxs("p", { className: cn("text-amber-300"), children: ["Total players: ", testResults.testParty.length] }), _jsxs("p", { className: cn("text-amber-300"), children: ["Total rebuys: ", testResults.totalRebuys] }), _jsxs("p", { className: cn("text-amber-300"), children: ["Total pot: ", testResults.totalPot, "\u20AC"] })] }), _jsx("div", { className: cn("overflow-hidden rounded-[5px] border border-amber-400 bg-slate-900"), children: _jsxs("table", { className: cn("w-full"), children: [_jsx("thead", { children: _jsxs("tr", { children: [_jsx("th", { className: cn("px-3 py-2 text-left text-sm font-semibold bg-blue-900/90 text-amber-400 border-b border-amber-400"), children: "Player" }), _jsx("th", { className: cn("px-3 py-2 text-left text-sm font-semibold bg-blue-900/90 text-amber-400 border-b border-amber-400"), children: "Position" }), _jsx("th", { className: cn("px-3 py-2 text-left text-sm font-semibold bg-blue-900/90 text-amber-400 border-b border-amber-400"), children: "Rebuys" }), _jsx("th", { className: cn("px-3 py-2 text-left text-sm font-semibold bg-blue-900/90 text-amber-400 border-b border-amber-400"), children: "Gains" })] }) }), _jsx("tbody", { children: testResults.results.map((result) => (_jsxs("tr", { className: cn("hover:bg-blue-900/50"), children: [_jsxs("td", { className: cn("px-3 py-2 text-sm text-amber-400 border-b border-amber-400/20"), children: ["Player ", result.playerId] }), _jsx("td", { className: cn("px-3 py-2 text-sm text-amber-400 border-b border-amber-400/20"), children: result.position }), _jsx("td", { className: cn("px-3 py-2 text-sm text-amber-400 border-b border-amber-400/20"), children: result.rebuys }), _jsxs("td", { className: cn("px-3 py-2 text-sm font-semibold border-b border-amber-400/20", result.gain >= 0 ? "text-green-400" : "text-red-400"), children: [result.gain >= 0 ? `+${result.gain.toFixed(2)}` : `${result.gain.toFixed(2)}`, "\u20AC"] })] }, result.playerId))) })] }) }), _jsx("div", { className: cn("mt-4 flex justify-end"), children: _jsx("button", { onClick: () => setTestResults(null), className: cn("px-4 py-2 bg-red-700 text-white rounded", "hover:bg-red-600 transition-colors"), children: "Close" }) })] }) }))] }));
 }

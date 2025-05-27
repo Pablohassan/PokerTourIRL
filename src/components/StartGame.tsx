@@ -393,6 +393,10 @@ const StartGame: React.FC<StartGameProps> = ({
 
   const confirmElimination = async () => {
     if (!pendingEliminateData) return;
+    if (selectedPlayers.length < 2) {
+      toast.error("CLICKEZ SUR END GAME POUR TERMINER LA PARTIE.");
+      return;
+    }
 
     try {
       setPlayerOutGame(pendingEliminateData.playerId);

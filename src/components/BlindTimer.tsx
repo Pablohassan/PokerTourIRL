@@ -1,15 +1,126 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { toast } from 'react-hot-toast';
 import alerteSon from '../assets/alarmpok.mp3';
+import pinup from '../assets/changementdeblind.wav';
+import nextBlindVideo from '../assets/pinup.mp4';
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
+
 } from "./ui/dialog";
-import { cn } from "../lib/utils";
 import { Player } from "./interfaces";
+
+
+
+
+const FADE = 0.5; // 500 ms
+const TOTAL = 6;  // durée totale du splash (fade‑in + lecture + fade‑out)
+
+interface NextBlindSplashProps {
+  show: boolean;
+  onClose: () => void;
+  blinds: { small: number; big: number; ante: number };
+  outPlayers: Player[];
+  showOutPlayers: boolean;
+  videoSrc: string;
+}
+
+const NextBlindSplash: React.FC<NextBlindSplashProps> = ({
+  show,
+  onClose,
+  blinds,
+  outPlayers,
+  showOutPlayers,
+  videoSrc,
+}) => {
+  /* auto‑fermeture après TOTAL secondes ------------------------------ */
+  useEffect(() => {
+    if (!show) return;
+    const id = setTimeout(onClose, TOTAL * 1000);
+    return () => clearTimeout(id);
+  }, [show, onClose]);
+
+  return (
+    <AnimatePresence>
+      {show && (
+        <Dialog open={show} onOpenChange={onClose}>
+          {/* ↓↓↓  on pousse la modale un peu plus haut */}
+          <DialogContent
+            className="max-w-full sm:max-w-[800px] p-0 overflow-hidden bg-transparent border-none shadow-none sm:top-8 sm:translate-y-0"
+          >
+            {/* Vidéo rétro */}
+            <motion.video
+              key="arcade-video"
+              src={videoSrc}
+              autoPlay
+              muted
+              playsInline
+              initial={{ opacity: 0, scale: 1.05 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: FADE, ease: "easeOut" }}
+              /* ↓↓↓  ancre la vidéo en haut du cadre */
+              className="border-2 border-amber-400/70 w-full h-full object-cover object-top"
+            />
+
+            {/* Overlay valeurs */}
+            <motion.div
+              aria-live="polite"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ delay: FADE / 2, duration: FADE / 2 }}
+              className="absolute inset-0 flex flex-col items-center justify-center gap-4 pointer-events-none"
+            >
+              {[
+                { label: "Small Blind", value: blinds.small, delay: 0.3 },
+                { label: "Big Blind", value: blinds.big, delay: 0.4 },
+                { label: "Ante", value: blinds.ante, delay: 0.5 },
+              ].map(({ label, value, delay }) => (
+                <motion.div
+                  key={label}
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  exit={{ y: -20, opacity: 0 }}
+                  transition={{ delay: delay + FADE, duration: 0.4 }}
+                  className="relative flex w-full max-w-xs justify-between font-ds-digital text-amber-300 drop-shadow-[0_0_6px_#f59e0b] tracking-wider text-3xl sm:text-4xl"
+                >
+                  <span className="font-bold" style={{ transform: "translateX(-100px)" }}>{label}</span>
+                  <span className="font-bold" style={{ transform: "translateX(80px)" }}>{value}</span>
+
+                  {/* Liste joueurs éliminés — sous Ante */}
+                  {label === "Ante" && showOutPlayers && outPlayers.length > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="absolute top-full right-0 mt-2 w-48 bg-zinc-900/90 rounded-lg shadow-xl border border-amber-500/20"
+                    >
+                      <div className="p-2 max-h-40 overflow-y-auto">
+                        <h4 className="font-ds-digital text-amber-400 text-sm mb-1">
+                          Eliminated Players:
+                        </h4>
+                        {outPlayers.map((p) => (
+                          <div
+                            key={p.id}
+                            className="text-amber-400/80 font-ds-digital text-xs py-1 border-b border-amber-500/10"
+                          >
+                            {p.name}
+                          </div>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </motion.div>
+              ))}
+            </motion.div>
+          </DialogContent>
+        </Dialog>
+      )}
+    </AnimatePresence>
+  );
+};
 
 
 interface BlindTimerProps {
@@ -80,7 +191,7 @@ const BlindTimer: React.FC<BlindTimerProps> = ({
 
   // Initialize audio on component mount
   useEffect(() => {
-    audioRef.current = new Audio(alerteSon);
+    audioRef.current = new Audio(pinup);
     // Preload the audio
     audioRef.current.load();
     // Set audio properties
@@ -113,26 +224,30 @@ const BlindTimer: React.FC<BlindTimerProps> = ({
   // Effect to handle sound playing when modal shows
   useEffect(() => {
     if (showModal && audioRef.current) {
-      console.log('Attempting to play sound...');
-      audioRef.current.currentTime = 0;
-      audioRef.current.play()
-        .then(() => {
-          console.log('Sound playing successfully');
-        })
-        .catch(error => {
-          console.warn('Could not play sound:', error);
-        });
-      const soundDuration = 6000; // 3 seconds (adjust as needed)
-      const soundTimer = setTimeout(() => {
+      console.log('Modal shown, preparing to play sound in 2s...');
+
+      const delay = 2500; // délai de 2 secondes
+      const playTimer = setTimeout(() => {
+        audioRef.current!.currentTime = 0;
+        audioRef.current!.play()
+          .then(() => {
+            console.log('Sound played after delay');
+          })
+          .catch(error => {
+            console.warn('Could not play sound after delay:', error);
+          });
+      }, delay);
+
+      const stopTimer = setTimeout(() => {
         if (audioRef.current) {
           audioRef.current.pause();
           audioRef.current.currentTime = 0;
         }
-      }, soundDuration);
+      }, delay + 6000); // arrêter après 6s de lecture (ajustable)
 
       return () => {
-        clearTimeout(soundTimer);
-        // Also stop sound when component unmounts or effect reruns
+        clearTimeout(playTimer);
+        clearTimeout(stopTimer);
         if (audioRef.current) {
           audioRef.current.pause();
           audioRef.current.currentTime = 0;
@@ -140,6 +255,7 @@ const BlindTimer: React.FC<BlindTimerProps> = ({
       };
     }
   }, [showModal]);
+
 
   // Initialize Screen Wake Lock
   useEffect(() => {
@@ -319,130 +435,14 @@ const BlindTimer: React.FC<BlindTimerProps> = ({
   }, [showModal]);
 
   return (
-    <>
-      <AnimatePresence>
-        {showModal && (
-          <Dialog open={showModal} onOpenChange={setShowModal} >
-            <DialogContent className={cn(
-              "bg-zinc-950/95 border-amber-500/50",
-              "backdrop-blur-lg",
-              "shadow-[0_0_50px_-5px_rgba(245,158,11,0.3)]",
-              "max-w-[95vw] sm:max-w-[800px]",
-              "p-6 sm:p-8",
-              "border-2"
-            )}>
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                transition={{ duration: 0.5, ease: "easeOut" }}
-              >
-                <DialogHeader className="mb-6">
-                  <motion.div
-                    initial={{ y: -30, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: 0.1, duration: 0.7 }}
-                  >
-                    <DialogTitle className={cn(
-                      "font-ds-digital",
-                      "text-4xl sm:text-5xl",
-                      "text-center",
-                      "text-amber-400",
-                      "tracking-wider",
-                      "font-bold",
-                      "mb-2"
-                    )}>
-                      Blind Change!
-                    </DialogTitle>
-                    <p className="text-amber-400/80 text-center text-lg sm:text-xl font-ds-digital">
-                      Changement de blind a la prochaine main
-                    </p>
-                  </motion.div>
-                </DialogHeader>
-
-                <motion.div
-                  className="space-y-6"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2, duration: 0.5 }}
-                >
-                  <div className="bg-zinc-900/80 rounded-xl p-4 sm:p-6 border border-amber-500/20">
-                    <div className="space-y-4">
-                      <motion.div
-                        className="flex justify-between items-center"
-                        initial={{ x: -20, opacity: 0 }}
-                        animate={{ x: 0, opacity: 1 }}
-                        transition={{ delay: 0.3, duration: 0.5 }}
-                      >
-                        <span className="font-ds-digital text-amber-400/80 text-2xl sm:text-3xl">Small Blind</span>
-                        <span className="font-ds-digital text-amber-400 text-3xl sm:text-4xl">{displayBlinds.small}</span>
-                      </motion.div>
-
-                      <motion.div
-                        className="flex justify-between items-center"
-                        initial={{ x: -20, opacity: 0 }}
-                        animate={{ x: 0, opacity: 1 }}
-                        transition={{ delay: 0.4, duration: 0.5 }}
-                      >
-                        <span className="font-ds-digital text-amber-400/80 text-2xl sm:text-3xl">Big Blind</span>
-                        <span className="font-ds-digital text-amber-400 text-3xl sm:text-4xl">{displayBlinds.big}</span>
-                      </motion.div>
-
-                      <div className="h-px bg-amber-400/20 my-4" />
-
-                      <motion.div
-                        className="flex justify-between items-center"
-                        initial={{ x: -20, opacity: 0 }}
-                        animate={{ x: 0, opacity: 1 }}
-                        transition={{ delay: 0.5, duration: 0.5 }}
-                      >
-                        <span className="font-ds-digital text-amber-400/80 text-2xl sm:text-3xl">Ante</span>
-                        <div className="relative">
-                          <span className="font-ds-digital text-amber-400 text-3xl sm:text-4xl">
-                            {displayBlinds.ante}
-                          </span>
-
-                          <AnimatePresence>
-                            {showOutPlayers && outPlayers.length > 0 && (
-                              <motion.div
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -10 }}
-                                className="absolute top-full right-0 mt-2 w-48 bg-zinc-900 rounded-lg shadow-xl border border-amber-500/20"
-                              >
-                                <div className="p-2 max-h-40 overflow-y-auto">
-                                  <h4 className="font-ds-digital text-amber-400 text-sm mb-1">Eliminated Players:</h4>
-                                  {outPlayers.map(player => (
-                                    <div
-                                      key={player.id}
-                                      className="text-amber-400/80 font-ds-digital text-xs py-1 border-b border-amber-500/10"
-                                    >
-                                      {player.name}
-                                    </div>
-                                  ))}
-                                </div>
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
-                        </div>
-                      </motion.div>
-                    </div>
-                  </div>
-
-                  <motion.div
-                    className="text-center text-amber-400/60 text-sm sm:text-base font-ds-digital"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.6, duration: 0.5 }}
-                  >
-                    Reapparition du compoteur dans quelques secondes...
-                  </motion.div>
-                </motion.div>
-              </motion.div>
-            </DialogContent>
-          </Dialog>
-        )}
-      </AnimatePresence>
+    <> <NextBlindSplash
+      show={showModal}
+      onClose={() => setShowModal(false)}
+      blinds={displayBlinds}
+      outPlayers={outPlayers}
+      showOutPlayers={showOutPlayers}
+      videoSrc={nextBlindVideo}
+    />
     </>
   );
 };

@@ -288,6 +288,10 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, players, 
     const confirmElimination = async () => {
         if (!pendingEliminateData)
             return;
+        if (selectedPlayers.length < 2) {
+            toast.error("CLICKEZ SUR END GAME POUR TERMINER LA PARTIE.");
+            return;
+        }
         try {
             setPlayerOutGame(pendingEliminateData.playerId);
             setKiller(true);
