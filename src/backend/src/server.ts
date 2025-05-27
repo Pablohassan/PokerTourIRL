@@ -4,6 +4,10 @@ import _ from "lodash";
 import cors from "cors";
 import dotenv from "dotenv";
 dotenv.config();
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
+import { clerkMiddleware, requireAuth } from "@clerk/express";
+
 import { PrismaClient, Prisma } from "@prisma/client";
 import { fetchGamesForPlayer } from "./services/fetsh-game-for-player.js";
 
@@ -17,6 +21,26 @@ const corsOrigin = isDevelopment
 
 app.use(bodyParser.json({ limit: "10mb" }));
 
+app.use(helmet()); // HTTP security headers
+
+if (!isDevelopment) {
+  // Basic rate-limiting in prod
+  app.use(
+    rateLimit({
+      windowMs: 5 * 60 * 1000, // 5 min window
+      max: 500, // limit each IP
+      standardHeaders: true,
+      legacyHeaders: false,
+    })
+  );
+}
+
+// Clerk: make sure secret key is configured
+if (!process.env.CLERK_SECRET_KEY) {
+  throw new Error("CLERK_SECRET_KEY environment variable is not set");
+}
+
+app.use(clerkMiddleware());
 // Configure CORS - Single configuration
 app.use(
   cors({
@@ -34,6 +58,8 @@ app.use(
 );
 
 app.use(express.json());
+
+app.use(requireAuth());
 
 app.get(
   "/season-points/:playerId/:tournamentId",

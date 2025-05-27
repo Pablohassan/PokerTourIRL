@@ -6,7 +6,7 @@ import dotenv from "dotenv";
 dotenv.config();
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
-import { ClerkExpressRequireAuth } from "@clerk/clerk-sdk-node";
+import { clerkMiddleware, requireAuth } from "@clerk/express";
 
 import { PrismaClient, Prisma } from "@prisma/client";
 import { fetchGamesForPlayer } from "./src/services/fetsh-game-for-player.js";
@@ -35,11 +35,14 @@ if (!isDevelopment) {
 }
 
 // Clerk: make sure secret key is configured
-if (!isDevelopment && !process.env.CLERK_SECRET_KEY) {
+if (!process.env.CLERK_SECRET_KEY) {
   throw new Error("CLERK_SECRET_KEY environment variable is not set");
 }
+console.log("CLERK_SECRET_KEY =", process.env.CLERK_SECRET_KEY);
 
 app.use(bodyParser.json({ limit: "10mb" }));
+
+app.use(clerkMiddleware());
 
 // Configure CORS - Single configuration
 app.use(
@@ -59,9 +62,8 @@ app.use(
 
 app.use(express.json());
 
-if (!isDevelopment) {
-  app.use(ClerkExpressRequireAuth()); // ← all routes after this require a valid Clerk JWT
-}
+app.use(requireAuth()); // ← all routes after this require a valid Clerk JWT
+
 app.get(
   "/season-points/:playerId/:tournamentId",
   async (req: Request, res: Response, next: NextFunction) => {

@@ -4,6 +4,9 @@ import _ from "lodash";
 import cors from "cors";
 import dotenv from "dotenv";
 dotenv.config();
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
+import { clerkMiddleware, requireAuth } from "@clerk/express";
 import { PrismaClient } from "@prisma/client";
 import { fetchGamesForPlayer } from "./services/fetsh-game-for-player.js";
 const prisma = new PrismaClient();
@@ -13,6 +16,21 @@ const corsOrigin = isDevelopment
     ? "http://localhost:5173"
     : "https://bourlypokertour.fr";
 app.use(bodyParser.json({ limit: "10mb" }));
+app.use(helmet()); // HTTP security headers
+if (!isDevelopment) {
+    // Basic rate-limiting in prod
+    app.use(rateLimit({
+        windowMs: 5 * 60 * 1000, // 5 min window
+        max: 500, // limit each IP
+        standardHeaders: true,
+        legacyHeaders: false,
+    }));
+}
+// Clerk: make sure secret key is configured
+if (!process.env.CLERK_SECRET_KEY) {
+    throw new Error("CLERK_SECRET_KEY environment variable is not set");
+}
+app.use(clerkMiddleware());
 // Configure CORS - Single configuration
 app.use(cors({
     origin: corsOrigin,
@@ -27,6 +45,7 @@ app.use(cors({
     ],
 }));
 app.use(express.json());
+app.use(requireAuth());
 app.get("/season-points/:playerId/:tournamentId", async (req, res, next) => {
     try {
         const playerId = parseInt(req.params.playerId);
@@ -179,12 +198,29 @@ app.get("/tournament/:year", async (req, res, next) => {
 });
 // @ts-ignore
 app.get("/parties", async (req, res, next) => {
-    const { page = 1, limit = 10 } = req.query;
+    const { page = 1, limit = 50, year } = req.query;
     const skip = (Number(page) - 1) * Number(limit);
     try {
+        // Create base query conditions
+        let whereCondition = {};
+        // Add year filter if provided
+        if (year) {
+            const yearStart = new Date(`${year}-01-01T00:00:00.000Z`);
+            const yearEnd = new Date(`${year}-12-31T23:59:59.999Z`);
+            whereCondition = {
+                date: {
+                    gte: yearStart,
+                    lte: yearEnd,
+                },
+            };
+        }
         const parties = await prisma.party.findMany({
+            where: whereCondition,
             skip,
             take: Number(limit),
+            orderBy: {
+                date: "desc",
+            },
             select: {
                 id: true,
                 date: true,
