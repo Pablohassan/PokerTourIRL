@@ -4,6 +4,10 @@ import _ from "lodash";
 import cors from "cors";
 import dotenv from "dotenv";
 dotenv.config();
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
+import { ClerkExpressRequireAuth } from "@clerk/clerk-sdk-node";
+
 import { PrismaClient, Prisma } from "@prisma/client";
 import { fetchGamesForPlayer } from "./src/services/fetsh-game-for-player.js";
 
@@ -14,6 +18,26 @@ const isDevelopment = process.env.NODE_ENV === "development";
 const corsOrigin = isDevelopment
   ? "http://localhost:5173"
   : "https://bourlypokertour.fr";
+
+// ---------- NEW GLOBAL SECURITY MIDDLEWARES ---------------------
+app.use(helmet()); // HTTP security headers
+
+if (!isDevelopment) {
+  // Basic rate-limiting in prod
+  app.use(
+    rateLimit({
+      windowMs: 5 * 60 * 1000, // 5 min window
+      max: 500, // limit each IP
+      standardHeaders: true,
+      legacyHeaders: false,
+    })
+  );
+}
+
+// Clerk: make sure secret key is configured
+if (!isDevelopment && !process.env.CLERK_SECRET_KEY) {
+  throw new Error("CLERK_SECRET_KEY environment variable is not set");
+}
 
 app.use(bodyParser.json({ limit: "10mb" }));
 
@@ -35,6 +59,9 @@ app.use(
 
 app.use(express.json());
 
+if (!isDevelopment) {
+  app.use(ClerkExpressRequireAuth()); // ← all routes after this require a valid Clerk JWT
+}
 app.get(
   "/season-points/:playerId/:tournamentId",
   async (req: Request, res: Response, next: NextFunction) => {
