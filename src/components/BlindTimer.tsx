@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { toast } from 'react-hot-toast';
-import alerteSon from '../assets/alarmpok.mp3';
 import pinup from '../assets/changementdeblind.wav';
 import nextBlindVideo from '../assets/pinup.mp4';
 import { motion, AnimatePresence } from "framer-motion";
