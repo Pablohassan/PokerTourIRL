@@ -1,7 +1,5 @@
 const isDevelopment = process.env.NODE_ENV === "development";
-export const API_BASE_URL = isDevelopment
-    ? "http://localhost:3000"
-    : "https://api.bourlypokertour.fr";
+export const API_BASE_URL = isDevelopment ? "http://localhost:3000" : "/api";
 export const API_ENDPOINTS = {
     GAME_STATE: `${API_BASE_URL}/gameState`,
     TOURNAMENTS: `${API_BASE_URL}/tournaments`,
