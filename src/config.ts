@@ -3,15 +3,15 @@ const isDevelopment = process.env.NODE_ENV === "development";
 export const API_BASE_URL = isDevelopment ? "http://localhost:3000" : "/api";
 
 export const API_ENDPOINTS = {
-  GAME_STATE: `${API_BASE_URL}/gameState`,
-  TOURNAMENTS: `${API_BASE_URL}/tournaments`,
-  PARTIES: `${API_BASE_URL}/parties`,
-  PLAYERS: `${API_BASE_URL}/player`,
-  PLAYER_STATS: `${API_BASE_URL}/playerstats`,
+  GAME_STATE: "/gameState",
+  TOURNAMENTS: "/tournaments",
+  PARTIES: "/parties",
+  PLAYERS: "/player",
+  PLAYER_STATS: "/playerstats",
   SEASON_POINTS: (playerId: number, tournamentId: number) =>
-    `${API_BASE_URL}/season-points/${playerId}/${tournamentId}`,
+    `/season-points/${playerId}/${tournamentId}`,
   PLAYER_STATS_BY_ID: (playerId: number, tournamentId: number) =>
-    `${API_BASE_URL}/player-stats/${playerId}/${tournamentId}`,
+    `/player-stats/${playerId}/${tournamentId}`,
 };
 
 export const API_CONFIG = {
