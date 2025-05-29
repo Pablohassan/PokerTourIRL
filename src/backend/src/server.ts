@@ -63,7 +63,14 @@ app.use(express.json());
 
 app.use(requireAuth());
 
-app.get(
+// Create API router
+const apiRouter = express.Router();
+
+// Apply auth to all API routes
+apiRouter.use(requireAuth());
+
+// Move all routes to apiRouter
+apiRouter.get(
   "/season-points/:playerId/:tournamentId",
   async (req: Request, res: Response, next: NextFunction) => {
     try {

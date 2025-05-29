@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Player, PlayerStats } from "./interfaces";
 import api from "../api";
+import { API_ENDPOINTS } from '../config';
 
 const useGameState = (
   gameStarted: boolean,
@@ -91,7 +92,7 @@ const useGameState = (
     };
 
     try {
-      const response = await api.post("/gameState", { state: gameState });
+      const response = await api.post(API_ENDPOINTS.GAME_STATE, { state: gameState });
       if (response.status === 404) {
 
         setLoading(false);
@@ -119,7 +120,7 @@ const useGameState = (
 
   const restoreState = async () => {
     try {
-      const response = await api.get("/gameState");
+      const response = await api.get(API_ENDPOINTS.GAME_STATE);
 
       if (!response.data?.state) {
         console.log('No saved game state found');

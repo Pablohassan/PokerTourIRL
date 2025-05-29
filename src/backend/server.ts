@@ -127,7 +127,13 @@ app.get("/player", async (req, res) => {
   res.json(players);
 });
 
-app.get(
+// Create API router
+const apiRouter = express.Router();
+
+// Apply auth to all API routes
+apiRouter.use(requireAuth());
+
+apiRouter.get(
   "/playerStats",
   // @ts-ignore
   async (req: Request, res: Response, next: NextFunction) => {
@@ -148,7 +154,7 @@ app.get(
   }
 );
 
-app.get(
+apiRouter.get(
   "/playerStats/:playerId",
   async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -168,7 +174,7 @@ app.get(
   }
 );
 
-app.get(
+apiRouter.get(
   "/playerStatsByParty/:partyId",
   async (req: Request, res: Response, next: NextFunction) => {
     const partyId = Number(req.params.partyId);
@@ -202,14 +208,22 @@ app.get(
   }
 );
 
-app.get(
+apiRouter.get(
   "/tournaments",
   // @ts-ignore
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const tournaments = await prisma.tournament.findMany({
-        orderBy: {
-          year: "desc",
+        include: {
+          parties: {
+            include: {
+              playerStats: {
+                include: {
+                  player: true,
+                },
+              },
+            },
+          },
         },
       });
       res.json(tournaments);
@@ -219,21 +233,28 @@ app.get(
   }
 );
 
-app.get(
+apiRouter.get(
   "/tournament/:year",
   async (req: Request, res: Response, next: NextFunction) => {
-    const year = parseInt(req.params.year);
     try {
+      const year = parseInt(req.params.year);
       const tournament = await prisma.tournament.findFirst({
-        where: {
-          year,
+        where: { year },
+        include: {
+          parties: {
+            include: {
+              playerStats: {
+                include: {
+                  player: true,
+                },
+              },
+            },
+          },
         },
       });
 
       if (!tournament) {
-        return res
-          .status(404)
-          .json({ error: "No tournament found for the given year." });
+        return res.status(404).json({ error: "Tournament not found" });
       }
 
       res.json(tournament);
@@ -242,161 +263,123 @@ app.get(
     }
   }
 );
-// @ts-ignore
-app.get("/parties", async (req: Request, res: Response, next: NextFunction) => {
-  const { page = 1, limit = 10, year } = req.query;
-  const skip = (Number(page) - 1) * Number(limit);
 
-  try {
-    const whereClause = year
-      ? {
-          date: {
-            gte: new Date(`${year}-01-01`),
-            lt: new Date(`${Number(year) + 1}-01-01`),
-          },
-        }
-      : {};
-
-    const parties = await prisma.party.findMany({
-      skip,
-      take: Number(limit),
-      where: whereClause,
-      orderBy: {
-        date: "desc",
-      },
-      select: {
-        id: true,
-        date: true,
-        playerStats: {
-          select: {
-            playerId: true,
-            points: true,
-            rebuys: true,
-          },
-        },
-      },
-    });
-    res.json(parties);
-  } catch (err) {
-    next(err);
-  }
-});
-
-app.get(
-  "/parties/state/:id",
+apiRouter.get(
+  "/parties",
   async (req: Request, res: Response, next: NextFunction) => {
-    const { id } = req.params;
     try {
-      const party = await prisma.party.findUnique({
-        where: { id: Number(id) },
-        select: { partyStarted: true, partyEnded: true },
-      });
-
-      res.json({
-        partyStarted: party?.partyStarted,
-        partyEnded: party?.partyEnded,
-      });
-    } catch (err) {
-      next(err);
-    }
-  }
-);
-
-app.get(
-  "/gameResults/:playerId",
-  async (req: Request, res: Response, next: NextFunction) => {
-    const playerId = Number(req.params.playerId);
-    const year = Number(req.query.year) || new Date().getFullYear();
-
-    // Validation checks
-    if (isNaN(playerId)) {
-      return res.status(400).json({ error: "Player ID must be a number" });
-    }
-    if (!playerId) {
-      return res.status(400).json({ error: "A valid player ID is required" });
-    }
-    if (isNaN(year) || year < 2023 || year > 2025) {
-      return res.status(400).json({ error: "Invalid year parameter" });
-    }
-
-    try {
-      const startDate = new Date(`${year}-01-01`);
-      const endDate = new Date(`${year + 1}-01-01`);
-
-      const playerGames = await prisma.playerStats.findMany({
-        where: {
-          playerId: playerId,
-          party: {
-            date: {
-              gte: startDate,
-              lt: endDate,
+      const parties = await prisma.party.findMany({
+        include: {
+          tournament: true,
+          playerStats: {
+            include: {
+              player: true,
             },
           },
         },
-        include: {
-          party: true,
-        },
-        take: 20, // Increased limit for better pagination
         orderBy: {
-          party: {
-            date: "desc",
+          date: "desc",
+        },
+      });
+      res.json(parties);
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+apiRouter.get(
+  "/parties/state/:id",
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const partyId = Number(req.params.id);
+      const partyDetails = await prisma.party.findUnique({
+        where: { id: partyId },
+        include: {
+          playerStats: {
+            include: {
+              player: true,
+            },
           },
         },
       });
 
-      if (!playerGames || playerGames.length === 0) {
-        return res
-          .status(404)
-          .json({ error: "Games for the specified player not found" });
-      }
-
-      return res.json({ playerGames });
-    } catch (err) {
-      next(err);
-    }
-  }
-);
-
-app.get(
-  "/parties/:id",
-  async (req: Request, res: Response, next: NextFunction) => {
-    const { id } = req.params;
-    try {
-      const party = await prisma.party.findUnique({
-        where: { id: Number(id) },
-      });
-      if (!party) {
+      if (!partyDetails) {
         return res.status(404).json({ error: "Party not found" });
       }
-      res.json(party);
+
+      res.json(partyDetails);
     } catch (err) {
       next(err);
     }
   }
 );
 
-app.get("/parties/:partyId/stats", async (req, res) => {
-  const partyId = Number(req.params.partyId);
+apiRouter.get(
+  "/gameResults/:playerId",
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const playerId = Number(req.params.playerId);
+      const games = await prisma.playerStats.findMany({
+        where: { playerId: playerId },
+        include: {
+          player: true,
+          party: {
+            include: {
+              tournament: true,
+            },
+          },
+        },
+      });
 
-  // Vérifiez si partyId est un nombre
-  if (isNaN(partyId)) {
-    return res.status(400).json({ error: "Party ID must be a number" });
+      const formattedGames = games.map((game) => ({
+        ...game,
+        tournament: game.party.tournament.year,
+      }));
+
+      res.json(formattedGames);
+    } catch (err) {
+      next(err);
+    }
   }
+);
 
+apiRouter.get(
+  "/parties/:id",
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const partyId = Number(req.params.id);
+      const partyDetails = await prisma.party.findUnique({
+        where: { id: partyId },
+        include: {
+          playerStats: {
+            include: {
+              player: true,
+            },
+          },
+        },
+      });
+
+      if (!partyDetails) {
+        return res.status(404).json({ error: "Party not found" });
+      }
+
+      res.json(partyDetails);
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+apiRouter.get("/parties/:partyId/stats", async (req, res) => {
+  const { partyId } = req.params;
   try {
     const stats = await prisma.playerStats.findMany({
-      where: { partyId: partyId },
-      include: { player: true },
-      take: 10, // Limit the results to 10
+      where: { partyId: Number(partyId) },
+      include: {
+        player: true,
+      },
     });
-
-    // Vérifiez si des statistiques ont été trouvées
-    if (!stats || stats.length === 0) {
-      return res
-        .status(404)
-        .json({ error: "No stats found for this party ID" });
-    }
-
     res.json(stats);
   } catch (err) {
     console.log(`Error fetching stats for party id: ${partyId}: `, err);
@@ -404,7 +387,7 @@ app.get("/parties/:partyId/stats", async (req, res) => {
   }
 });
 // @ts-ignore
-app.get("/gameState", async (req, res) => {
+apiRouter.get("/gameState", async (req, res) => {
   try {
     const gameState = await prisma.gameState.findFirst(); // Find the first (and only) game state
     if (gameState) {
@@ -418,7 +401,7 @@ app.get("/gameState", async (req, res) => {
   }
 });
 
-app.post("/tournaments", async (req: Request, res: Response) => {
+apiRouter.post("/tournaments", async (req: Request, res: Response) => {
   const { year } = req.body;
   const existingTournament = await prisma.tournament.findFirst({
     where: { year },
@@ -437,7 +420,7 @@ app.post("/tournaments", async (req: Request, res: Response) => {
 });
 
 // modifié
-app.post("/parties", async (req: Request, res: Response) => {
+apiRouter.post("/parties", async (req: Request, res: Response) => {
   const { date, tournamentId } = req.body;
 
   if (!tournamentId) {
@@ -459,7 +442,7 @@ app.post("/parties", async (req: Request, res: Response) => {
   res.json(parties);
 });
 
-app.post("/players", async (req: Request, res: Response) => {
+apiRouter.post("/players", async (req: Request, res: Response) => {
   try {
     const { name } = req.body;
     const { phoneNumber } = req.body;
@@ -485,7 +468,7 @@ app.post("/players", async (req: Request, res: Response) => {
   }
 });
 
-app.post("/playerStats/start", async (req: Request, res: Response) => {
+apiRouter.post("/playerStats/start", async (req: Request, res: Response) => {
   const { players } = req.body;
 
   if (!players || !Array.isArray(players) || players.length < 4) {
@@ -533,12 +516,13 @@ app.post("/playerStats/start", async (req: Request, res: Response) => {
   return res.json({
     message: "New game started successfully",
     playerStats: newPlayerStats,
+    partyId: newParty.id,
   });
 });
 
 // Assume each player provides playerId, points, and rebuys
 
-app.post("/playerStats", async (req: Request, res: Response) => {
+apiRouter.post("/playerStats", async (req: Request, res: Response) => {
   try {
     const { partyId, playerId, points, rebuys, buyin, position, outAt, kills } =
       req.body;
@@ -573,7 +557,7 @@ app.post("/playerStats", async (req: Request, res: Response) => {
   }
 });
 
-app.post("/gameResults", async (req: Request, res: Response) => {
+apiRouter.post("/gameResults", async (req: Request, res: Response) => {
   const games = req.body;
   const updatedGames: Prisma.PromiseReturnType<
     typeof prisma.playerStats.update
@@ -599,9 +583,9 @@ app.post("/gameResults", async (req: Request, res: Response) => {
   }
 });
 
-app.post("/gameState", async (req, res) => {
-  const { state } = req.body;
+apiRouter.post("/gameState", async (req, res) => {
   try {
+    const { state } = req.body;
     const existingGameState = await prisma.gameState.findFirst();
     if (existingGameState) {
       const updatedGameState = await prisma.gameState.update({
@@ -616,11 +600,12 @@ app.post("/gameState", async (req, res) => {
       res.json(newGameState);
     }
   } catch (error) {
+    console.error("Error saving game state:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
 
-app.put("/gamesResults/:id", async (req: Request, res: Response) => {
+apiRouter.put("/gamesResults/:id", async (req: Request, res: Response) => {
   try {
     const gameId = parseInt(req.params.id, 10); // Convert the id to a number
 
@@ -642,29 +627,32 @@ app.put("/gamesResults/:id", async (req: Request, res: Response) => {
   }
 });
 
-app.put("/updateMultipleGamesResults", async (req: Request, res: Response) => {
-  try {
-    const gameUpdates: Array<{ id: number; data: any }> = req.body;
+apiRouter.put(
+  "/updateMultipleGamesResults",
+  async (req: Request, res: Response) => {
+    try {
+      const gameUpdates: Array<{ id: number; data: any }> = req.body;
 
-    const updatedGames = await Promise.all(
-      gameUpdates.map(async (update) => {
-        return await prisma.playerStats.update({
-          where: { id: update.id },
-          data: update.data,
-        });
-      })
-    );
+      const updatedGames = await Promise.all(
+        gameUpdates.map(async (update) => {
+          return await prisma.playerStats.update({
+            where: { id: update.id },
+            data: update.data,
+          });
+        })
+      );
 
-    res.json({ updatedGames });
-  } catch (error) {
-    console.error(error);
-    res
-      .status(500)
-      .json({ error: "An error occurred while updating the game results" });
+      res.json({ updatedGames });
+    } catch (error) {
+      console.error(error);
+      res
+        .status(500)
+        .json({ error: "An error occurred while updating the game results" });
+    }
   }
-});
+);
 
-app.put("/parties/:id", async (req, res) => {
+apiRouter.put("/parties/:id", async (req, res) => {
   let { date } = req.body; // Extract the new date from the request body
   const partyId = parseInt(req.params.id, 10); // Convert the id to a number
   date = new Date(date);
@@ -688,7 +676,7 @@ app.put("/parties/:id", async (req, res) => {
 });
 
 // sais pas comment ça fonctionne
-app.put("/playerStats/eliminate", async (req: Request, res: Response) => {
+apiRouter.put("/playerStats/eliminate", async (req: Request, res: Response) => {
   const { playerId, eliminatedById, partyId } = req.body;
   if (!playerId) {
     return res.status(400).json({ error: "Player ID is required" });
@@ -744,29 +732,32 @@ app.put("/playerStats/eliminate", async (req: Request, res: Response) => {
   res.json({ message: "Player stats updated successfully", updatedStats });
 });
 
-app.put("/playerStats/out/:playerId", async (req: Request, res: Response) => {
-  const { playerId } = req.params;
+apiRouter.put(
+  "/playerStats/out/:playerId",
+  async (req: Request, res: Response) => {
+    const { playerId } = req.params;
 
-  if (!playerId) {
-    return res.status(400).json({ error: "Player ID is required" });
+    if (!playerId) {
+      return res.status(400).json({ error: "Player ID is required" });
+    }
+
+    try {
+      const updatedPlayerStat = await prisma.playerStats.update({
+        where: { id: Number(playerId) },
+        data: { outAt: new Date() },
+      });
+
+      return res.json({
+        message: "Player knocked out successfully",
+        updatedPlayerStat,
+      });
+    } catch (error) {
+      return res.status(400).json({ error: "Error knocking out player" });
+    }
   }
-
-  try {
-    const updatedPlayerStat = await prisma.playerStats.update({
-      where: { id: Number(playerId) },
-      data: { outAt: new Date() },
-    });
-
-    return res.json({
-      message: "Player knocked out successfully",
-      updatedPlayerStat,
-    });
-  } catch (error) {
-    return res.status(400).json({ error: "Error knocking out player" });
-  }
-});
+);
 // Delete a specific party by its ID
-app.delete(
+apiRouter.delete(
   "/parties/:id",
   async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -789,7 +780,7 @@ app.delete(
   }
 );
 // @ts-ignore
-app.delete(
+apiRouter.delete(
   "/gameState",
   async (_req: Request, res: Response, next: NextFunction) => {
     try {
@@ -801,6 +792,9 @@ app.delete(
     }
   }
 );
+
+// Mount the API router under /api
+app.use("/api", apiRouter);
 
 // @ts-ignore
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {

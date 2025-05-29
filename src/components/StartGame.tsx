@@ -699,7 +699,7 @@ const StartGame: React.FC<StartGameProps> = ({
           try {
             // First delete the game state to prevent race conditions
             try {
-              await api.delete("/gameState");
+              await api.delete(API_ENDPOINTS.GAME_STATE);
 
             } catch (error) {
               console.error('Error deleting game state:', error);
@@ -727,11 +727,11 @@ const StartGame: React.FC<StartGameProps> = ({
 
             // Verify game state is deleted
             try {
-              const stateCheck = await api.get("/gameState");
+              const stateCheck = await api.get(API_ENDPOINTS.GAME_STATE);
               if (stateCheck.data?.state) {
                 console.error('Game state still exists after deletion');
                 // Force delete again
-                await api.delete("/gameState");
+                await api.delete(API_ENDPOINTS.GAME_STATE);
               }
             } catch (error: any) {
               // 404 is expected here, as the state should be deleted
