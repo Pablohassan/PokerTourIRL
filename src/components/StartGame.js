@@ -403,12 +403,7 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, players, 
             try {
                 await api.post("/gameResults", updatedGames);
                 updateAfterGameEnd(updatedGames);
-                const response = await fetch(API_ENDPOINTS.GAME_STATE, {
-                    method: 'DELETE',
-                });
-                if (!response.ok) {
-                    throw new Error("Failed to delete game state on server");
-                }
+                await api.delete(API_ENDPOINTS.GAME_STATE);
                 toast.success("Game ended successfully!");
                 resetGameState();
                 setGameStarted(false);

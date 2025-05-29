@@ -11,6 +11,7 @@ import { PrismaClient } from "@prisma/client";
 import { fetchGamesForPlayer } from "./services/fetsh-game-for-player.js";
 const prisma = new PrismaClient();
 const app = express();
+app.set("trust proxy", 1);
 const isDevelopment = process.env.NODE_ENV === "development";
 const corsOrigin = isDevelopment
     ? "http://localhost:5173"

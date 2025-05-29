@@ -33,17 +33,23 @@ export default function App() {
         const fetchChampionnat = async () => {
             try {
                 const response = await api.get("/tournaments");
-                // Si vous souhaitez stocker tous les tournois dans le tableau:
-                const formattedChampionnat = response.data.map((t) => ({
-                    id: t.id,
-                    year: t.year,
-                    createdAt: new Date(t.createdAt)
-                }));
-                setChampionnat(formattedChampionnat);
+                // Ensure response.data is an array before mapping
+                if (Array.isArray(response.data)) {
+                    const formattedChampionnat = response.data.map((t) => ({
+                        id: t.id,
+                        year: t.year,
+                        createdAt: new Date(t.createdAt)
+                    }));
+                    setChampionnat(formattedChampionnat);
+                }
+                else {
+                    console.warn("Tournaments API did not return an array:", response.data);
+                    setChampionnat([]); // Set empty array as fallback
+                }
             }
             catch (error) {
                 console.error("Error fetching championnat: ", error);
-                // Optionally, handle the error in the UI
+                setChampionnat([]); // Set empty array on error
             }
         };
         fetchChampionnat();
@@ -62,12 +68,17 @@ export default function App() {
                 api.get("/playerstats"),
             ]);
             // Une fois toutes les requêtes terminées, mettre à jour l'état avec les données
-            setPlayers(resPlayers.data);
-            setParties(resParties.data);
-            setStats(restStats.data);
+            // Ensure we have arrays before setting state
+            setPlayers(Array.isArray(resPlayers.data) ? resPlayers.data : []);
+            setParties(Array.isArray(resParties.data) ? resParties.data : []);
+            setStats(Array.isArray(restStats.data) ? restStats.data : []);
         }
         catch (error) {
             console.log("error fetching players or parties:", error);
+            // Set empty arrays on error to prevent crashes
+            setPlayers([]);
+            setParties([]);
+            setStats([]);
         }
         finally {
             // S'assurer que l'état de chargement est mis à jour quelle que soit l'issue des requêtes

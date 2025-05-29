@@ -6,6 +6,36 @@ const api = axios.create({
   ...API_CONFIG,
 });
 
+// Function to get token from Clerk
+const getClerkToken = async () => {
+  try {
+    // Access Clerk through the global window object
+    if (typeof window !== "undefined" && (window as any).Clerk) {
+      const clerk = (window as any).Clerk;
+      if (clerk.session) {
+        return await clerk.session.getToken();
+      }
+    }
+  } catch (error) {
+    console.error("Error getting Clerk token:", error);
+  }
+  return null;
+};
+
+// Add request interceptor to include authentication token
+api.interceptors.request.use(
+  async (config) => {
+    const token = await getClerkToken();
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
 // Add response interceptor for better error handling
 api.interceptors.response.use(
   (response) => response,
