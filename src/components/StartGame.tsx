@@ -13,6 +13,7 @@ import { API_ENDPOINTS } from '../config';
 import EditGameStateModal from './EditGameStateModal';
 import { Button } from "./ui/button";
 import ConfirmDialog from "./ui/confirm-dialog";
+import WinnerModal from "./ui/winner-modal";
 
 interface StartGameProps {
   players: Player[];
@@ -55,6 +56,9 @@ const StartGame: React.FC<StartGameProps> = ({
   const [showKillerConfirm, setShowKillerConfirm] = useState(false);
   const [pendingKillerId, setPendingKillerId] = useState<number | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showWinnerModal, setShowWinnerModal] = useState(false);
+  const [winnerPlayer, setWinnerPlayer] = useState<Player | null>(null);
+  const [winnerTimeout, setWinnerTimeout] = useState<NodeJS.Timeout | null>(null);
 
   const blinds = [
     { small: 10, big: 20, ante: 0 },
@@ -124,6 +128,8 @@ const StartGame: React.FC<StartGameProps> = ({
     initialPlayerCount,
     setInitialPlayerCount,
     postInitialGameState,
+    gameEnded,
+    setGameEnded,
   } = useGameState(
     gameStarted,
     setGameStarted,
@@ -229,6 +235,58 @@ const StartGame: React.FC<StartGameProps> = ({
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
 
+  // Detect when only one player remains and show winner modal, then auto-end game
+  useEffect(() => {
+    if (gameStarted && !gameEnded && !isEnding && !showWinnerModal && games.length > 0) {
+      const remainingPlayers = selectedPlayers.filter(player => {
+        const game = games.find(game => game.playerId === player.id);
+        const isOut = game && game.outAt;
+        return !isOut;
+      });
+
+      if (remainingPlayers.length === 1) {
+        const winner = remainingPlayers[0];
+        setWinnerPlayer(winner);
+        setShowWinnerModal(true);
+
+        // Auto-trigger game end after 30 seconds to show the modal
+        const timeout = setTimeout(() => {
+          setShowWinnerModal(false);
+          handleGameEnd();
+          setWinnerTimeout(null);
+        }, 30000); // 30 seconds delay to show congratulations
+        setWinnerTimeout(timeout);
+      }
+    }
+  }, [gameStarted, gameEnded, isEnding, selectedPlayers, games, showWinnerModal]);
+
+  // Additional effect specifically triggered by games updates (for immediate detection)
+  useEffect(() => {
+    if (gameStarted && !gameEnded && !isEnding && games.length > 0) {
+      const playersWithOutAt = games.filter(g => g.outAt).length;
+      const totalPlayers = games.length;
+
+      if (totalPlayers - playersWithOutAt === 1 && !showWinnerModal) {
+        const winnerGame = games.find(g => !g.outAt);
+        if (winnerGame) {
+          const winner = selectedPlayers.find(p => p.id === winnerGame.playerId);
+          if (winner) {
+            setWinnerPlayer(winner);
+            setShowWinnerModal(true);
+
+            // Auto-trigger game end after showing the modal for 30 seconds
+            const timeout = setTimeout(() => {
+              setShowWinnerModal(false);
+              handleGameEnd();
+              setWinnerTimeout(null);
+            }, 30000);
+            setWinnerTimeout(timeout);
+          }
+        }
+      }
+    }
+  }, [games, gameStarted, gameEnded, isEnding, showWinnerModal, selectedPlayers]);
+
   const toggleFullscreen = async () => {
     try {
       if (!document.fullscreenElement) {
@@ -258,6 +316,14 @@ const StartGame: React.FC<StartGameProps> = ({
 
     await toggleFullscreen();
 
+    // Ensure game ended flag is reset for new game
+    setGameEnded(false);
+    setShowWinnerModal(false);
+    setWinnerPlayer(null);
+    if (winnerTimeout) {
+      clearTimeout(winnerTimeout);
+      setWinnerTimeout(null);
+    }
     resetGameState(blindDuration);
 
     if (selectedPlayers.length < 4) {
@@ -347,10 +413,10 @@ const StartGame: React.FC<StartGameProps> = ({
   };
 
   useEffect(() => {
-    if (gameStarted && !isEnding && timeLeft % 10 === 0) {
+    if (gameStarted && !isEnding && !gameEnded && timeLeft % 10 === 0) {
       saveGameState(timeLeft);
     }
-  }, [gameStarted, timeLeft, isEnding]);
+  }, [gameStarted, timeLeft, isEnding, gameEnded]);
 
   const confirmAndStartGame = async () => {
     setShowReview(false);
@@ -520,6 +586,10 @@ const StartGame: React.FC<StartGameProps> = ({
   const handleGameEnd = async () => {
     if (games.filter((game) => !game.outAt).length === 1) {
       setIsEnding(true);
+
+      // Mark game as ended FIRST to stop all state saving
+      setGameEnded(true);
+
       const winningPlayerId = games.find((game) => !game.outAt)?.playerId;
       const updatedGames = games.map((game) =>
         game.playerId === winningPlayerId
@@ -528,21 +598,40 @@ const StartGame: React.FC<StartGameProps> = ({
       );
 
       try {
+        // Stop the game first
+        setGameStarted(false);
+
+        // Delete game state before posting results to prevent race conditions
+        await api.delete(API_ENDPOINTS.GAME_STATE);
+
+        // Wait a bit to ensure state deletion is processed
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        // Then post game results
         await api.post("/gameResults", updatedGames);
         updateAfterGameEnd(updatedGames);
 
-        await api.delete(API_ENDPOINTS.GAME_STATE);
-
         toast.success("Game ended successfully!");
 
+        // Reset all state
         resetGameState();
-        setGameStarted(false);
         setPartyId(null);
+        setShowWinnerModal(false);
+        setWinnerPlayer(null);
+        if (winnerTimeout) {
+          clearTimeout(winnerTimeout);
+          setWinnerTimeout(null);
+        }
+
+        // Navigate to results
         navigate("/results");
 
       } catch (error) {
         console.error("Error:", error);
         toast.error("Failed to end the game properly. Please try again.");
+        // Reset gameEnded flag on error to allow retry
+        setGameEnded(false);
+        setGameStarted(true);
       }
     } else {
       toast.error("The game cannot be ended yet as more than one player is still playing.");
@@ -643,6 +732,12 @@ const StartGame: React.FC<StartGameProps> = ({
       flexDirection: 'column',
       position: 'relative'
     }}>
+      <WinnerModal
+        isOpen={showWinnerModal}
+        onClose={() => setShowWinnerModal(false)}
+        winner={winnerPlayer}
+      />
+
       <EditGameStateModal
         isOpen={showEditModal}
         onClose={() => setShowEditModal(false)}

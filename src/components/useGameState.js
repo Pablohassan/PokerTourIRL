@@ -23,6 +23,7 @@ const useGameState = (gameStarted, setGameStarted, selectedPlayers, setSelectedP
     const [lastUsedPosition, setLastUsedPosition] = useState(0);
     const [initialPlayerCount, setInitialPlayerCount] = useState(selectedPlayers.length);
     const [lastSaveTime, setLastSaveTime] = useState(0);
+    const [gameEnded, setGameEnded] = useState(false);
     const resetGameState = (newBlindDuration) => {
         const finalDuration = typeof newBlindDuration === "number"
             ? newBlindDuration
@@ -46,9 +47,11 @@ const useGameState = (gameStarted, setGameStarted, selectedPlayers, setSelectedP
         setLastUsedPosition(0);
         setInitialPlayerCount(0);
         setLastSaveTime(0);
+        setGameEnded(false);
     };
     const saveGameState = async (currentTimeLeft = timeLeft) => {
-        if (!initialGameStatePosted) {
+        if (!initialGameStatePosted || gameEnded) {
+            // Don't save if game has ended
             return;
         }
         const now = Date.now();
@@ -102,6 +105,11 @@ const useGameState = (gameStarted, setGameStarted, selectedPlayers, setSelectedP
     };
     const restoreState = async () => {
         try {
+            // Don't restore state if game has already ended
+            if (gameEnded) {
+                setLoading(false);
+                return;
+            }
             const response = await api.get(API_ENDPOINTS.GAME_STATE);
             if (!response.data?.state) {
                 console.log('No saved game state found');
@@ -207,15 +215,15 @@ const useGameState = (gameStarted, setGameStarted, selectedPlayers, setSelectedP
             setSavedTotalStack(totalStack);
         }
     }, [totalStack, selectedPlayers.length]);
-    // Save game state periodically
+    // Save game state periodically (but not if game has ended)
     useEffect(() => {
-        if (gameStarted) {
+        if (gameStarted && !gameEnded) {
             const interval = setInterval(() => {
                 saveGameState(timeLeft);
             }, 1000);
             return () => clearInterval(interval);
         }
-    }, [gameStarted, timeLeft]);
+    }, [gameStarted, gameEnded, timeLeft]);
     return {
         timeLeft,
         setTimeLeft,
@@ -256,6 +264,8 @@ const useGameState = (gameStarted, setGameStarted, selectedPlayers, setSelectedP
         setInitialPlayerCount,
         initialGameStatePosted,
         setInitialGameStatePosted,
+        gameEnded,
+        setGameEnded,
     };
 };
 export default useGameState;

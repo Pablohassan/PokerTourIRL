@@ -13,6 +13,7 @@ import { API_ENDPOINTS } from '../config';
 import EditGameStateModal from './EditGameStateModal';
 import { Button } from "./ui/button";
 import ConfirmDialog from "./ui/confirm-dialog";
+import WinnerModal from "./ui/winner-modal";
 const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, players, updateAfterGameEnd, blindIndex, setBlindIndex }) => {
     const navigate = useNavigate();
     const [gameStarted, setGameStarted] = useState(false);
@@ -34,6 +35,9 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, players, 
     const [showKillerConfirm, setShowKillerConfirm] = useState(false);
     const [pendingKillerId, setPendingKillerId] = useState(null);
     const [isFullscreen, setIsFullscreen] = useState(false);
+    const [showWinnerModal, setShowWinnerModal] = useState(false);
+    const [winnerPlayer, setWinnerPlayer] = useState(null);
+    const [winnerTimeout, setWinnerTimeout] = useState(null);
     const blinds = [
         { small: 10, big: 20, ante: 0 },
         { small: 25, big: 50, ante: 0 },
@@ -67,7 +71,7 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, players, 
         { small: 9000, big: 18000, ante: 4000 },
         { small: 10000, big: 20000, ante: 5000 },
     ];
-    const { timeLeft, setTimeLeft, smallBlind, setSmallBlind, bigBlind, setBigBlind, ante, setAnte, games, setGames, pot, setPot, middleStack, setSavedTotalStack, totalStack, setTotalStack, saveGameState, resetGameState, rebuyPlayerId, setRebuyPlayerId, killer, setKiller, stateRestored, currentBlindDuration, setCurrentBlindDuration, loading, error, setPositions, setOutPlayers, setLastUsedPosition, initialPlayerCount, setInitialPlayerCount, postInitialGameState, } = useGameState(gameStarted, setGameStarted, selectedPlayers, setSelectedPLayers, blindIndex, setBlindIndex, blindDuration);
+    const { timeLeft, setTimeLeft, smallBlind, setSmallBlind, bigBlind, setBigBlind, ante, setAnte, games, setGames, pot, setPot, middleStack, setSavedTotalStack, totalStack, setTotalStack, saveGameState, resetGameState, rebuyPlayerId, setRebuyPlayerId, killer, setKiller, stateRestored, currentBlindDuration, setCurrentBlindDuration, loading, error, setPositions, setOutPlayers, setLastUsedPosition, initialPlayerCount, setInitialPlayerCount, postInitialGameState, gameEnded, setGameEnded, } = useGameState(gameStarted, setGameStarted, selectedPlayers, setSelectedPLayers, blindIndex, setBlindIndex, blindDuration);
     const updateBlinds = useCallback(() => {
         try {
             const nextIndex = blindIndex + 1;
@@ -148,6 +152,52 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, players, 
         document.addEventListener('fullscreenchange', handleFullscreenChange);
         return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
     }, []);
+    // Detect when only one player remains and show winner modal, then auto-end game
+    useEffect(() => {
+        if (gameStarted && !gameEnded && !isEnding && !showWinnerModal && games.length > 0) {
+            const remainingPlayers = selectedPlayers.filter(player => {
+                const game = games.find(game => game.playerId === player.id);
+                const isOut = game && game.outAt;
+                return !isOut;
+            });
+            if (remainingPlayers.length === 1) {
+                const winner = remainingPlayers[0];
+                setWinnerPlayer(winner);
+                setShowWinnerModal(true);
+                // Auto-trigger game end after 30 seconds to show the modal
+                const timeout = setTimeout(() => {
+                    setShowWinnerModal(false);
+                    handleGameEnd();
+                    setWinnerTimeout(null);
+                }, 30000); // 30 seconds delay to show congratulations
+                setWinnerTimeout(timeout);
+            }
+        }
+    }, [gameStarted, gameEnded, isEnding, selectedPlayers, games, showWinnerModal]);
+    // Additional effect specifically triggered by games updates (for immediate detection)
+    useEffect(() => {
+        if (gameStarted && !gameEnded && !isEnding && games.length > 0) {
+            const playersWithOutAt = games.filter(g => g.outAt).length;
+            const totalPlayers = games.length;
+            if (totalPlayers - playersWithOutAt === 1 && !showWinnerModal) {
+                const winnerGame = games.find(g => !g.outAt);
+                if (winnerGame) {
+                    const winner = selectedPlayers.find(p => p.id === winnerGame.playerId);
+                    if (winner) {
+                        setWinnerPlayer(winner);
+                        setShowWinnerModal(true);
+                        // Auto-trigger game end after showing the modal for 30 seconds
+                        const timeout = setTimeout(() => {
+                            setShowWinnerModal(false);
+                            handleGameEnd();
+                            setWinnerTimeout(null);
+                        }, 30000);
+                        setWinnerTimeout(timeout);
+                    }
+                }
+            }
+        }
+    }, [games, gameStarted, gameEnded, isEnding, showWinnerModal, selectedPlayers]);
     const toggleFullscreen = async () => {
         try {
             if (!document.fullscreenElement) {
@@ -175,6 +225,14 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, players, 
             return;
         }
         await toggleFullscreen();
+        // Ensure game ended flag is reset for new game
+        setGameEnded(false);
+        setShowWinnerModal(false);
+        setWinnerPlayer(null);
+        if (winnerTimeout) {
+            clearTimeout(winnerTimeout);
+            setWinnerTimeout(null);
+        }
         resetGameState(blindDuration);
         if (selectedPlayers.length < 4) {
             toast.error("You need at least 4 players to start a game.");
@@ -251,10 +309,10 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, players, 
         }
     };
     useEffect(() => {
-        if (gameStarted && !isEnding && timeLeft % 10 === 0) {
+        if (gameStarted && !isEnding && !gameEnded && timeLeft % 10 === 0) {
             saveGameState(timeLeft);
         }
-    }, [gameStarted, timeLeft, isEnding]);
+    }, [gameStarted, timeLeft, isEnding, gameEnded]);
     const confirmAndStartGame = async () => {
         setShowReview(false);
         await onStartGame();
@@ -396,23 +454,41 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, players, 
     const handleGameEnd = async () => {
         if (games.filter((game) => !game.outAt).length === 1) {
             setIsEnding(true);
+            // Mark game as ended FIRST to stop all state saving
+            setGameEnded(true);
             const winningPlayerId = games.find((game) => !game.outAt)?.playerId;
             const updatedGames = games.map((game) => game.playerId === winningPlayerId
                 ? { ...game, points: initialPlayerCount, outAt: new Date(), position: 1 }
                 : game);
             try {
+                // Stop the game first
+                setGameStarted(false);
+                // Delete game state before posting results to prevent race conditions
+                await api.delete(API_ENDPOINTS.GAME_STATE);
+                // Wait a bit to ensure state deletion is processed
+                await new Promise(resolve => setTimeout(resolve, 500));
+                // Then post game results
                 await api.post("/gameResults", updatedGames);
                 updateAfterGameEnd(updatedGames);
-                await api.delete(API_ENDPOINTS.GAME_STATE);
                 toast.success("Game ended successfully!");
+                // Reset all state
                 resetGameState();
-                setGameStarted(false);
                 setPartyId(null);
+                setShowWinnerModal(false);
+                setWinnerPlayer(null);
+                if (winnerTimeout) {
+                    clearTimeout(winnerTimeout);
+                    setWinnerTimeout(null);
+                }
+                // Navigate to results
                 navigate("/results");
             }
             catch (error) {
                 console.error("Error:", error);
                 toast.error("Failed to end the game properly. Please try again.");
+                // Reset gameEnded flag on error to allow retry
+                setGameEnded(false);
+                setGameStarted(true);
             }
         }
         else {
@@ -485,7 +561,7 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, players, 
             display: 'flex',
             flexDirection: 'column',
             position: 'relative'
-        }, children: [_jsx(EditGameStateModal, { isOpen: showEditModal, onClose: () => setShowEditModal(false), games: games, selectedPlayers: selectedPlayers, players: players, onUpdateStats: handleUpdateGameState, blindIndex: blindIndex, setBlindIndex: setBlindIndex, timeLeft: timeLeft, setTimeLeft: setTimeLeft, currentBlindDuration: currentBlindDuration, setCurrentBlindDuration: setCurrentBlindDuration, smallBlind: smallBlind, bigBlind: bigBlind, ante: ante, setSmallBlind: setSmallBlind, setBigBlind: setBigBlind, setAnte: setAnte, isPaused: isPaused, setIsPaused: setIsPaused }), _jsx(KillerSelectionModal, { killer: killer, games: games, currentlyPlayingPlayers: selectedPlayers.filter((p) => !games.find((g) => g.playerId === p.id && g.outAt)), rebuyPlayerId: rebuyPlayerId, playerOutGame: playerOutGame, handlePlayerKillSelection: handlePlayerKillSelection }), _jsx(ConfirmDialog, { isOpen: showRebuyConfirm, onClose: () => setShowRebuyConfirm(false), onConfirm: confirmRebuy, title: "Confirm Rebuy", description: "Has this player paid for the rebuy?", confirmText: "Yes, Paid", cancelText: "Cancel", variant: "warning" }), _jsx(ConfirmDialog, { isOpen: showResetConfirm, onClose: () => setShowResetConfirm(false), onConfirm: async () => {
+        }, children: [_jsx(WinnerModal, { isOpen: showWinnerModal, onClose: () => setShowWinnerModal(false), winner: winnerPlayer }), _jsx(EditGameStateModal, { isOpen: showEditModal, onClose: () => setShowEditModal(false), games: games, selectedPlayers: selectedPlayers, players: players, onUpdateStats: handleUpdateGameState, blindIndex: blindIndex, setBlindIndex: setBlindIndex, timeLeft: timeLeft, setTimeLeft: setTimeLeft, currentBlindDuration: currentBlindDuration, setCurrentBlindDuration: setCurrentBlindDuration, smallBlind: smallBlind, bigBlind: bigBlind, ante: ante, setSmallBlind: setSmallBlind, setBigBlind: setBigBlind, setAnte: setAnte, isPaused: isPaused, setIsPaused: setIsPaused }), _jsx(KillerSelectionModal, { killer: killer, games: games, currentlyPlayingPlayers: selectedPlayers.filter((p) => !games.find((g) => g.playerId === p.id && g.outAt)), rebuyPlayerId: rebuyPlayerId, playerOutGame: playerOutGame, handlePlayerKillSelection: handlePlayerKillSelection }), _jsx(ConfirmDialog, { isOpen: showRebuyConfirm, onClose: () => setShowRebuyConfirm(false), onConfirm: confirmRebuy, title: "Confirm Rebuy", description: "Has this player paid for the rebuy?", confirmText: "Yes, Paid", cancelText: "Cancel", variant: "warning" }), _jsx(ConfirmDialog, { isOpen: showResetConfirm, onClose: () => setShowResetConfirm(false), onConfirm: async () => {
                     try {
                         // First delete the game state to prevent race conditions
                         try {

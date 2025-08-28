@@ -33,6 +33,7 @@ const useGameState = (
   const [lastUsedPosition, setLastUsedPosition] = useState<number>(0);
   const [initialPlayerCount, setInitialPlayerCount] = useState(selectedPlayers.length);
   const [lastSaveTime, setLastSaveTime] = useState(0);
+  const [gameEnded, setGameEnded] = useState(false);
 
   const resetGameState = (newBlindDuration?: number) => {
     const finalDuration = typeof newBlindDuration === "number"
@@ -57,11 +58,12 @@ const useGameState = (
     setLastUsedPosition(0);
     setInitialPlayerCount(0);
     setLastSaveTime(0);
+    setGameEnded(false);
   };
 
   const saveGameState = async (currentTimeLeft: number = timeLeft) => {
-    if (!initialGameStatePosted) {
-
+    if (!initialGameStatePosted || gameEnded) {
+      // Don't save if game has ended
       return;
     }
 
@@ -120,6 +122,12 @@ const useGameState = (
 
   const restoreState = async () => {
     try {
+      // Don't restore state if game has already ended
+      if (gameEnded) {
+        setLoading(false);
+        return;
+      }
+
       const response = await api.get(API_ENDPOINTS.GAME_STATE);
 
       if (!response.data?.state) {
@@ -246,15 +254,15 @@ const useGameState = (
     }
   }, [totalStack, selectedPlayers.length]);
 
-  // Save game state periodically
+  // Save game state periodically (but not if game has ended)
   useEffect(() => {
-    if (gameStarted) {
+    if (gameStarted && !gameEnded) {
       const interval = setInterval(() => {
         saveGameState(timeLeft);
       }, 1000);
       return () => clearInterval(interval);
     }
-  }, [gameStarted, timeLeft]);
+  }, [gameStarted, gameEnded, timeLeft]);
 
   return {
     timeLeft,
@@ -296,6 +304,8 @@ const useGameState = (
     setInitialPlayerCount,
     initialGameStatePosted,
     setInitialGameStatePosted,
+    gameEnded,
+    setGameEnded,
   };
 };
 
