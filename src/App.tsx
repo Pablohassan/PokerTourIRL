@@ -246,7 +246,7 @@ export default function App() {
         </SignedOut>
       </ClerkProvider>
 
-      {/* Test Button */}
+      {/* Test Button
       <div className={cn("fixed bottom-4 right-4 z-50")}>
         <button
           onClick={runGainsCalculationTest}
@@ -258,7 +258,7 @@ export default function App() {
         >
           Test Gains Calculation
         </button>
-      </div>
+      </div> */}
 
       {/* Test Results Modal */}
       {testResults && (
