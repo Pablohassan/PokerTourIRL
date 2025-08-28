@@ -11,7 +11,6 @@ import bourlyimage from "./assets/bourlypoker3.webp";
 import { Menu } from "./components/Menu";
 import { cn } from "./lib/utils";
 import { motion } from "framer-motion";
-import runTests from "./utils/testGainsCalculator";
 // import Ak from "./components/PokerLogo";
 import { ClerkProvider, SignedIn, SignedOut, RedirectToSignIn, SignIn, SignUp, } from "@clerk/clerk-react";
 import AddPlayer from "./components/AddPlayer";
@@ -54,11 +53,6 @@ export default function App() {
         };
         fetchChampionnat();
     }, []); // Runs only on the first render
-    const runGainsCalculationTest = () => {
-        const results = runTests();
-        setTestResults(results);
-        console.log("Test results:", results);
-    };
     const fetchPlayersAndParties = async () => {
         try {
             // Exécuter les appels API en parallèle

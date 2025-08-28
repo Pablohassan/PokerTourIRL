@@ -10,7 +10,6 @@ import bourlyimage from "./assets/bourlypoker3.webp"
 import { Menu } from "./components/Menu";
 import { cn } from "./lib/utils";
 import { motion } from "framer-motion";
-import runTests from "./utils/testGainsCalculator";
 
 // import Ak from "./components/PokerLogo";
 import {
@@ -85,11 +84,7 @@ export default function App() {
     fetchChampionnat();
   }, []); // Runs only on the first render
 
-  const runGainsCalculationTest = () => {
-    const results = runTests();
-    setTestResults(results as TestResults);
-    console.log("Test results:", results);
-  };
+
 
   const fetchPlayersAndParties = async () => {
     try {
