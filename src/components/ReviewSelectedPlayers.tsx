@@ -2,6 +2,8 @@ import React from 'react';
 import { Player, Tournaments } from './interfaces';
 import bgReview from '../assets/reviewpoker.png';
 import { useNavigate } from 'react-router-dom';
+import { Button } from './ui/button';
+import { cn } from '../lib/utils';
 
 interface ReviewSelectedPlayersProps {
   selectedPlayers: Player[];
@@ -60,11 +62,11 @@ const ReviewSelectedPlayers: React.FC<ReviewSelectedPlayersProps> = ({
         width: '100%',
         height: '100%',
         padding: '16px',
-        backgroundColor: 'rgba(2, 6, 23, 0.90)',
-        backdropFilter: 'blur(8px)',
-        border: '1px solid rgba(245, 158, 11, 0.2)',
+        backgroundColor: 'rgba(0, 0, 0, 0.75)', // Noir semi-transparent poker
+        backdropFilter: 'blur(3px)',
+        border: '1px solid rgba(212, 175, 55, 0.3)', // Bordure dorée
         borderRadius: '12px',
-        boxShadow: '0 0 35px -5px rgba(245, 158, 11, 0.15)',
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
         display: 'flex',
         flexDirection: 'column'
       }}>
@@ -74,10 +76,11 @@ const ReviewSelectedPlayers: React.FC<ReviewSelectedPlayersProps> = ({
             <h1 style={{
               fontFamily: 'DS-DIGI',
               fontSize: '1.5rem',
-              color: 'rgba(245, 158, 11, 0.9)',
+              color: '#D4AF37', // Doré poker
               letterSpacing: '0.1em',
               textAlign: 'center',
-              margin: 0
+              margin: 0,
+              textShadow: '2px 2px 4px rgba(0, 0, 0, 0.8)'
             }}>
               Tournament: {selectedTournament.year}
             </h1>
@@ -100,10 +103,11 @@ const ReviewSelectedPlayers: React.FC<ReviewSelectedPlayersProps> = ({
             <h3 style={{
               fontFamily: 'DS-DIGI',
               fontSize: '1rem',
-              color: 'rgba(245, 158, 11, 0.8)',
+              color: '#F4E4BC', // Beige doré clair
               letterSpacing: '0.05em',
               marginBottom: '12px',
-              margin: 0
+              margin: 0,
+              textShadow: '1px 1px 2px rgba(0, 0, 0, 0.7)'
             }}>
               Selected Players ({selectedPlayers.length})
             </h3>
@@ -121,14 +125,15 @@ const ReviewSelectedPlayers: React.FC<ReviewSelectedPlayersProps> = ({
                   style={{
                     padding: '8px',
                     borderRadius: '6px',
-                    backgroundColor: 'rgba(2, 6, 23, 0.9)',
-                    border: '1px solid rgba(245, 158, 11, 0.2)',
-                    boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.3)',
+                    backgroundColor: '#D4AF37', // Doré poker pour les joueurs sélectionnés
+                    border: '1px solid #D4AF37',
+                    boxShadow: '0 2px 8px rgba(212, 175, 55, 0.4)',
                     fontFamily: 'DS-DIGI',
                     fontSize: '0.875rem',
-                    color: 'rgba(245, 158, 11, 0.9)',
+                    color: '#000000', // Texte noir sur fond doré
                     letterSpacing: '0.05em',
-                    textAlign: 'center'
+                    textAlign: 'center',
+                    fontWeight: '600'
                   }}
                 >
                   {player.name}
@@ -146,10 +151,11 @@ const ReviewSelectedPlayers: React.FC<ReviewSelectedPlayersProps> = ({
             <h3 style={{
               fontFamily: 'DS-DIGI',
               fontSize: '1rem',
-              color: 'rgba(245, 158, 11, 0.8)',
+              color: '#F4E4BC', // Beige doré clair
               letterSpacing: '0.05em',
               marginBottom: '12px',
-              margin: 0
+              margin: 0,
+              textShadow: '1px 1px 2px rgba(0, 0, 0, 0.7)'
             }}>
               Blinds Structure
             </h3>
@@ -157,9 +163,9 @@ const ReviewSelectedPlayers: React.FC<ReviewSelectedPlayersProps> = ({
               flex: 1,
               borderRadius: '6px',
               overflow: 'hidden',
-              border: '1px solid rgba(245, 158, 11, 0.2)',
+              border: '1px solid rgba(212, 175, 55, 0.2)', // Bordure dorée
               boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.3)',
-              backgroundColor: 'rgba(2, 6, 23, 0.2)'
+              backgroundColor: 'rgba(20, 20, 20, 0.5)' // Noir poker
             }}>
               <div style={{
                 height: '100%',
@@ -172,7 +178,7 @@ const ReviewSelectedPlayers: React.FC<ReviewSelectedPlayersProps> = ({
                   <thead style={{
                     position: 'sticky',
                     top: 0,
-                    backgroundColor: 'rgba(2, 6, 23, 0.95)',
+                    backgroundColor: 'rgba(20, 20, 20, 0.95)', // Noir poker
                     zIndex: 1
                   }}>
                     <tr>
@@ -184,9 +190,9 @@ const ReviewSelectedPlayers: React.FC<ReviewSelectedPlayersProps> = ({
                             textAlign: 'left',
                             fontFamily: 'DS-DIGI',
                             fontSize: '0.875rem',
-                            color: 'rgba(245, 158, 11, 0.8)',
+                            color: '#F4E4BC', // Beige doré clair
                             letterSpacing: '0.05em',
-                            borderBottom: '1px solid rgba(245, 158, 11, 0.2)'
+                            borderBottom: '1px solid rgba(212, 175, 55, 0.2)'
                           }}
                         >
                           {column.label}
@@ -199,10 +205,10 @@ const ReviewSelectedPlayers: React.FC<ReviewSelectedPlayersProps> = ({
                       <tr
                         key={item.level}
                         style={{
-                          borderBottom: index < blindLevels.length - 1 ? '1px solid rgba(245, 158, 11, 0.1)' : 'none'
+                          borderBottom: index < blindLevels.length - 1 ? '1px solid rgba(212, 175, 55, 0.1)' : 'none'
                         }}
                         onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor = 'rgba(2, 6, 23, 0.3)';
+                          e.currentTarget.style.backgroundColor = 'rgba(212, 175, 55, 0.1)';
                         }}
                         onMouseLeave={(e) => {
                           e.currentTarget.style.backgroundColor = 'transparent';
@@ -215,7 +221,7 @@ const ReviewSelectedPlayers: React.FC<ReviewSelectedPlayersProps> = ({
                               padding: '6px 12px',
                               fontFamily: 'DS-DIGI',
                               fontSize: '0.875rem',
-                              color: 'rgba(245, 158, 11, 0.9)',
+                              color: '#F4E4BC', // Beige doré clair
                               letterSpacing: '0.05em'
                             }}
                           >
@@ -237,12 +243,12 @@ const ReviewSelectedPlayers: React.FC<ReviewSelectedPlayersProps> = ({
           justifyContent: 'space-between',
           alignItems: 'center',
           paddingTop: '12px',
-          borderTop: '1px solid rgba(245, 158, 11, 0.2)',
+          borderTop: '1px solid rgba(212, 175, 55, 0.3)', // Bordure dorée
           marginTop: '12px'
         }}>
           <div style={{
             fontSize: '0.875rem',
-            color: 'rgba(156, 163, 175, 1)',
+            color: '#F4E4BC', // Beige doré clair
             fontFamily: 'DS-DIGI',
             letterSpacing: '0.05em'
           }}>
@@ -252,55 +258,31 @@ const ReviewSelectedPlayers: React.FC<ReviewSelectedPlayersProps> = ({
             display: 'flex',
             gap: '12px'
           }}>
-            <button
+            <Button
               onClick={() => navigate("/partypage")}
-              style={{
-                padding: '10px 20px',
-                fontSize: '0.875rem',
-                fontWeight: '600',
-                fontFamily: 'DS-DIGI',
-                color: 'rgba(245, 158, 11, 1)',
-                backgroundColor: 'rgba(30, 41, 59, 0.8)',
-                border: '1px solid rgba(245, 158, 11, 0.2)',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-                letterSpacing: '0.05em'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = 'rgba(30, 41, 59, 0.6)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'rgba(30, 41, 59, 0.8)';
-              }}
+              variant="outline"
+              className={cn(
+                "font-['DS-DIGI'] text-sm",
+                "bg-black/80 text-[#F4E4BC] font-semibold",
+                "border-[#D4AF37]/30 hover:border-[#D4AF37]/50",
+                "hover:bg-[#D4AF37]/10 hover:text-[#F4E4BC]",
+                "shadow-[0_2px_4px_rgba(0,0,0,0.3)]"
+              )}
             >
               Back
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={onConfirm}
-              style={{
-                padding: '10px 24px',
-                fontSize: '0.875rem',
-                fontWeight: '600',
-                fontFamily: 'DS-DIGI',
-                color: 'rgba(15, 23, 42, 1)',
-                backgroundColor: 'rgba(245, 158, 11, 0.8)',
-                border: '1px solid rgba(245, 158, 11, 0.2)',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-                minWidth: '180px',
-                letterSpacing: '0.05em'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = 'rgba(245, 158, 11, 0.6)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'rgba(245, 158, 11, 0.8)';
-              }}
+              className={cn(
+                "font-['DS-DIGI'] text-sm min-w-[180px]",
+                "bg-[#D4AF37] text-black font-semibold",
+                "border-[#D4AF37] hover:bg-[#B8941F]",
+                "shadow-[0_2px_4px_rgba(0,0,0,0.3)]",
+                "hover:shadow-[0_4px_8px_rgba(212,175,55,0.4)]"
+              )}
             >
               Confirm and Start Game
-            </button>
+            </Button>
           </div>
         </div>
       </div>

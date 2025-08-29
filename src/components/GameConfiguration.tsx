@@ -3,7 +3,9 @@ import { Tournaments, Player } from './interfaces';
 import api from '../api';
 import { useNavigate } from 'react-router-dom';
 import { API_ENDPOINTS } from '../config';
-
+import logo from '../assets/pokerlogobourly.jpeg';
+import { Button } from './ui/button';
+import { cn } from '../lib/utils';
 // Add CSS styles for hover effects
 
 // Add CSS classes for hover effects
@@ -22,13 +24,15 @@ interface GameConfigurationProps {
   onStartGameConfiguration: (selectedTournament: Tournaments | null, blindDuration: number, selectedPlayers: Player[]) => void;
 }
 
-const GameConfiguration: React.FC<GameConfigurationProps> = ({ championnat: initialChampionnat, players, onStartGameConfiguration }) => {
+const GameConfiguration: React.FC<GameConfigurationProps> = ({ championnat: initialChampionnat, players: initialPlayers, onStartGameConfiguration }) => {
   const [selectedTournamentId, setSelectedTournamentId] = useState<number | null>(null);
   const [blindDuration, setBlindDuration] = useState<number>(20);
   const [selectedPlayers, setSelectedPlayers] = useState<Player[]>([]);
   const [newTournamentYear, setNewTournamentYear] = useState<string>('');
   const [localChampionnat, setLocalChampionnat] = useState<Tournaments[]>(initialChampionnat);
+  const [localPlayers, setLocalPlayers] = useState<Player[]>(initialPlayers);
   const [isLoadingTournaments, setIsLoadingTournaments] = useState<boolean>(false);
+  const [isLoadingPlayers, setIsLoadingPlayers] = useState<boolean>(false);
   const navigate = useNavigate();
 
   // Function to get current year
@@ -45,6 +49,26 @@ const GameConfiguration: React.FC<GameConfigurationProps> = ({ championnat: init
     if (currentYearTournament && !selectedTournamentId) {
       setSelectedTournamentId(currentYearTournament.id);
       console.log(`Auto-selected tournament for year ${currentYear}:`, currentYearTournament);
+    }
+  };
+
+  // Function to fetch players
+  const fetchPlayers = async () => {
+    setIsLoadingPlayers(true);
+    try {
+      const response = await api.get("/player");
+
+      if (Array.isArray(response.data)) {
+        setLocalPlayers(response.data);
+      } else {
+        console.warn("Players API did not return an array:", response.data);
+        setLocalPlayers([]);
+      }
+    } catch (error) {
+      console.error("Error fetching players:", error);
+      setLocalPlayers([]);
+    } finally {
+      setIsLoadingPlayers(false);
     }
   };
 
@@ -86,6 +110,15 @@ const GameConfiguration: React.FC<GameConfigurationProps> = ({ championnat: init
       autoSelectCurrentYearTournament(initialChampionnat);
     }
   }, [initialChampionnat]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Effect to fetch players when component mounts or when initialPlayers changes
+  useEffect(() => {
+    if (initialPlayers.length === 0) {
+      fetchPlayers();
+    } else {
+      setLocalPlayers(initialPlayers);
+    }
+  }, [initialPlayers]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleTournamentChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedTournamentId(Number(e.target.value));
@@ -149,7 +182,10 @@ const GameConfiguration: React.FC<GameConfigurationProps> = ({ championnat: init
         overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column',
-        background: 'linear-gradient(to bottom, #111827, #1F2937)',
+        backgroundImage: `url(${logo})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
         position: 'relative'
       }}>
         <form onSubmit={handleSubmit} style={{
@@ -157,18 +193,22 @@ const GameConfiguration: React.FC<GameConfigurationProps> = ({ championnat: init
           display: 'flex',
           flexDirection: 'column',
           padding: '16px',
-          backgroundColor: '#1F2937',
-          borderRadius: '8px',
-          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+          backgroundColor: 'rgba(0, 0, 0, 0.75)', // Noir semi-transparent pour le poker
+          backdropFilter: 'blur(2px)', // Flou pour l'effet glassmorphism
+          borderRadius: '12px',
+          border: '1px solid rgba(212, 175, 55, 0.3)', // Bordure dorée subtile
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)'
         }}>
           {/* Header */}
           <div style={{ marginBottom: '16px' }}>
             <h2 style={{
-              fontSize: '1.25rem',
+              fontSize: '2rem',
               fontWeight: 'bold',
-              color: 'white',
+              color: '#D4AF37', // Doré poker
               marginBottom: '16px',
-              textAlign: 'center'
+              textAlign: 'center',
+              textShadow: '2px 2px 4px rgba(0, 0, 0, 0.8)',
+              fontFamily: 'DS-DIGI'
             }}>Game Configuration</h2>
           </div>
 
@@ -176,7 +216,7 @@ const GameConfiguration: React.FC<GameConfigurationProps> = ({ championnat: init
           <div style={{
             flex: 1,
             display: 'flex',
-            gap: '20px',
+            gap: '28px',
             overflow: 'hidden'
           }}>
             {/* Left Column - Tournament & Configuration */}
@@ -190,10 +230,12 @@ const GameConfiguration: React.FC<GameConfigurationProps> = ({ championnat: init
               <div>
                 <label htmlFor="tournament" style={{
                   display: 'block',
-                  fontSize: '0.875rem',
+                  fontSize: '20px',
                   fontWeight: '500',
-                  color: '#E5E7EB',
-                  marginBottom: '6px'
+                  color: '#F4E4BC', // Beige doré clair
+                  marginBottom: '6px',
+                  textShadow: '1px 1px 2px rgba(0, 0, 0, 0.7)',
+                  fontFamily: 'DS-DIGI'
                 }}>
                   Select Tournament:
                 </label>
@@ -205,11 +247,11 @@ const GameConfiguration: React.FC<GameConfigurationProps> = ({ championnat: init
                   style={{
                     width: '100%',
                     padding: '8px',
-                    fontSize: '0.875rem',
-                    backgroundColor: '#374151',
-                    color: 'white',
+                    fontSize: '20px',
+                    backgroundColor: 'rgba(20, 20, 20, 0.9)', // Noir poker
+                    color: '#F4E4BC', // Texte doré clair
                     borderRadius: '6px',
-                    border: '2px solid transparent',
+                    border: '1px solid rgba(212, 175, 55, 0.3)',
                     outline: 'none',
                     opacity: isLoadingTournaments ? 0.6 : 1
                   }}
@@ -227,10 +269,12 @@ const GameConfiguration: React.FC<GameConfigurationProps> = ({ championnat: init
               <div>
                 <label htmlFor="newTournamentYear" style={{
                   display: 'block',
-                  fontSize: '0.875rem',
+                  fontSize: '20px',
                   fontWeight: '500',
-                  color: '#E5E7EB',
-                  marginBottom: '6px'
+                  color: '#F4E4BC', // Beige doré clair
+                  marginBottom: '6px',
+                  textShadow: '1px 1px 2px rgba(0, 0, 0, 0.7)',
+                  fontFamily: 'DS-DIGI'
                 }}>
                   Create New Tournament:
                 </label>
@@ -244,34 +288,29 @@ const GameConfiguration: React.FC<GameConfigurationProps> = ({ championnat: init
                     style={{
                       flex: 1,
                       padding: '8px',
-                      fontSize: '0.875rem',
-                      backgroundColor: '#374151',
-                      color: 'white',
+                      fontSize: '20px',
+                      backgroundColor: 'rgba(20, 20, 20, 0.9)', // Noir poker
+                      color: '#F4E4BC', // Texte doré clair
                       borderRadius: '6px',
-                      border: '2px solid transparent',
+                      border: '1px solid rgba(212, 175, 55, 0.3)',
                       outline: 'none'
                     }}
                   />
-                  <button
+                  <Button
                     type="button"
                     onClick={handleCreateTournament}
                     disabled={isLoadingTournaments || !newTournamentYear}
-                    className="button-primary"
-                    style={{
-                      padding: '8px 12px',
-                      fontSize: '0.875rem',
-                      fontWeight: '600',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '6px',
-                      cursor: 'pointer',
-                      transition: 'background-color 0.2s',
-                      backgroundColor: '#3B82F6',
-                      opacity: isLoadingTournaments || !newTournamentYear ? 0.6 : 1
-                    }}
+                    size="lg"
+                    className={cn(
+                      "bg-[#D4AF37] text-black font-semibold",
+                      "border-[#D4AF37] hover:bg-[#B8941F]",
+                      "shadow-[0_2px_4px_rgba(0,0,0,0.3)]",
+                      "hover:shadow-[0_4px_8px_rgba(212,175,55,0.4)]",
+                      "disabled:opacity-60 disabled:hover:bg-[#D4AF37]"
+                    )}
                   >
                     {isLoadingTournaments ? 'Creating...' : 'Create'}
-                  </button>
+                  </Button>
                 </div>
               </div>
 
@@ -279,10 +318,12 @@ const GameConfiguration: React.FC<GameConfigurationProps> = ({ championnat: init
               <div>
                 <label htmlFor="blindDuration" style={{
                   display: 'block',
-                  fontSize: '0.875rem',
+                  fontSize: '20px',
                   fontWeight: '500',
-                  color: '#E5E7EB',
-                  marginBottom: '6px'
+                  color: '#F4E4BC', // Beige doré clair
+                  marginBottom: '6px',
+                  textShadow: '1px 1px 2px rgba(0, 0, 0, 0.7)',
+                  fontFamily: 'DS-DIGI'
                 }}>
                   Blind Duration (minutes):
                 </label>
@@ -295,12 +336,13 @@ const GameConfiguration: React.FC<GameConfigurationProps> = ({ championnat: init
                   style={{
                     width: '100%',
                     padding: '8px',
-                    fontSize: '0.875rem',
-                    backgroundColor: '#374151',
-                    color: 'white',
+                    fontSize: '20px',
+                    backgroundColor: 'rgba(20, 20, 20, 0.9)', // Noir poker
+                    color: '#F4E4BC', // Texte doré clair
                     borderRadius: '6px',
-                    border: '2px solid transparent',
-                    outline: 'none'
+                    border: '1px solid rgba(212, 175, 55, 0.3)',
+                    outline: 'none',
+                    fontFamily: 'DS-DIGI'
                   }}
                 />
               </div>
@@ -316,60 +358,77 @@ const GameConfiguration: React.FC<GameConfigurationProps> = ({ championnat: init
                 display: 'block',
                 fontSize: '0.875rem',
                 fontWeight: '500',
-                color: '#E5E7EB',
-                marginBottom: '8px'
+                color: '#F4E4BC', // Beige doré clair
+                marginBottom: '8px',
+                textShadow: '1px 1px 2px rgba(0, 0, 0, 0.7)'
               }}>
                 Select Players:
               </label>
               <div style={{
                 flex: 1,
-                backgroundColor: '#374151',
+                backgroundColor: 'rgba(20, 20, 20, 0.85)', // Noir poker semi-transparent
                 borderRadius: '6px',
+                border: '1px solid rgba(212, 175, 55, 0.2)',
                 padding: '12px',
                 overflowY: 'auto',
-                maxHeight: 'calc(100% - 40px)'
+                maxHeight: 'calc(100% - 40px)',
+                opacity: isLoadingPlayers ? 0.6 : 1
               }}>
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(2, 1fr)',
-                  gap: '8px'
-                }}>
-                  {players.map(player => (
-                    <div key={player.id} style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px',
-                      padding: '6px 8px',
-                      backgroundColor: '#4B5563',
-                      borderRadius: '4px',
-                      fontSize: '0.875rem'
-                    }}>
-                      <input
-                        type="checkbox"
-                        id={`player-${player.id}`}
-                        checked={selectedPlayers.some(p => p.id === player.id)}
-                        onChange={() => handlePlayerSelect(player)}
-                        style={{
-                          width: '16px',
-                          height: '16px',
-                          accentColor: '#3B82F6',
-                          cursor: 'pointer'
-                        }}
-                      />
-                      <label
-                        htmlFor={`player-${player.id}`}
-                        style={{
-                          color: 'white',
-                          cursor: 'pointer',
-                          userSelect: 'none',
-                          fontSize: '0.875rem'
-                        }}
-                      >
-                        {player.name}
-                      </label>
-                    </div>
-                  ))}
-                </div>
+                {isLoadingPlayers ? (
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    height: '100px',
+                    color: '#F4E4BC', // Beige doré clair
+                    fontSize: '0.875rem'
+                  }}>
+                    Loading players...
+                  </div>
+                ) : (
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(2, 1fr)',
+                    gap: '10px'
+                  }}>
+                    {localPlayers.map(player => {
+                      const isSelected = selectedPlayers.some(p => p.id === player.id);
+                      return (
+                        <Button
+                          key={player.id}
+                          type="button"
+                          variant={isSelected ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => handlePlayerSelect(player)}
+                          className={cn(
+                            "h-10 px-3 py-2 text-sm font-medium transition-all duration-200",
+                            "border rounded-md shadow-sm",
+                            "focus-visible:outline-none focus-visible:ring-1",
+                            isSelected
+                              ? [
+                                // Selected state - doré poker
+                                "bg-[#D4AF37] text-black font-semibold",
+                                "border-[#D4AF37] shadow-[0_2px_8px_rgba(212,175,55,0.4)]",
+                                "hover:bg-[#B8941F] hover:border-[#B8941F]",
+                                "transform -translate-y-0.5",
+                                "hover:shadow-[0_4px_12px_rgba(212,175,55,0.5)]"
+                              ]
+                              : [
+                                // Unselected state - noir avec bordure dorée
+                                "bg-black/70 text-[#F4E4BC] font-normal",
+                                "border-[#D4AF37]/30",
+                                "hover:bg-[#D4AF37]/20 hover:border-[#D4AF37]/50",
+                                "hover:text-[#F4E4BC]",
+                                "shadow-[0_1px_3px_rgba(0,0,0,0.3)]"
+                              ]
+                          )}
+                        >
+                          {player.name}
+                        </Button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -380,12 +439,12 @@ const GameConfiguration: React.FC<GameConfigurationProps> = ({ championnat: init
             justifyContent: 'space-between',
             alignItems: 'center',
             paddingTop: '12px',
-            borderTop: '1px solid #374151',
+            borderTop: '1px solid rgba(212, 175, 55, 0.3)',
             marginTop: '12px'
           }}>
             <div style={{
               fontSize: '0.875rem',
-              color: '#9CA3AF'
+              color: '#F4E4BC' // Beige doré clair
             }}>
               {selectedPlayers.length} player{selectedPlayers.length !== 1 ? 's' : ''} selected
             </div>
@@ -393,42 +452,30 @@ const GameConfiguration: React.FC<GameConfigurationProps> = ({ championnat: init
               display: 'flex',
               gap: '12px'
             }}>
-              <button
+              <Button
                 type="button"
                 onClick={() => navigate("/partypage")}
-                className="button-danger"
-                style={{
-                  padding: '10px 20px',
-                  fontSize: '0.875rem',
-                  fontWeight: '600',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  transition: 'background-color 0.2s',
-                  backgroundColor: '#EF4444'
-                }}
+                variant="outline"
+                className={cn(
+                  "bg-black/80 text-[#F4E4BC] font-semibold",
+                  "border-[#D4AF37]/30 hover:border-[#D4AF37]/50",
+                  "hover:bg-[#D4AF37]/10 hover:text-[#F4E4BC]",
+                  "shadow-[0_2px_4px_rgba(0,0,0,0.3)]"
+                )}
               >
                 Back
-              </button>
-              <button
+              </Button>
+              <Button
                 type="submit"
-                className="button-primary"
-                style={{
-                  padding: '10px 24px',
-                  fontSize: '0.875rem',
-                  fontWeight: '600',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  transition: 'background-color 0.2s',
-                  backgroundColor: '#3B82F6',
-                  minWidth: '120px'
-                }}
+                className={cn(
+                  "bg-[#D4AF37] text-black font-semibold min-w-[120px]",
+                  "border-[#D4AF37] hover:bg-[#B8941F]",
+                  "shadow-[0_2px_4px_rgba(0,0,0,0.3)]",
+                  "hover:shadow-[0_4px_8px_rgba(212,175,55,0.4)]"
+                )}
               >
                 Start Game
-              </button>
+              </Button>
             </div>
           </div>
         </form>

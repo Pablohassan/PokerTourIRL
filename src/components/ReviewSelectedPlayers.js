@@ -1,6 +1,8 @@
 import { jsxs as _jsxs, jsx as _jsx } from "react/jsx-runtime";
 import bgReview from '../assets/reviewpoker.png';
 import { useNavigate } from 'react-router-dom';
+import { Button } from './ui/button';
+import { cn } from '../lib/utils';
 const blindLevels = [
     { level: 1, small: 10, big: 20, duration: '20m' },
     { level: 2, small: 25, big: 50, duration: '20m' },
@@ -43,20 +45,21 @@ const ReviewSelectedPlayers = ({ selectedPlayers, selectedTournament, onConfirm 
                 width: '100%',
                 height: '100%',
                 padding: '16px',
-                backgroundColor: 'rgba(2, 6, 23, 0.90)',
-                backdropFilter: 'blur(8px)',
-                border: '1px solid rgba(245, 158, 11, 0.2)',
+                backgroundColor: 'rgba(0, 0, 0, 0.75)', // Noir semi-transparent poker
+                backdropFilter: 'blur(3px)',
+                border: '1px solid rgba(212, 175, 55, 0.3)', // Bordure dorée
                 borderRadius: '12px',
-                boxShadow: '0 0 35px -5px rgba(245, 158, 11, 0.15)',
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
                 display: 'flex',
                 flexDirection: 'column'
             }, children: [selectedTournament && (_jsx("div", { style: { marginBottom: '16px' }, children: _jsxs("h1", { style: {
                             fontFamily: 'DS-DIGI',
                             fontSize: '1.5rem',
-                            color: 'rgba(245, 158, 11, 0.9)',
+                            color: '#D4AF37', // Doré poker
                             letterSpacing: '0.1em',
                             textAlign: 'center',
-                            margin: 0
+                            margin: 0,
+                            textShadow: '2px 2px 4px rgba(0, 0, 0, 0.8)'
                         }, children: ["Tournament: ", selectedTournament.year] }) })), _jsxs("div", { style: {
                         flex: 1,
                         display: 'flex',
@@ -69,10 +72,11 @@ const ReviewSelectedPlayers = ({ selectedPlayers, selectedTournament, onConfirm 
                             }, children: [_jsxs("h3", { style: {
                                         fontFamily: 'DS-DIGI',
                                         fontSize: '1rem',
-                                        color: 'rgba(245, 158, 11, 0.8)',
+                                        color: '#F4E4BC', // Beige doré clair
                                         letterSpacing: '0.05em',
                                         marginBottom: '12px',
-                                        margin: 0
+                                        margin: 0,
+                                        textShadow: '1px 1px 2px rgba(0, 0, 0, 0.7)'
                                     }, children: ["Selected Players (", selectedPlayers.length, ")"] }), _jsx("div", { style: {
                                         display: 'grid',
                                         gridTemplateColumns: 'repeat(2, 1fr)',
@@ -83,14 +87,15 @@ const ReviewSelectedPlayers = ({ selectedPlayers, selectedTournament, onConfirm 
                                     }, children: selectedPlayers.map((player) => (_jsx("div", { style: {
                                             padding: '8px',
                                             borderRadius: '6px',
-                                            backgroundColor: 'rgba(2, 6, 23, 0.9)',
-                                            border: '1px solid rgba(245, 158, 11, 0.2)',
-                                            boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.3)',
+                                            backgroundColor: '#D4AF37', // Doré poker pour les joueurs sélectionnés
+                                            border: '1px solid #D4AF37',
+                                            boxShadow: '0 2px 8px rgba(212, 175, 55, 0.4)',
                                             fontFamily: 'DS-DIGI',
                                             fontSize: '0.875rem',
-                                            color: 'rgba(245, 158, 11, 0.9)',
+                                            color: '#000000', // Texte noir sur fond doré
                                             letterSpacing: '0.05em',
-                                            textAlign: 'center'
+                                            textAlign: 'center',
+                                            fontWeight: '600'
                                         }, children: player.name }, player.id))) })] }), _jsxs("div", { style: {
                                 flex: 1,
                                 display: 'flex',
@@ -98,17 +103,18 @@ const ReviewSelectedPlayers = ({ selectedPlayers, selectedTournament, onConfirm 
                             }, children: [_jsx("h3", { style: {
                                         fontFamily: 'DS-DIGI',
                                         fontSize: '1rem',
-                                        color: 'rgba(245, 158, 11, 0.8)',
+                                        color: '#F4E4BC', // Beige doré clair
                                         letterSpacing: '0.05em',
                                         marginBottom: '12px',
-                                        margin: 0
+                                        margin: 0,
+                                        textShadow: '1px 1px 2px rgba(0, 0, 0, 0.7)'
                                     }, children: "Blinds Structure" }), _jsx("div", { style: {
                                         flex: 1,
                                         borderRadius: '6px',
                                         overflow: 'hidden',
-                                        border: '1px solid rgba(245, 158, 11, 0.2)',
+                                        border: '1px solid rgba(212, 175, 55, 0.2)', // Bordure dorée
                                         boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.3)',
-                                        backgroundColor: 'rgba(2, 6, 23, 0.2)'
+                                        backgroundColor: 'rgba(20, 20, 20, 0.5)' // Noir poker
                                     }, children: _jsx("div", { style: {
                                             height: '100%',
                                             overflowY: 'auto'
@@ -118,76 +124,43 @@ const ReviewSelectedPlayers = ({ selectedPlayers, selectedTournament, onConfirm 
                                             }, children: [_jsx("thead", { style: {
                                                         position: 'sticky',
                                                         top: 0,
-                                                        backgroundColor: 'rgba(2, 6, 23, 0.95)',
+                                                        backgroundColor: 'rgba(20, 20, 20, 0.95)', // Noir poker
                                                         zIndex: 1
                                                     }, children: _jsx("tr", { children: columns.map((column) => (_jsx("th", { style: {
                                                                 padding: '8px 12px',
                                                                 textAlign: 'left',
                                                                 fontFamily: 'DS-DIGI',
                                                                 fontSize: '0.875rem',
-                                                                color: 'rgba(245, 158, 11, 0.8)',
+                                                                color: '#F4E4BC', // Beige doré clair
                                                                 letterSpacing: '0.05em',
-                                                                borderBottom: '1px solid rgba(245, 158, 11, 0.2)'
+                                                                borderBottom: '1px solid rgba(212, 175, 55, 0.2)'
                                                             }, children: column.label }, column.key))) }) }), _jsx("tbody", { children: blindLevels.map((item, index) => (_jsx("tr", { style: {
-                                                            borderBottom: index < blindLevels.length - 1 ? '1px solid rgba(245, 158, 11, 0.1)' : 'none'
+                                                            borderBottom: index < blindLevels.length - 1 ? '1px solid rgba(212, 175, 55, 0.1)' : 'none'
                                                         }, onMouseEnter: (e) => {
-                                                            e.currentTarget.style.backgroundColor = 'rgba(2, 6, 23, 0.3)';
+                                                            e.currentTarget.style.backgroundColor = 'rgba(212, 175, 55, 0.1)';
                                                         }, onMouseLeave: (e) => {
                                                             e.currentTarget.style.backgroundColor = 'transparent';
                                                         }, children: columns.map((column) => (_jsx("td", { style: {
                                                                 padding: '6px 12px',
                                                                 fontFamily: 'DS-DIGI',
                                                                 fontSize: '0.875rem',
-                                                                color: 'rgba(245, 158, 11, 0.9)',
+                                                                color: '#F4E4BC', // Beige doré clair
                                                                 letterSpacing: '0.05em'
                                                             }, children: item[column.key] }, column.key))) }, item.level))) })] }) }) })] })] }), _jsxs("div", { style: {
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'center',
                         paddingTop: '12px',
-                        borderTop: '1px solid rgba(245, 158, 11, 0.2)',
+                        borderTop: '1px solid rgba(212, 175, 55, 0.3)', // Bordure dorée
                         marginTop: '12px'
                     }, children: [_jsxs("div", { style: {
                                 fontSize: '0.875rem',
-                                color: 'rgba(156, 163, 175, 1)',
+                                color: '#F4E4BC', // Beige doré clair
                                 fontFamily: 'DS-DIGI',
                                 letterSpacing: '0.05em'
                             }, children: ["Ready to start with ", selectedPlayers.length, " players"] }), _jsxs("div", { style: {
                                 display: 'flex',
                                 gap: '12px'
-                            }, children: [_jsx("button", { onClick: () => navigate("/partypage"), style: {
-                                        padding: '10px 20px',
-                                        fontSize: '0.875rem',
-                                        fontWeight: '600',
-                                        fontFamily: 'DS-DIGI',
-                                        color: 'rgba(245, 158, 11, 1)',
-                                        backgroundColor: 'rgba(30, 41, 59, 0.8)',
-                                        border: '1px solid rgba(245, 158, 11, 0.2)',
-                                        borderRadius: '6px',
-                                        cursor: 'pointer',
-                                        transition: 'all 0.2s',
-                                        letterSpacing: '0.05em'
-                                    }, onMouseEnter: (e) => {
-                                        e.currentTarget.style.backgroundColor = 'rgba(30, 41, 59, 0.6)';
-                                    }, onMouseLeave: (e) => {
-                                        e.currentTarget.style.backgroundColor = 'rgba(30, 41, 59, 0.8)';
-                                    }, children: "Back" }), _jsx("button", { onClick: onConfirm, style: {
-                                        padding: '10px 24px',
-                                        fontSize: '0.875rem',
-                                        fontWeight: '600',
-                                        fontFamily: 'DS-DIGI',
-                                        color: 'rgba(15, 23, 42, 1)',
-                                        backgroundColor: 'rgba(245, 158, 11, 0.8)',
-                                        border: '1px solid rgba(245, 158, 11, 0.2)',
-                                        borderRadius: '6px',
-                                        cursor: 'pointer',
-                                        transition: 'all 0.2s',
-                                        minWidth: '180px',
-                                        letterSpacing: '0.05em'
-                                    }, onMouseEnter: (e) => {
-                                        e.currentTarget.style.backgroundColor = 'rgba(245, 158, 11, 0.6)';
-                                    }, onMouseLeave: (e) => {
-                                        e.currentTarget.style.backgroundColor = 'rgba(245, 158, 11, 0.8)';
-                                    }, children: "Confirm and Start Game" })] })] })] }) }));
+                            }, children: [_jsx(Button, { onClick: () => navigate("/partypage"), variant: "outline", className: cn("font-['DS-DIGI'] text-sm", "bg-black/80 text-[#F4E4BC] font-semibold", "border-[#D4AF37]/30 hover:border-[#D4AF37]/50", "hover:bg-[#D4AF37]/10 hover:text-[#F4E4BC]", "shadow-[0_2px_4px_rgba(0,0,0,0.3)]"), children: "Back" }), _jsx(Button, { onClick: onConfirm, className: cn("font-['DS-DIGI'] text-sm min-w-[180px]", "bg-[#D4AF37] text-black font-semibold", "border-[#D4AF37] hover:bg-[#B8941F]", "shadow-[0_2px_4px_rgba(0,0,0,0.3)]", "hover:shadow-[0_4px_8px_rgba(212,175,55,0.4)]"), children: "Confirm and Start Game" })] })] })] }) }));
 };
 export default ReviewSelectedPlayers;
