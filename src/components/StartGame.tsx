@@ -820,6 +820,10 @@ const StartGame: React.FC<StartGameProps> = ({
         isOpen={showWinnerModal}
         onClose={() => setShowWinnerModal(false)}
         winner={winnerPlayer}
+        games={games}
+        pot={pot}
+        initialPlayerCount={initialPlayerCount}
+        selectedPlayers={selectedPlayers}
       />
 
       <EditGameStateModal

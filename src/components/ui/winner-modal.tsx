@@ -1,20 +1,78 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "../../lib/utils";
-import { Player } from "../interfaces";
+import { Player, PlayerStats } from "../interfaces";
+import { calculateGains, calculatePlayerCost } from "../../utils/gainsCalculator";
 
 interface WinnerModalProps {
     isOpen: boolean;
     onClose: () => void;
     winner: Player | null;
+    games: PlayerStats[];
+    pot: number;
+    initialPlayerCount: number;
+    selectedPlayers: Player[];
 }
 
 const WinnerModal: React.FC<WinnerModalProps> = ({
     isOpen,
     onClose,
-    winner
+    winner,
+    games,
+    pot,
+    initialPlayerCount,
+    selectedPlayers
 }) => {
     const [countdown, setCountdown] = useState(30);
+
+    const totalPlayers = useMemo(() => initialPlayerCount || games.length || selectedPlayers.length, [initialPlayerCount, games.length, selectedPlayers.length]);
+
+    const payingPositions = useMemo(() => {
+        if (totalPlayers <= 6) return [1, 2];
+        if (totalPlayers === 7) return [1, 2, 3];
+        return [1, 2, 3, 4];
+    }, [totalPlayers]);
+
+    const getPlayerName = (playerId: number | undefined | null) => {
+        if (!playerId) return "";
+        const inSelected = selectedPlayers.find(p => p.id === playerId);
+        if (inSelected) return inSelected.name;
+        const inGame = games.find(g => g.playerId === playerId);
+        return (inGame as any)?.playerName || "";
+    };
+
+    const payoutList = useMemo(() => {
+        return payingPositions.map(position => {
+            const gameEntry = games.find(g => g.position === position) || games.find(g => g.playerId === winner?.id && !g.position && position === 1);
+
+            if (!gameEntry && position === 1 && winner) {
+                const cost = calculatePlayerCost(0);
+                const net = calculateGains(position, totalPlayers, pot, cost);
+                const payout = net + cost;
+                return {
+                    position,
+                    name: winner.name,
+                    payout,
+                    net
+                };
+            }
+
+            if (!gameEntry) return null;
+
+            const name = getPlayerName(gameEntry.playerId) || winner?.name || "";
+            const rebuys = gameEntry.rebuys || 0;
+            const cost = calculatePlayerCost(rebuys);
+            const net = calculateGains(position, totalPlayers, pot, cost);
+            const payout = net + cost;
+
+            return {
+                position,
+                name: name || `Joueur ${position}`,
+                payout,
+                net
+            };
+        }).filter(Boolean) as { position: number; name: string; payout: number; net: number; }[];
+    }, [payingPositions, games, winner, totalPlayers, pot, selectedPlayers]);
 
     useEffect(() => {
         if (isOpen) {
@@ -89,6 +147,25 @@ const WinnerModal: React.FC<WinnerModalProps> = ({
                         )}>
                             {winner.name} remporte la victoire ! 🎉
                         </p>
+                    )}
+
+                    {payoutList.length > 0 && (
+                        <div className="mt-4 space-y-2">
+                            <div className="text-center text-amber-100 font-['DS-DIGI'] text-xl">
+                                Partage du pot ({pot}€)
+                            </div>
+                            <div className="bg-amber-900/30 border border-amber-400/30 rounded-lg p-3 space-y-2">
+                                {payoutList.map(({ position, name, payout, net }) => (
+                                    <div key={position} className="flex justify-between items-baseline text-amber-100 font-['DS-DIGI'] text-lg">
+                                        <span>{position}e : {name}</span>
+                                        <div className="text-right leading-tight">
+                                            <div className="font-bold">+{payout.toFixed(2)}€</div>
+                                            <div className="text-xs text-amber-200/70">net: {net >= 0 ? '+' : ''}{net.toFixed(2)}€</div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
                     )}
 
                     <p className={cn(
