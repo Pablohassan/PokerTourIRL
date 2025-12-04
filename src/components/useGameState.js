@@ -74,9 +74,11 @@ const useGameState = (gameStarted, setGameStarted, selectedPlayers, setSelectedP
             blindIndex,
             positions,
             outPlayers,
+            lastUsedPosition,
             lastSavedTime: now,
             initialPlayerCount,
             currentBlindDuration,
+            gameEnded,
         };
         try {
             const response = await api.post(API_ENDPOINTS.GAME_STATE, { state: gameState });
@@ -117,8 +119,11 @@ const useGameState = (gameStarted, setGameStarted, selectedPlayers, setSelectedP
                 return;
             }
             const { state } = response.data;
+            const savedSelectedPlayers = Array.isArray(state.selectedPlayers) ? state.selectedPlayers : [];
+            const savedGames = Array.isArray(state.games) ? state.games : [];
             // Calculate elapsed time since last save
-            const elapsedTime = (Date.now() - state.lastSavedTime) / 1000;
+            const lastSaved = typeof state.lastSavedTime === 'number' ? state.lastSavedTime : Date.now();
+            const elapsedTime = (Date.now() - lastSaved) / 1000;
             const restoredBlindDuration = state.currentBlindDuration || configBlindDuration;
             // Calculate remaining time for current blind level
             let adjustedTimeLeft = Math.max(0, state.timeLeft - elapsedTime);
@@ -129,7 +134,7 @@ const useGameState = (gameStarted, setGameStarted, selectedPlayers, setSelectedP
                 adjustedTimeLeft = restoredBlindDuration * 60 - (overflowTime % (restoredBlindDuration * 60));
             }
             // First, process the games to ensure eliminated players are handled correctly
-            const restoredGames = state.games.map((game) => ({
+            const restoredGames = savedGames.map((game) => ({
                 ...game,
                 outAt: game.outAt ? new Date(game.outAt) : null
             }));
@@ -137,13 +142,13 @@ const useGameState = (gameStarted, setGameStarted, selectedPlayers, setSelectedP
             const activePlayerIds = new Set(restoredGames
                 .filter((game) => !game.outAt)
                 .map((game) => game.playerId));
-            const activeSelectedPlayers = state.selectedPlayers.filter((player) => activePlayerIds.has(player.id));
+            const activeSelectedPlayers = savedSelectedPlayers.filter((player) => activePlayerIds.has(player.id));
             // Process out players
             const eliminatedGames = restoredGames
                 .filter((game) => game.outAt)
                 .sort((a, b) => new Date(a.outAt).getTime() - new Date(b.outAt).getTime());
             const restoredOutPlayers = eliminatedGames.map((game) => {
-                const player = state.selectedPlayers.find((p) => p.id === game.playerId);
+                const player = savedSelectedPlayers.find((p) => p.id === game.playerId);
                 if (!player)
                     return null;
                 return {
@@ -152,6 +157,8 @@ const useGameState = (gameStarted, setGameStarted, selectedPlayers, setSelectedP
                     points: game.points
                 };
             }).filter(Boolean);
+            const fallbackOutPlayers = (state.outPlayers ?? []);
+            const mergedOutPlayers = restoredOutPlayers.length > 0 ? restoredOutPlayers : fallbackOutPlayers;
             // Update state with adjusted time
             setTimeLeft(Math.floor(adjustedTimeLeft));
             setCurrentBlindDuration(restoredBlindDuration);
@@ -165,9 +172,9 @@ const useGameState = (gameStarted, setGameStarted, selectedPlayers, setSelectedP
             setRebuyPlayerId(state.rebuyPlayerId);
             setMiddleStack(state.middleStack);
             setBlindIndex(state.blindIndex);
-            setPositions(state.positions);
-            setOutPlayers(restoredOutPlayers);
-            setLastUsedPosition(Math.max(...Object.values(state.positions), 0));
+            setPositions(state.positions || {});
+            setOutPlayers(mergedOutPlayers);
+            setLastUsedPosition(Math.max(...Object.values(state.positions || {}), state.lastUsedPosition || 0));
             setGameStarted(true);
             setInitialGameStatePosted(true);
             setInitialPlayerCount(state.initialPlayerCount);

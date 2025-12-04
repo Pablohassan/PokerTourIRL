@@ -3,7 +3,7 @@ import { useRef } from "react";
 import BlindTimer from "./BlindTimer";
 import GameTimer from "./GameTimer";
 import { cn } from "../lib/utils";
-const GameControls = ({ gameStarted, isPaused, timeLeft, smallBlind, bigBlind, ante, handleGameEnd, setIsPaused, pot, middleStack, setSmallBlind, setBigBlind, setAnte, setTimeLeft, blindIndex, setBlindIndex, initialTimeLeft, }) => {
+const GameControls = ({ gameStarted, isPaused, timeLeft, smallBlind, bigBlind, ante, handleGameEnd, setIsPaused, pot, middleStack, totalRebuys, outPlayers, setSmallBlind, setBigBlind, setAnte, setTimeLeft, blindIndex, setBlindIndex, initialTimeLeft, }) => {
     const isUpdatingRef = useRef(false);
     const formatTime = (time) => {
         const minutes = Math.floor(time / 60);
@@ -30,6 +30,6 @@ const GameControls = ({ gameStarted, isPaused, timeLeft, smallBlind, bigBlind, a
                         setTimeLeft(time);
                     }, blindIndex: blindIndex, setBlindIndex: setBlindIndex, initialTimeLeft: initialTimeLeft, 
                     // @ts-ignore timeLeft is not used in BlindTimer
-                    timeLeft: timeLeft, setTimeLeft: setTimeLeft }), _jsx(GameTimer, { timeLeft: timeLeft, smallBlind: smallBlind, bigBlind: bigBlind, ante: ante, handleGameEnd: handleGameEnd, isPaused: isPaused, setIsPaused: setIsPaused, totalPot: pot, middleStack: middleStack, formatTime: formatTime })] }) }));
+                    timeLeft: timeLeft, setTimeLeft: setTimeLeft }), _jsx(GameTimer, { timeLeft: timeLeft, smallBlind: smallBlind, bigBlind: bigBlind, ante: ante, handleGameEnd: handleGameEnd, isPaused: isPaused, setIsPaused: setIsPaused, totalPot: pot, middleStack: middleStack, totalRebuys: totalRebuys, outPlayers: outPlayers, formatTime: formatTime })] }) }));
 };
 export default GameControls;

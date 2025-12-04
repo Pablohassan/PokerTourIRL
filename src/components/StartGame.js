@@ -1,5 +1,5 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api";
 import GameConfiguration from './GameConfiguration';
@@ -14,6 +14,8 @@ import EditGameStateModal from './EditGameStateModal';
 import { Button } from "./ui/button";
 import ConfirmDialog from "./ui/confirm-dialog";
 import WinnerModal from "./ui/winner-modal";
+import killSfx from "../assets/kill.mp3";
+import ogreSfx from "../assets/ogre.mp3";
 const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, players, updateAfterGameEnd, blindIndex, setBlindIndex }) => {
     const navigate = useNavigate();
     const [gameStarted, setGameStarted] = useState(false);
@@ -38,6 +40,10 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, players, 
     const [showWinnerModal, setShowWinnerModal] = useState(false);
     const [winnerPlayer, setWinnerPlayer] = useState(null);
     const [winnerTimeout, setWinnerTimeout] = useState(null);
+    const killSoundTimeout = useRef(null);
+    const killAudioRef = useRef(null);
+    const rebuySoundTimeout = useRef(null);
+    const rebuyAudioRef = useRef(null);
     const blinds = [
         { small: 10, big: 20, ante: 0 },
         { small: 25, big: 50, ante: 0 },
@@ -71,7 +77,57 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, players, 
         { small: 9000, big: 18000, ante: 4000 },
         { small: 10000, big: 20000, ante: 5000 },
     ];
-    const { timeLeft, setTimeLeft, smallBlind, setSmallBlind, bigBlind, setBigBlind, ante, setAnte, games, setGames, pot, setPot, middleStack, setSavedTotalStack, totalStack, setTotalStack, saveGameState, resetGameState, rebuyPlayerId, setRebuyPlayerId, killer, setKiller, stateRestored, currentBlindDuration, setCurrentBlindDuration, loading, error, setPositions, setOutPlayers, setLastUsedPosition, initialPlayerCount, setInitialPlayerCount, postInitialGameState, gameEnded, setGameEnded, } = useGameState(gameStarted, setGameStarted, selectedPlayers, setSelectedPLayers, blindIndex, setBlindIndex, blindDuration);
+    const { timeLeft, setTimeLeft, smallBlind, setSmallBlind, bigBlind, setBigBlind, ante, setAnte, games, setGames, pot, setPot, middleStack, setSavedTotalStack, totalStack, setTotalStack, saveGameState, resetGameState, rebuyPlayerId, setRebuyPlayerId, killer, setKiller, stateRestored, currentBlindDuration, setCurrentBlindDuration, loading, error, setPositions, outPlayers, setOutPlayers, setLastUsedPosition, initialPlayerCount, setInitialPlayerCount, postInitialGameState, gameEnded, setGameEnded, } = useGameState(gameStarted, setGameStarted, selectedPlayers, setSelectedPLayers, blindIndex, setBlindIndex, blindDuration);
+    const totalRebuys = useMemo(() => {
+        return games.reduce((sum, game) => {
+            if (partyId && game.partyId !== partyId) {
+                return sum;
+            }
+            return sum + (game.rebuys || 0);
+        }, 0);
+    }, [games, partyId]);
+    const queueKillSound = useCallback(() => {
+        if (killSoundTimeout.current) {
+            clearTimeout(killSoundTimeout.current);
+        }
+        killSoundTimeout.current = setTimeout(() => {
+            try {
+                if (!killAudioRef.current) {
+                    killAudioRef.current = new Audio(killSfx);
+                }
+                else {
+                    killAudioRef.current.currentTime = 0;
+                }
+                killAudioRef.current.play().catch((err) => {
+                    console.warn('Unable to play kill sound:', err);
+                });
+            }
+            catch (err) {
+                console.warn('Kill sound error:', err);
+            }
+        }, 5000);
+    }, []);
+    const queueRebuySound = useCallback(() => {
+        if (rebuySoundTimeout.current) {
+            clearTimeout(rebuySoundTimeout.current);
+        }
+        rebuySoundTimeout.current = setTimeout(() => {
+            try {
+                if (!rebuyAudioRef.current) {
+                    rebuyAudioRef.current = new Audio(ogreSfx);
+                }
+                else {
+                    rebuyAudioRef.current.currentTime = 0;
+                }
+                rebuyAudioRef.current.play().catch((err) => {
+                    console.warn('Unable to play rebuy sound:', err);
+                });
+            }
+            catch (err) {
+                console.warn('Rebuy sound error:', err);
+            }
+        }, 150000);
+    }, []);
     const updateBlinds = useCallback(() => {
         try {
             const nextIndex = blindIndex + 1;
@@ -150,7 +206,21 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, players, 
             setIsFullscreen(!!document.fullscreenElement);
         };
         document.addEventListener('fullscreenchange', handleFullscreenChange);
-        return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+        return () => {
+            document.removeEventListener('fullscreenchange', handleFullscreenChange);
+            if (killSoundTimeout.current) {
+                clearTimeout(killSoundTimeout.current);
+            }
+            if (killAudioRef.current) {
+                killAudioRef.current.pause();
+            }
+            if (rebuySoundTimeout.current) {
+                clearTimeout(rebuySoundTimeout.current);
+            }
+            if (rebuyAudioRef.current) {
+                rebuyAudioRef.current.pause();
+            }
+        };
     }, []);
     // Detect when only one player remains and show winner modal, then auto-end game
     useEffect(() => {
@@ -331,6 +401,7 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, players, 
                 totalCost: (game.totalCost ?? 0) + 5,
             }
             : game));
+        queueRebuySound();
         setTotalStack((prevTotalStack) => prevTotalStack + 5350);
         setPot((prevPot) => prevPot + 4);
         setSavedTotalStack(totalStack);
@@ -410,6 +481,7 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, players, 
                             }
                         });
                         setGames(updatedGames);
+                        queueKillSound();
                         const player = selectedPlayers.find((p) => p.id === playerOutGame);
                         if (player) {
                             const playerWithPosition = {
@@ -435,6 +507,7 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, players, 
             }
             else {
                 setGames((prevGames) => prevGames.map((game) => game.playerId === killerPlayerId ? { ...game, kills: (game.kills || 0) + 1 } : game));
+                queueKillSound();
                 await saveGameState(timeLeft);
             }
             setKiller(false);
@@ -498,6 +571,8 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, players, 
     };
     const handleUpdateGameState = async (updatedGames) => {
         try {
+            const currentTotalRebuys = games.reduce((sum, game) => sum + (game.rebuys || 0), 0);
+            const nextTotalRebuys = updatedGames.reduce((sum, game) => sum + (game.rebuys || 0), 0);
             const returningPlayers = updatedGames.filter(updatedGame => {
                 const originalGame = games.find(g => g.playerId === updatedGame.playerId);
                 return originalGame?.outAt && !updatedGame.outAt;
@@ -531,6 +606,9 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, players, 
             });
             await saveGameState(timeLeft);
             toast.success("Game state updated successfully!");
+            if (nextTotalRebuys > currentTotalRebuys) {
+                queueRebuySound();
+            }
         }
         catch (error) {
             console.error("Error updating game state:", error);
@@ -671,7 +749,7 @@ const StartGame = ({ championnat, selectedPlayers, setSelectedPLayers, players, 
                             flexDirection: 'column',
                             // gap: '16px',
                             backgroundColor: '#ffffff'
-                        }, children: [_jsx(GameControls, { gameStarted: gameStarted, isPaused: isPaused, timeLeft: timeLeft, smallBlind: smallBlind, bigBlind: bigBlind, ante: ante, handleGameEnd: handleGameEnd, setIsPaused: setIsPaused, pot: pot, middleStack: middleStack, setSmallBlind: setSmallBlind, setBigBlind: setBigBlind, setAnte: setAnte, setTimeLeft: setTimeLeft, blindIndex: blindIndex, setBlindIndex: setBlindIndex, initialTimeLeft: timeLeft || currentBlindDuration * 60, style: {
+                        }, children: [_jsx(GameControls, { gameStarted: gameStarted, isPaused: isPaused, timeLeft: timeLeft, smallBlind: smallBlind, bigBlind: bigBlind, ante: ante, handleGameEnd: handleGameEnd, setIsPaused: setIsPaused, pot: pot, middleStack: middleStack, totalRebuys: totalRebuys, outPlayers: outPlayers, setSmallBlind: setSmallBlind, setBigBlind: setBigBlind, setAnte: setAnte, setTimeLeft: setTimeLeft, blindIndex: blindIndex, setBlindIndex: setBlindIndex, initialTimeLeft: timeLeft || currentBlindDuration * 60, style: {
                                     width: '100%',
                                     maxWidth: '100%',
                                     position: 'sticky',

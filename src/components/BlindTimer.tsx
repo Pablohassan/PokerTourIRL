@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { toast } from 'react-hot-toast';
-import pinup from '../assets/changementdeblind.wav';
 import nextBlindVideo from '../assets/pinup.mp4';
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -33,12 +32,32 @@ const NextBlindSplash: React.FC<NextBlindSplashProps> = ({
   showOutPlayers,
   videoSrc,
 }) => {
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+
   /* auto‑fermeture après TOTAL secondes ------------------------------ */
   useEffect(() => {
     if (!show) return;
     const id = setTimeout(onClose, TOTAL * 1000);
     return () => clearTimeout(id);
   }, [show, onClose]);
+
+  // Relance la vidéo avec le son à chaque ouverture
+  useEffect(() => {
+    const videoEl = videoRef.current;
+    if (!videoEl) return;
+
+    if (!show) {
+      videoEl.pause();
+      videoEl.currentTime = 0;
+      return;
+    }
+
+    videoEl.muted = false;
+    videoEl.currentTime = 0;
+    videoEl.play().catch((err) => {
+      console.warn('Impossible de lancer la vidéo avec le son :', err);
+    });
+  }, [show]);
 
   return (
     <AnimatePresence>
@@ -53,8 +72,8 @@ const NextBlindSplash: React.FC<NextBlindSplashProps> = ({
               key="arcade-video"
               src={videoSrc}
               autoPlay
-              muted
               playsInline
+              ref={videoRef}
               initial={{ opacity: 0, scale: 1.05 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
@@ -146,7 +165,6 @@ const BlindTimer: React.FC<BlindTimerProps> = ({
   // @ts-ignore - Local state needed for immediate updates while staying in sync with parent
   const [timeLeft, setTimeLeft] = useState<number>(initialTimeLeft);
   const [showModal, setShowModal] = useState<boolean>(false);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
   const isUpdatingRef = useRef<boolean>(false);
   const nextBlindIndexRef = useRef<number>(blindIndex);
   const isInitialMount = useRef(true);
@@ -187,73 +205,6 @@ const BlindTimer: React.FC<BlindTimerProps> = ({
     { small: 9000, big: 18000, ante: 4000 },
     { small: 10000, big: 20000, ante: 5000 },
   ] as const;
-
-  // Initialize audio on component mount
-  useEffect(() => {
-    audioRef.current = new Audio(pinup);
-    // Preload the audio
-    audioRef.current.load();
-    // Set audio properties
-    audioRef.current.volume = 1.0;
-
-    // Add click listener to document to enable audio
-    const enableAudio = () => {
-      if (audioRef.current) {
-        // Create and immediately pause a play promise
-        audioRef.current.play().then(() => {
-          audioRef.current?.pause();
-          audioRef.current!.currentTime = 0;
-        }).catch(() => {
-          // Ignore error - this is just for enabling audio
-        });
-      }
-    };
-
-    document.addEventListener('click', enableAudio, { once: true });
-
-    return () => {
-      document.removeEventListener('click', enableAudio);
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current = null;
-      }
-    };
-  }, []);
-
-  // Effect to handle sound playing when modal shows
-  useEffect(() => {
-    if (showModal && audioRef.current) {
-      console.log('Modal shown, preparing to play sound in 2s...');
-
-      const delay = 2500; // délai de 2 secondes
-      const playTimer = setTimeout(() => {
-        audioRef.current!.currentTime = 0;
-        audioRef.current!.play()
-          .then(() => {
-            console.log('Sound played after delay');
-          })
-          .catch(error => {
-            console.warn('Could not play sound after delay:', error);
-          });
-      }, delay);
-
-      const stopTimer = setTimeout(() => {
-        if (audioRef.current) {
-          audioRef.current.pause();
-          audioRef.current.currentTime = 0;
-        }
-      }, delay + 6000); // arrêter après 6s de lecture (ajustable)
-
-      return () => {
-        clearTimeout(playTimer);
-        clearTimeout(stopTimer);
-        if (audioRef.current) {
-          audioRef.current.pause();
-          audioRef.current.currentTime = 0;
-        }
-      };
-    }
-  }, [showModal]);
 
 
   // Initialize Screen Wake Lock
@@ -447,4 +398,3 @@ const BlindTimer: React.FC<BlindTimerProps> = ({
 };
 
 export default BlindTimer;
-

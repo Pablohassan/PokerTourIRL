@@ -2,6 +2,9 @@ import React, { useRef } from "react";
 import BlindTimer from "./BlindTimer";
 import GameTimer from "./GameTimer";
 import { cn } from "../lib/utils";
+import { Player } from "./interfaces";
+
+type OutPlayer = Player & { position?: number | null; playerName?: string | null; playerId?: number | null; points?: number | null };
 
 interface GameControlsProps {
   gameStarted: boolean;
@@ -14,6 +17,8 @@ interface GameControlsProps {
   setIsPaused: React.Dispatch<React.SetStateAction<boolean>>;
   pot: number;
   middleStack: number;
+  totalRebuys: number;
+  outPlayers: OutPlayer[];
   setSmallBlind: React.Dispatch<React.SetStateAction<number>>;
   setBigBlind: React.Dispatch<React.SetStateAction<number>>;
   setAnte: React.Dispatch<React.SetStateAction<number>>;
@@ -35,6 +40,8 @@ const GameControls: React.FC<GameControlsProps> = ({
   setIsPaused,
   pot,
   middleStack,
+  totalRebuys,
+  outPlayers,
   setSmallBlind,
   setBigBlind,
   setAnte,
@@ -97,6 +104,8 @@ const GameControls: React.FC<GameControlsProps> = ({
           setIsPaused={setIsPaused}
           totalPot={pot}
           middleStack={middleStack}
+          totalRebuys={totalRebuys}
+          outPlayers={outPlayers}
           formatTime={formatTime}
         />
       </div>
@@ -105,4 +114,3 @@ const GameControls: React.FC<GameControlsProps> = ({
 }
 
 export default GameControls;
-

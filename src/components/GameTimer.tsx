@@ -1,14 +1,20 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Card, CardContent } from "./ui/card";
 import { Button } from "./ui/button";
 import { cn } from "../lib/utils";
 import metaltexture from "../../public/texturemetaluse.jpg";
+import { AnimatePresence, motion } from "framer-motion";
+import { Player } from "./interfaces";
+
+type OutPlayer = Player & { position?: number | null; playerName?: string | null; playerId?: number | null; points?: number | null };
 
 
 interface GameTimerProps {
   formatTime: (time: number) => string;
   totalPot: number;
   middleStack: number;
+  totalRebuys: number;
+  outPlayers: OutPlayer[];
   timeLeft: number;
   smallBlind: number;
   bigBlind: number;
@@ -20,6 +26,8 @@ interface GameTimerProps {
 
 const GameTimer: React.FC<GameTimerProps> = ({
   middleStack,
+  totalRebuys,
+  outPlayers,
   totalPot,
   formatTime,
   timeLeft,
@@ -30,6 +38,23 @@ const GameTimer: React.FC<GameTimerProps> = ({
   setIsPaused,
   ante
 }) => {
+  const [currentOutIndex, setCurrentOutIndex] = useState(0);
+
+  useEffect(() => {
+    setCurrentOutIndex(0);
+  }, [outPlayers.length]);
+
+  useEffect(() => {
+    if (outPlayers.length <= 1) return;
+
+    const interval = setInterval(() => {
+      setCurrentOutIndex((prev) => (prev + 1) % outPlayers.length);
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [outPlayers.length]);
+
+  const currentOutPlayer = outPlayers[currentOutIndex];
   const handleClick = () => {
     // Add vibration feedback (50ms)
     if (navigator.vibrate) {
@@ -128,6 +153,10 @@ const GameTimer: React.FC<GameTimerProps> = ({
                 <span className="font-['DS-DIGI'] text-amber-400/90 text-xl sm:text-3xl">Ante</span>
                 <span className="font-['DS-DIGI'] text-amber-400/95 text-2xl sm:text-5xl">{ante}</span>
               </div>
+              <div className="flex justify-between items-center">
+                <span className="font-['DS-DIGI'] text-amber-400/90 text-xl sm:text-2xl">M-Stack</span>
+                <span className="font-['DS-DIGI'] text-amber-400 text-2xl sm:text-5xl">{middleStack}</span>
+              </div>
             </div>
           </div>
 
@@ -145,9 +174,49 @@ const GameTimer: React.FC<GameTimerProps> = ({
                 <span className="font-['DS-DIGI'] text-amber-400/90 text-xl sm:text-2xl">Pot</span>
                 <span className="font-['DS-DIGI'] text-amber-400 text-2xl sm:text-4xl">{totalPot}</span>
               </div>
+
+              <div className="h-px bg-amber-400/20 my-1 sm:my-2" />
               <div className="flex justify-between items-center">
-                <span className="font-['DS-DIGI'] text-amber-400/90 text-xl sm:text-2xl">M-Stack</span>
-                <span className="font-['DS-DIGI'] text-amber-400 text-2xl sm:text-4xl">{middleStack}</span>
+                <span className="font-['DS-DIGI'] text-amber-400/90 text-xl sm:text-2xl">Total Rebuys</span>
+                <span className="font-['DS-DIGI'] text-amber-400 text-2xl sm:text-4xl">{totalRebuys}</span>
+              </div>
+              <div className="h-px bg-amber-400/20 my-1 sm:my-2" />
+              <div className="flex flex-col gap-2">
+                <span className="font-['DS-DIGI'] text-amber-400/80 text-xs sm:text-sm uppercase tracking-[0.25em]">Joueurs éliminés</span>
+                <div className="h-14 sm:h-16 w-full overflow-hidden rounded-lg border border-amber-400/10 bg-slate-900/70">
+                  <div className="h-full flex items-center justify-center px-3">
+                    <AnimatePresence mode="wait" initial={false}>
+                      {currentOutPlayer ? (
+                        <motion.div
+                          key={`${currentOutPlayer.id || currentOutPlayer.playerId}-out`}
+                          initial={{ x: "100%", opacity: 0 }}
+                          animate={{ x: 0, opacity: 1 }}
+                          exit={{ x: "-100%", opacity: 0 }}
+                          transition={{ duration: 0.6, ease: "easeInOut" }}
+                          className="flex items-center gap-3 text-amber-300"
+                        >
+                          <span className="font-['DS-DIGI'] text-xl sm:text-2xl">
+                            {currentOutPlayer.name || currentOutPlayer.playerName || 'Player'}
+                          </span>
+                          <span className="text-sm sm:text-base text-amber-200/80">
+                            {currentOutPlayer.position ? `#${currentOutPlayer.position}` : 'Out'}
+                          </span>
+                        </motion.div>
+                      ) : (
+                        <motion.div
+                          key="no-out-players"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          transition={{ duration: 0.3 }}
+                          className="text-amber-200/60 text-sm sm:text-base font-['DS-DIGI']"
+                        >
+                          Aucun joueur éliminé
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

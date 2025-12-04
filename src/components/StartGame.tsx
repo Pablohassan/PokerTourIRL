@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api";
 import GameConfiguration from './GameConfiguration';
@@ -14,6 +14,8 @@ import EditGameStateModal from './EditGameStateModal';
 import { Button } from "./ui/button";
 import ConfirmDialog from "./ui/confirm-dialog";
 import WinnerModal from "./ui/winner-modal";
+import killSfx from "../assets/kill.mp3";
+import ogreSfx from "../assets/ogre.mp3";
 
 interface StartGameProps {
   players: Player[];
@@ -59,6 +61,10 @@ const StartGame: React.FC<StartGameProps> = ({
   const [showWinnerModal, setShowWinnerModal] = useState(false);
   const [winnerPlayer, setWinnerPlayer] = useState<Player | null>(null);
   const [winnerTimeout, setWinnerTimeout] = useState<NodeJS.Timeout | null>(null);
+  const killSoundTimeout = useRef<NodeJS.Timeout | null>(null);
+  const killAudioRef = useRef<HTMLAudioElement | null>(null);
+  const rebuySoundTimeout = useRef<NodeJS.Timeout | null>(null);
+  const rebuyAudioRef = useRef<HTMLAudioElement | null>(null);
 
   const blinds = [
     { small: 10, big: 20, ante: 0 },
@@ -123,6 +129,7 @@ const StartGame: React.FC<StartGameProps> = ({
     loading,
     error,
     setPositions,
+    outPlayers,
     setOutPlayers,
     setLastUsedPosition,
     initialPlayerCount,
@@ -139,6 +146,59 @@ const StartGame: React.FC<StartGameProps> = ({
     setBlindIndex,
     blindDuration
   );
+
+  const totalRebuys = useMemo(() => {
+    return games.reduce((sum, game) => {
+      if (partyId && game.partyId !== partyId) {
+        return sum;
+      }
+      return sum + (game.rebuys || 0);
+    }, 0);
+  }, [games, partyId]);
+
+  const queueKillSound = useCallback(() => {
+    if (killSoundTimeout.current) {
+      clearTimeout(killSoundTimeout.current);
+    }
+
+    killSoundTimeout.current = setTimeout(() => {
+      try {
+        if (!killAudioRef.current) {
+          killAudioRef.current = new Audio(killSfx);
+        } else {
+          killAudioRef.current.currentTime = 0;
+        }
+
+        killAudioRef.current.play().catch((err) => {
+          console.warn('Unable to play kill sound:', err);
+        });
+      } catch (err) {
+        console.warn('Kill sound error:', err);
+      }
+    }, 5000);
+  }, []);
+
+  const queueRebuySound = useCallback(() => {
+    if (rebuySoundTimeout.current) {
+      clearTimeout(rebuySoundTimeout.current);
+    }
+
+    rebuySoundTimeout.current = setTimeout(() => {
+      try {
+        if (!rebuyAudioRef.current) {
+          rebuyAudioRef.current = new Audio(ogreSfx);
+        } else {
+          rebuyAudioRef.current.currentTime = 0;
+        }
+
+        rebuyAudioRef.current.play().catch((err) => {
+          console.warn('Unable to play rebuy sound:', err);
+        });
+      } catch (err) {
+        console.warn('Rebuy sound error:', err);
+      }
+    }, 150000);
+  }, []);
 
   const updateBlinds = useCallback(() => {
     try {
@@ -232,7 +292,21 @@ const StartGame: React.FC<StartGameProps> = ({
     };
 
     document.addEventListener('fullscreenchange', handleFullscreenChange);
-    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      if (killSoundTimeout.current) {
+        clearTimeout(killSoundTimeout.current);
+      }
+      if (killAudioRef.current) {
+        killAudioRef.current.pause();
+      }
+      if (rebuySoundTimeout.current) {
+        clearTimeout(rebuySoundTimeout.current);
+      }
+      if (rebuyAudioRef.current) {
+        rebuyAudioRef.current.pause();
+      }
+    };
   }, []);
 
   // Detect when only one player remains and show winner modal, then auto-end game
@@ -442,6 +516,7 @@ const StartGame: React.FC<StartGameProps> = ({
           : game
       )
     );
+    queueRebuySound();
     setTotalStack((prevTotalStack) => prevTotalStack + 5350);
     setPot((prevPot) => prevPot + 4);
     setSavedTotalStack(totalStack);
@@ -533,6 +608,7 @@ const StartGame: React.FC<StartGameProps> = ({
             });
 
             setGames(updatedGames);
+            queueKillSound();
 
             const player = selectedPlayers.find((p) => p.id === playerOutGame);
             if (player) {
@@ -565,6 +641,7 @@ const StartGame: React.FC<StartGameProps> = ({
             game.playerId === killerPlayerId ? { ...game, kills: (game.kills || 0) + 1 } : game
           )
         );
+        queueKillSound();
         await saveGameState(timeLeft);
       }
 
@@ -642,6 +719,9 @@ const StartGame: React.FC<StartGameProps> = ({
 
   const handleUpdateGameState = async (updatedGames: PlayerStats[]) => {
     try {
+      const currentTotalRebuys = games.reduce((sum, game) => sum + (game.rebuys || 0), 0);
+      const nextTotalRebuys = updatedGames.reduce((sum, game) => sum + (game.rebuys || 0), 0);
+
       const returningPlayers = updatedGames.filter(updatedGame => {
         const originalGame = games.find(g => g.playerId === updatedGame.playerId);
         return originalGame?.outAt && !updatedGame.outAt;
@@ -689,6 +769,10 @@ const StartGame: React.FC<StartGameProps> = ({
       await saveGameState(timeLeft);
 
       toast.success("Game state updated successfully!");
+
+      if (nextTotalRebuys > currentTotalRebuys) {
+        queueRebuySound();
+      }
     } catch (error) {
       console.error("Error updating game state:", error);
       toast.error("Failed to update game state");
@@ -1013,6 +1097,8 @@ const StartGame: React.FC<StartGameProps> = ({
               setIsPaused={setIsPaused}
               pot={pot}
               middleStack={middleStack}
+              totalRebuys={totalRebuys}
+              outPlayers={outPlayers}
               setSmallBlind={setSmallBlind}
               setBigBlind={setBigBlind}
               setAnte={setAnte}
