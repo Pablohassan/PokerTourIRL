@@ -149,7 +149,7 @@ const BlindTimer = ({ gameStarted, isPaused, onBlindChange, onTimeChange, blindI
             setTimeout(() => {
                 setShowModal(false);
                 isUpdatingRef.current = false;
-            }, 6000);
+            }, 10000);
         }
         catch (error) {
             console.error('Error updating blinds:', error);
