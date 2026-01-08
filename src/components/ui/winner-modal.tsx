@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { cn } from "../../lib/utils";
 import { Player, PlayerStats } from "../interfaces";
 import { calculateGains, calculatePlayerCost } from "../../utils/gainsCalculator";
+import api from "../../api";
 
 interface WinnerModalProps {
     isOpen: boolean;
@@ -12,6 +13,7 @@ interface WinnerModalProps {
     pot: number;
     initialPlayerCount: number;
     selectedPlayers: Player[];
+    partyId?: number | null;
 }
 
 const WinnerModal: React.FC<WinnerModalProps> = ({
@@ -21,11 +23,17 @@ const WinnerModal: React.FC<WinnerModalProps> = ({
     games,
     pot,
     initialPlayerCount,
-    selectedPlayers
+    selectedPlayers,
+    partyId
 }) => {
     const [countdown, setCountdown] = useState(30);
+    const [partyStats, setPartyStats] = useState<PlayerStats[]>([]);
+    const currentPartyId = partyId ?? games[0]?.partyId ?? null;
 
-    const totalPlayers = useMemo(() => initialPlayerCount || games.length || selectedPlayers.length, [initialPlayerCount, games.length, selectedPlayers.length]);
+    const totalPlayers = useMemo(
+        () => initialPlayerCount || partyStats.length || games.length || selectedPlayers.length,
+        [initialPlayerCount, partyStats.length, games.length, selectedPlayers.length]
+    );
 
     const payingPositions = useMemo(() => {
         if (totalPlayers <= 6) return [1, 2];
@@ -35,6 +43,8 @@ const WinnerModal: React.FC<WinnerModalProps> = ({
 
     const getPlayerName = (playerId: number | undefined | null) => {
         if (!playerId) return "";
+        const inPartyStats = partyStats.find(stat => stat.playerId === playerId);
+        if (inPartyStats?.player?.name) return inPartyStats.player.name;
         const inSelected = selectedPlayers.find(p => p.id === playerId);
         if (inSelected) return inSelected.name;
         const inGame = games.find(g => g.playerId === playerId);
@@ -42,8 +52,11 @@ const WinnerModal: React.FC<WinnerModalProps> = ({
     };
 
     const payoutList = useMemo(() => {
+        const sourceGames = partyStats.length > 0 ? partyStats : games;
+
         return payingPositions.map(position => {
-            const gameEntry = games.find(g => g.position === position) || games.find(g => g.playerId === winner?.id && !g.position && position === 1);
+            const gameEntry = sourceGames.find(g => g.position === position)
+                || sourceGames.find(g => g.playerId === winner?.id && !g.position && position === 1);
 
             if (!gameEntry && position === 1 && winner) {
                 const cost = calculatePlayerCost(0);
@@ -59,7 +72,7 @@ const WinnerModal: React.FC<WinnerModalProps> = ({
 
             if (!gameEntry) return null;
 
-            const name = getPlayerName(gameEntry.playerId) || winner?.name || "";
+            const name = getPlayerName(gameEntry.playerId) || (position === 1 ? winner?.name : "") || "";
             const rebuys = gameEntry.rebuys || 0;
             const cost = calculatePlayerCost(rebuys);
             const net = calculateGains(position, totalPlayers, pot, cost);
@@ -72,7 +85,7 @@ const WinnerModal: React.FC<WinnerModalProps> = ({
                 net
             };
         }).filter(Boolean) as { position: number; name: string; payout: number; net: number; }[];
-    }, [payingPositions, games, winner, totalPlayers, pot, selectedPlayers]);
+    }, [payingPositions, games, partyStats, winner, totalPlayers, pot, selectedPlayers]);
 
     useEffect(() => {
         if (isOpen) {
@@ -90,6 +103,33 @@ const WinnerModal: React.FC<WinnerModalProps> = ({
             return () => clearInterval(interval);
         }
     }, [isOpen]);
+
+    useEffect(() => {
+        if (!isOpen) {
+            return;
+        }
+
+        if (!currentPartyId) {
+            setPartyStats([]);
+            return;
+        }
+
+        const fetchPartyStats = async () => {
+            try {
+                const response = await api.get(`/playerStatsByParty/${currentPartyId}`);
+                if (response.data?.playerStats) {
+                    setPartyStats(response.data.playerStats);
+                } else {
+                    setPartyStats([]);
+                }
+            } catch (error) {
+                console.error("Failed to load party stats for winner modal:", error);
+                setPartyStats([]);
+            }
+        };
+
+        fetchPartyStats();
+    }, [isOpen, currentPartyId]);
 
     if (!isOpen) return null;
 

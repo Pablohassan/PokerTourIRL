@@ -8,6 +8,7 @@ import { cn } from '../lib/utils';
 import { Tabs, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { useNavigate } from 'react-router-dom';
 import { calculatePartyGains } from '../utils/gainsCalculator';
+import { useRecentTournamentYears } from '../hooks/useRecentTournamentYears';
 
 // Add CSS styles
 
@@ -35,24 +36,35 @@ export const PartyPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const observer = useRef<IntersectionObserver | null>(null);
   const limit = 10; // Match backend limit
-  const [selectedYear, setSelectedYear] = useState(2025);
-  const years = [2023, 2024, 2025];
+  const { years, defaultYear } = useRecentTournamentYears();
+  const [selectedYear, setSelectedYear] = useState<number | null>(null);
   const navigate = useNavigate();
+  const activeYear = selectedYear ?? defaultYear;
 
   // Reset pagination when year changes
   useEffect(() => {
+    if (!activeYear) {
+      return;
+    }
     setPage(1);
     setParties([]);
     setHasMore(true);
-  }, [selectedYear]);
+  }, [activeYear]);
+
+  useEffect(() => {
+    if (defaultYear && selectedYear === null) {
+      setSelectedYear(defaultYear);
+    }
+  }, [defaultYear, selectedYear]);
 
   useEffect(() => {
     const fetchParties = async () => {
+      if (!activeYear) return;
       if (isLoading) return;
 
       try {
         setIsLoading(true);
-        const response = await api.get(`/parties?page=${page}&limit=${limit}&year=${selectedYear}`);
+        const response = await api.get(`/parties?page=${page}&limit=${limit}&year=${activeYear}`);
         const fetchedParties = response.data;
 
         // No need to filter by year again since the backend handles it
@@ -93,7 +105,7 @@ export const PartyPage = () => {
     };
 
     fetchParties();
-  }, [page, selectedYear]);
+  }, [page, activeYear]);
 
   const lastPartyElementRef = useCallback((node: HTMLDivElement) => {
     if (observer.current) observer.current.disconnect();
@@ -205,13 +217,21 @@ export const PartyPage = () => {
 
   return (
     <div className="p-5 min-h-screen bg-slate-900">
-      <Tabs defaultValue="2025" className="mb-4">
+      <Tabs
+        value={activeYear ? activeYear.toString() : ""}
+        onValueChange={(value) => {
+          const year = Number(value);
+          if (!Number.isNaN(year)) {
+            setSelectedYear(year);
+          }
+        }}
+        className="mb-4"
+      >
         <TabsList className="grid w-full grid-cols-3 bg-slate-800/50 p-0.5 rounded-lg">
           {years.map(year => (
             <TabsTrigger
               key={year}
               value={year.toString()}
-              onClick={() => setSelectedYear(year)}
               className={cn(
                 "font-['DS-DIGI']",
                 "text-3xl xl:text-base",
@@ -231,7 +251,7 @@ export const PartyPage = () => {
 
       {years.map(year => (
         <div key={year} className={cn(
-          selectedYear === year ? "block" : "hidden"
+          activeYear === year ? "block" : "hidden"
         )}>
           {filterPartiesByYear(parties, year).map((party, i) => (
             <div
@@ -402,4 +422,3 @@ export const PartyPage = () => {
 };
 
 export default PartyPage;
-

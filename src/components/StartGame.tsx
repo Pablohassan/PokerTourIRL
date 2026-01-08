@@ -415,7 +415,7 @@ const StartGame: React.FC<StartGameProps> = ({
       }
 
       const playerStats = playerStatsResponse.data.playerStats;
-      const newPartyId = playerStatsResponse.data.partyId;
+      const newPartyId = playerStatsResponse.data.partyId ?? playerStats[0]?.partyId ?? null;
 
       setPartyId(newPartyId);
 
@@ -824,6 +824,7 @@ const StartGame: React.FC<StartGameProps> = ({
         pot={pot}
         initialPlayerCount={initialPlayerCount}
         selectedPlayers={selectedPlayers}
+        partyId={partyId}
       />
 
       <EditGameStateModal

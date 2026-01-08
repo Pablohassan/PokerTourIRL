@@ -439,6 +439,7 @@ app.post("/playerStats/start", async (req, res) => {
     return res.json({
         message: "New game started successfully",
         playerStats: newPlayerStats,
+        // partyId: newParty.id,
     });
 });
 // Assume each player provides playerId, points, and rebuys

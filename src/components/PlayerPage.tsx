@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Tabs, TabsList, TabsTrigger } from "./ui/tabs";
 import { cn } from "../lib/utils";
 import { calculatePartyGains } from '../utils/gainsCalculator';
+import { useRecentTournamentYears } from '../hooks/useRecentTournamentYears';
 
 // Define or extend the PlayerStats interface
 interface PlayerStats {
@@ -75,8 +76,9 @@ export const PlayerPage = () => {
     const [playerStats, setPlayerStats] = useState<DetailedPlayerStats | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [selectedYear, setSelectedYear] = useState<number>(2025);
-    const years = [2023, 2024, 2025];
+    const { years, defaultYear } = useRecentTournamentYears();
+    const [selectedYear, setSelectedYear] = useState<number | null>(null);
+    const activeYear = selectedYear ?? defaultYear;
 
     useEffect(() => {
         const fetchPlayerStats = async () => {
@@ -208,6 +210,12 @@ export const PlayerPage = () => {
         fetchPlayerStats();
     }, [playerId]);
 
+    useEffect(() => {
+        if (defaultYear && selectedYear === null) {
+            setSelectedYear(defaultYear);
+        }
+    }, [defaultYear, selectedYear]);
+
     return (
         <div className="p-5 min-h-screen bg-slate-900">
             {isLoading ? (
@@ -242,13 +250,21 @@ export const PlayerPage = () => {
                         />
                     </div>
 
-                    <Tabs defaultValue="2025" className="mb-4">
+                    <Tabs
+                        value={activeYear ? activeYear.toString() : ""}
+                        onValueChange={(value) => {
+                            const year = Number(value);
+                            if (!Number.isNaN(year)) {
+                                setSelectedYear(year);
+                            }
+                        }}
+                        className="mb-4"
+                    >
                         <TabsList className="grid w-full grid-cols-3 bg-slate-800/50 p-0.5 rounded-lg">
                             {years.map(year => (
                                 <TabsTrigger
                                     key={year}
                                     value={year.toString()}
-                                    onClick={() => setSelectedYear(year)}
                                     className={cn(
                                         "font-['DS-DIGI']",
                                         "text-3xl xl:text-base",
@@ -269,7 +285,7 @@ export const PlayerPage = () => {
                     {years.map(year => {
                         const yearData = playerStats.yearlyStats.find(y => y.year === year);
                         return (
-                            <div key={year} className={selectedYear === year ? "block" : "hidden"}>
+                            <div key={year} className={activeYear === year ? "block" : "hidden"}>
                                 {yearData ? (
                                     <div>
                                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">

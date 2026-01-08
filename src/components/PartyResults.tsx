@@ -1,8 +1,10 @@
+import { useEffect, useState } from "react";
 import PlayerTable from "./PlayerTable";
 import { PlayerStats, PlayerTableProps, PartyResultsProps } from "./interfaces.js";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { cn } from "../lib/utils";
+import { useRecentTournamentYears } from "../hooks/useRecentTournamentYears";
 
 function calculateGains(playerStats: PlayerStats[]): number {
   // Group stats by party
@@ -67,8 +69,16 @@ function calculateGains(playerStats: PlayerStats[]): number {
 
 const PartyResults: React.FC<PartyResultsProps> = ({ players }) => {
   // Group configs by year for better organization
-  const years = [2023, 2024, 2025];
+  const { years, defaultYear } = useRecentTournamentYears();
+  const [selectedYear, setSelectedYear] = useState<number | null>(null);
+  const activeYear = selectedYear ?? defaultYear;
   const categories = ["Points", "Gains", "Recave", "Moneydown", "Killer", "Bule"];
+
+  useEffect(() => {
+    if (defaultYear && selectedYear === null) {
+      setSelectedYear(defaultYear);
+    }
+  }, [defaultYear, selectedYear]);
 
   const tableConfigs: PlayerTableProps["config"][] = years.flatMap(year =>
     categories.map(category => ({
@@ -118,7 +128,16 @@ const PartyResults: React.FC<PartyResultsProps> = ({ players }) => {
 
   return (
     <div className="w-full px-1 bg-slate-950">
-      <Tabs defaultValue="2025" className="w-full">
+      <Tabs
+        value={activeYear ? activeYear.toString() : ""}
+        onValueChange={(value) => {
+          const year = Number(value);
+          if (!Number.isNaN(year)) {
+            setSelectedYear(year);
+          }
+        }}
+        className="w-full"
+      >
         <TabsList className="grid w-full grid-cols-3 mb-2 bg-slate-800/50 p-0.5 rounded-lg">
           {years.map(year => (
             <TabsTrigger

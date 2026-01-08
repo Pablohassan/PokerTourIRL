@@ -1,8 +1,10 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+import { useEffect, useState } from "react";
 import PlayerTable from "./PlayerTable";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { cn } from "../lib/utils";
+import { useRecentTournamentYears } from "../hooks/useRecentTournamentYears";
 function calculateGains(playerStats) {
     // Group stats by party
     const statsByParty = {};
@@ -58,8 +60,15 @@ function calculateGains(playerStats) {
 }
 const PartyResults = ({ players }) => {
     // Group configs by year for better organization
-    const years = [2023, 2024, 2025];
+    const { years, defaultYear } = useRecentTournamentYears();
+    const [selectedYear, setSelectedYear] = useState(null);
+    const activeYear = selectedYear ?? defaultYear;
     const categories = ["Points", "Gains", "Recave", "Moneydown", "Killer", "Bule"];
+    useEffect(() => {
+        if (defaultYear && selectedYear === null) {
+            setSelectedYear(defaultYear);
+        }
+    }, [defaultYear, selectedYear]);
     const tableConfigs = years.flatMap(year => categories.map(category => ({
         title: `${category} ${year}`,
         filterFunction: (playerStat) => {
@@ -101,7 +110,12 @@ const PartyResults = ({ players }) => {
             }
         },
     })));
-    return (_jsx("div", { className: "w-full px-1 bg-slate-950", children: _jsxs(Tabs, { defaultValue: "2025", className: "w-full", children: [_jsx(TabsList, { className: "grid w-full grid-cols-3 mb-2 bg-slate-800/50 p-0.5 rounded-lg", children: years.map(year => (_jsx(TabsTrigger, { value: year.toString(), className: cn("font-['DS-DIGI']", "text-3xl xl:text-base", "h-8", "data-[state=active]:bg-amber-500/10", "data-[state=active]:text-amber-400", "data-[state=active]:shadow-[0_0_10px_rgba(245,158,11,0.1)]", "text-slate-400", "transition-all"), children: year }, year))) }), years.map(year => (_jsx(TabsContent, { value: year.toString(), className: cn("grid gap-2", "grid-cols-1", "sm:grid-cols-2", "lg:grid-cols-3"), children: categories.map(category => {
+    return (_jsx("div", { className: "w-full px-1 bg-slate-950", children: _jsxs(Tabs, { value: activeYear ? activeYear.toString() : "", onValueChange: (value) => {
+                const year = Number(value);
+                if (!Number.isNaN(year)) {
+                    setSelectedYear(year);
+                }
+            }, className: "w-full", children: [_jsx(TabsList, { className: "grid w-full grid-cols-3 mb-2 bg-slate-800/50 p-0.5 rounded-lg", children: years.map(year => (_jsx(TabsTrigger, { value: year.toString(), className: cn("font-['DS-DIGI']", "text-3xl xl:text-base", "h-8", "data-[state=active]:bg-amber-500/10", "data-[state=active]:text-amber-400", "data-[state=active]:shadow-[0_0_10px_rgba(245,158,11,0.1)]", "text-slate-400", "transition-all"), children: year }, year))) }), years.map(year => (_jsx(TabsContent, { value: year.toString(), className: cn("grid gap-2", "grid-cols-1", "sm:grid-cols-2", "lg:grid-cols-3"), children: categories.map(category => {
                         const config = tableConfigs.find(c => c.title === `${category} ${year}`);
                         if (!config)
                             return null;

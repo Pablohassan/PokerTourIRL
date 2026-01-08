@@ -8,6 +8,7 @@ import { cn } from '../lib/utils';
 import { Tabs, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { useNavigate } from 'react-router-dom';
 import { calculatePartyGains } from '../utils/gainsCalculator';
+import { useRecentTournamentYears } from '../hooks/useRecentTournamentYears';
 export const PartyPage = () => {
     const [parties, setParties] = useState([]);
     const [isModalOpen, setModalOpen] = useState(false);
@@ -17,22 +18,33 @@ export const PartyPage = () => {
     const [isLoading, setIsLoading] = useState(false);
     const observer = useRef(null);
     const limit = 10; // Match backend limit
-    const [selectedYear, setSelectedYear] = useState(2025);
-    const years = [2023, 2024, 2025];
+    const { years, defaultYear } = useRecentTournamentYears();
+    const [selectedYear, setSelectedYear] = useState(null);
     const navigate = useNavigate();
+    const activeYear = selectedYear ?? defaultYear;
     // Reset pagination when year changes
     useEffect(() => {
+        if (!activeYear) {
+            return;
+        }
         setPage(1);
         setParties([]);
         setHasMore(true);
-    }, [selectedYear]);
+    }, [activeYear]);
+    useEffect(() => {
+        if (defaultYear && selectedYear === null) {
+            setSelectedYear(defaultYear);
+        }
+    }, [defaultYear, selectedYear]);
     useEffect(() => {
         const fetchParties = async () => {
+            if (!activeYear)
+                return;
             if (isLoading)
                 return;
             try {
                 setIsLoading(true);
-                const response = await api.get(`/parties?page=${page}&limit=${limit}&year=${selectedYear}`);
+                const response = await api.get(`/parties?page=${page}&limit=${limit}&year=${activeYear}`);
                 const fetchedParties = response.data;
                 // No need to filter by year again since the backend handles it
                 const partiesWithStats = await Promise.all(fetchedParties.map(async (party) => {
@@ -64,7 +76,7 @@ export const PartyPage = () => {
             }
         };
         fetchParties();
-    }, [page, selectedYear]);
+    }, [page, activeYear]);
     const lastPartyElementRef = useCallback((node) => {
         if (observer.current)
             observer.current.disconnect();
@@ -170,7 +182,12 @@ export const PartyPage = () => {
     const navigateToPlayerPage = (playerId) => {
         navigate(`/player/${playerId}`);
     };
-    return (_jsxs("div", { className: "p-5 min-h-screen bg-slate-900", children: [_jsx(Tabs, { defaultValue: "2025", className: "mb-4", children: _jsx(TabsList, { className: "grid w-full grid-cols-3 bg-slate-800/50 p-0.5 rounded-lg", children: years.map(year => (_jsx(TabsTrigger, { value: year.toString(), onClick: () => setSelectedYear(year), className: cn("font-['DS-DIGI']", "text-3xl xl:text-base", "h-8", "data-[state=active]:bg-amber-500/10", "data-[state=active]:text-amber-400", "data-[state=active]:shadow-[0_0_10px_rgba(245,158,11,0.1)]", "text-slate-400", "transition-all"), children: year }, year))) }) }), years.map(year => (_jsx("div", { className: cn(selectedYear === year ? "block" : "hidden"), children: filterPartiesByYear(parties, year).map((party, i) => (_jsxs("div", { ref: parties.length === i + 1 ? lastPartyElementRef : undefined, className: "mb-5", children: [_jsxs("div", { className: "px-2 ml-10 flex items-center gap-3", children: [_jsx("span", { className: "text-amber-400", children: new Date(party.date).toLocaleDateString() }), _jsx("button", { onClick: () => deleteParty(party.id), className: "px-4 py-2 text-sm font-semibold text-white bg-red-700 hover:bg-red-800 rounded-[5px] border border-red-300/70 transition-all duration-200 hover:shadow-[0_0_10px_rgba(251,191,36,0.3)]", children: "Delete" })] }), _jsxs("div", { className: "mt-2 overflow-hidden rounded-[5px] border border-amber-400 bg-slate-900 shadow-[0_0_20px_rgba(251,191,36,0.1)]", children: [_jsxs("table", { className: "w-full", children: [_jsx("thead", { children: _jsxs("tr", { children: [_jsx("th", { className: "px-3 py-3 text-left text-sm font-semibold bg-blue-900/90 text-amber-400 border-b border-amber-400", children: "Player" }), _jsx("th", { className: "px-3 py-3 text-left text-sm font-semibold bg-blue-900/90 text-amber-400 border-b border-amber-400", children: "Position" }), _jsx("th", { className: "px-3 py-3 text-left text-sm font-semibold bg-blue-900/90 text-amber-400 border-b border-amber-400", children: "Points" }), _jsx("th", { className: "px-3 py-3 text-left text-sm font-semibold bg-blue-900/90 text-amber-400 border-b border-amber-400", children: "Rebuys" }), _jsx("th", { className: "px-3 py-3 text-left text-sm font-semibold bg-blue-900/90 text-amber-400 border-b border-amber-400", children: "Kills" }), _jsx("th", { className: "px-3 py-3 text-left text-sm font-semibold bg-blue-900/90 text-amber-400 border-b border-amber-400", children: "Out Time" }), _jsx("th", { className: "px-3 py-3 text-left text-sm font-semibold bg-blue-900/90 text-amber-400 border-b border-amber-400", children: "Gains" })] }) }), _jsx("tbody", { children: party.playerStats.map((stat, statIndex) => (_jsxs("tr", { className: "hover:bg-blue-900/80 transition-colors", children: [_jsx("td", { className: "px-3 py-3 text-sm text-amber-400 border-b border-amber-400/20 cursor-pointer hover:text-amber-300", onClick: () => navigateToPlayerPage(stat.player.id), children: stat.player.name }), _jsx("td", { className: "px-3 py-3 text-sm text-amber-400 border-b border-amber-400/20", children: stat.position }), _jsx("td", { className: "px-3 py-3 text-sm text-amber-400 border-b border-amber-400/20", children: stat.points }), _jsx("td", { className: "px-3 py-3 text-sm text-amber-400 border-b border-amber-400/20", children: stat.rebuys }), _jsx("td", { className: "px-3 py-3 text-sm text-amber-400 border-b border-amber-400/20", children: stat.kills }), _jsx("td", { className: "px-3 py-3 text-sm text-amber-400 border-b border-amber-400/20", children: stat.outAt
+    return (_jsxs("div", { className: "p-5 min-h-screen bg-slate-900", children: [_jsx(Tabs, { value: activeYear ? activeYear.toString() : "", onValueChange: (value) => {
+                    const year = Number(value);
+                    if (!Number.isNaN(year)) {
+                        setSelectedYear(year);
+                    }
+                }, className: "mb-4", children: _jsx(TabsList, { className: "grid w-full grid-cols-3 bg-slate-800/50 p-0.5 rounded-lg", children: years.map(year => (_jsx(TabsTrigger, { value: year.toString(), className: cn("font-['DS-DIGI']", "text-3xl xl:text-base", "h-8", "data-[state=active]:bg-amber-500/10", "data-[state=active]:text-amber-400", "data-[state=active]:shadow-[0_0_10px_rgba(245,158,11,0.1)]", "text-slate-400", "transition-all"), children: year }, year))) }) }), years.map(year => (_jsx("div", { className: cn(activeYear === year ? "block" : "hidden"), children: filterPartiesByYear(parties, year).map((party, i) => (_jsxs("div", { ref: parties.length === i + 1 ? lastPartyElementRef : undefined, className: "mb-5", children: [_jsxs("div", { className: "px-2 ml-10 flex items-center gap-3", children: [_jsx("span", { className: "text-amber-400", children: new Date(party.date).toLocaleDateString() }), _jsx("button", { onClick: () => deleteParty(party.id), className: "px-4 py-2 text-sm font-semibold text-white bg-red-700 hover:bg-red-800 rounded-[5px] border border-red-300/70 transition-all duration-200 hover:shadow-[0_0_10px_rgba(251,191,36,0.3)]", children: "Delete" })] }), _jsxs("div", { className: "mt-2 overflow-hidden rounded-[5px] border border-amber-400 bg-slate-900 shadow-[0_0_20px_rgba(251,191,36,0.1)]", children: [_jsxs("table", { className: "w-full", children: [_jsx("thead", { children: _jsxs("tr", { children: [_jsx("th", { className: "px-3 py-3 text-left text-sm font-semibold bg-blue-900/90 text-amber-400 border-b border-amber-400", children: "Player" }), _jsx("th", { className: "px-3 py-3 text-left text-sm font-semibold bg-blue-900/90 text-amber-400 border-b border-amber-400", children: "Position" }), _jsx("th", { className: "px-3 py-3 text-left text-sm font-semibold bg-blue-900/90 text-amber-400 border-b border-amber-400", children: "Points" }), _jsx("th", { className: "px-3 py-3 text-left text-sm font-semibold bg-blue-900/90 text-amber-400 border-b border-amber-400", children: "Rebuys" }), _jsx("th", { className: "px-3 py-3 text-left text-sm font-semibold bg-blue-900/90 text-amber-400 border-b border-amber-400", children: "Kills" }), _jsx("th", { className: "px-3 py-3 text-left text-sm font-semibold bg-blue-900/90 text-amber-400 border-b border-amber-400", children: "Out Time" }), _jsx("th", { className: "px-3 py-3 text-left text-sm font-semibold bg-blue-900/90 text-amber-400 border-b border-amber-400", children: "Gains" })] }) }), _jsx("tbody", { children: party.playerStats.map((stat, statIndex) => (_jsxs("tr", { className: "hover:bg-blue-900/80 transition-colors", children: [_jsx("td", { className: "px-3 py-3 text-sm text-amber-400 border-b border-amber-400/20 cursor-pointer hover:text-amber-300", onClick: () => navigateToPlayerPage(stat.player.id), children: stat.player.name }), _jsx("td", { className: "px-3 py-3 text-sm text-amber-400 border-b border-amber-400/20", children: stat.position }), _jsx("td", { className: "px-3 py-3 text-sm text-amber-400 border-b border-amber-400/20", children: stat.points }), _jsx("td", { className: "px-3 py-3 text-sm text-amber-400 border-b border-amber-400/20", children: stat.rebuys }), _jsx("td", { className: "px-3 py-3 text-sm text-amber-400 border-b border-amber-400/20", children: stat.kills }), _jsx("td", { className: "px-3 py-3 text-sm text-amber-400 border-b border-amber-400/20", children: stat.outAt
                                                             ? `${new Date(stat.outAt).getHours().toString().padStart(2, '0')}:${new Date(stat.outAt).getMinutes().toString().padStart(2, '0')}:${new Date(stat.outAt).getSeconds().toString().padStart(2, '0')}`
                                                             : 'N/A' }), _jsxs("td", { className: cn("px-3 py-3 text-sm font-semibold border-b border-amber-400/20", stat.gains >= 0 ? "text-green-400" : "text-red-400"), children: [stat.gains >= 0 ? `+${stat.gains}` : stat.gains, "\u20AC"] })] }, `${party.id}-${stat.player.id}-${statIndex}`))) })] }), _jsx("button", { onClick: () => openModal(party), className: "m-3 px-4 py-2 text-sm font-semibold text-white bg-slate-700 hover:bg-blue-800 rounded-[5px] border border-slate-400/70 transition-all duration-200 hover:shadow-[0_0_10px_rgba(251,191,36,0.3)]", children: "Edit" })] })] }, party.id))) }, year))), isModalOpen && selectedParty && ReactDOM.createPortal(_jsx("div", { className: "fixed inset-0 bg-black/50 flex items-center justify-center z-50", children: _jsxs("div", { className: "bg-blue-900 p-6 rounded-lg max-w-2xl w-[90%] max-h-[90vh] overflow-auto border border-amber-400 shadow-[0_0_30px_rgba(251,191,36,0.2)]", children: [_jsx("h2", { className: "text-2xl font-semibold mb-4 text-amber-400", children: "Edit Party" }), _jsxs("div", { className: "mb-6", children: [_jsx("label", { className: "block mb-2 text-amber-400", children: "Date:" }), _jsx("input", { type: "datetime-local", value: selectedParty.date.slice(0, 16), onChange: (e) => setSelectedParty({
                                         ...selectedParty,
