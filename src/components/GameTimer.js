@@ -7,7 +7,7 @@ import metaltexture from "../../public/texturemetaluse.jpg";
 import { AnimatePresence, motion } from "framer-motion";
 const GameTimer = ({ middleStack, totalRebuys, outPlayers, totalPot, formatTime, timeLeft, smallBlind, bigBlind, 
 // handleGameEnd,
-isPaused, setIsPaused, ante }) => {
+isPaused, setIsPaused, ante, socketConnected = false, socketPauseTimer, socketResumeTimer, }) => {
     const [currentOutIndex, setCurrentOutIndex] = useState(0);
     useEffect(() => {
         setCurrentOutIndex(0);
@@ -26,7 +26,17 @@ isPaused, setIsPaused, ante }) => {
         if (navigator.vibrate) {
             navigator.vibrate(50);
         }
-        setIsPaused(!isPaused);
+        if (socketConnected) {
+            if (isPaused) {
+                socketResumeTimer?.();
+            }
+            else {
+                socketPauseTimer?.();
+            }
+        }
+        else {
+            setIsPaused(!isPaused);
+        }
     };
     return (_jsx(Card, { className: cn("w-full max-w-full mx-auto", "rounded-2xl", "border border-slate-200/80", "shadow-[0_0_25px_-5px_rgba(245,158,11,0.2)]", "overflow-hidden", "min-h-[300px]", "relative", "before:content-[''] before:absolute before:inset-0", "before:bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.2)_50%,transparent_75%)]", "before:opacity-0 before:animate-shine before:-z-[1]", "hover:before:opacity-40"), style: {
             backgroundImage: `url(${metaltexture})`,

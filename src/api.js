@@ -31,20 +31,50 @@ api.interceptors.request.use(async (config) => {
     return Promise.reject(error);
 });
 // Add response interceptor for better error handling
-api.interceptors.response.use((response) => response, (error) => {
-    console.error("API Error:", error);
+api.interceptors.response.use((response) => response, async (error) => {
+    // Handle auth errors specifically
+    if (error.response?.status === 401) {
+        console.error("Auth token expired or invalid - attempting session refresh");
+        // Try to refresh the session
+        if (typeof window !== "undefined" && window.Clerk) {
+            const clerk = window.Clerk;
+            try {
+                // Touch session to refresh it
+                if (clerk.session?.touch) {
+                    await clerk.session.touch();
+                }
+                // Mark error for potential retry by caller
+                error.isAuthError = true;
+                error.message = "Session expirée - veuillez rafraîchir la page si le problème persiste";
+            }
+            catch (refreshError) {
+                console.error("Failed to refresh session:", refreshError);
+                // If refresh fails, user needs to re-authenticate
+                error.message = "Session invalide - veuillez vous reconnecter";
+            }
+        }
+    }
+    // Handle network errors
+    if (!error.response && (error.code === 'ERR_NETWORK' || error.code === 'ECONNABORTED')) {
+        error.isNetworkError = true;
+        error.message = "Erreur réseau - vérifiez votre connexion";
+        console.error("Network error:", error.code);
+    }
+    // Handle server errors (5xx)
+    if (error.response?.status >= 500) {
+        error.isServerError = true;
+        error.message = "Erreur serveur - réessayez dans quelques instants";
+        console.error("Server error:", error.response.status);
+    }
+    // Standard logging
     if (error.response) {
-        // The request was made and the server responded with a status code
-        // that falls out of the range of 2xx
         console.error("Response data:", error.response.data);
         console.error("Response status:", error.response.status);
     }
     else if (error.request) {
-        // The request was made but no response was received
         console.error("No response received:", error.request);
     }
     else {
-        // Something happened in setting up the request that triggered an Error
         console.error("Error setting up request:", error.message);
     }
     return Promise.reject(error);

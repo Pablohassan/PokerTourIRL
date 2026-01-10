@@ -8,7 +8,6 @@ import { Player } from "./interfaces";
 
 type OutPlayer = Player & { position?: number | null; playerName?: string | null; playerId?: number | null; points?: number | null };
 
-
 interface GameTimerProps {
   formatTime: (time: number) => string;
   totalPot: number;
@@ -22,6 +21,9 @@ interface GameTimerProps {
   handleGameEnd: () => void;
   isPaused: boolean;
   setIsPaused: React.Dispatch<React.SetStateAction<boolean>>;
+  socketConnected?: boolean;
+  socketPauseTimer?: () => void;
+  socketResumeTimer?: () => void;
 }
 
 const GameTimer: React.FC<GameTimerProps> = ({
@@ -36,7 +38,10 @@ const GameTimer: React.FC<GameTimerProps> = ({
   // handleGameEnd,
   isPaused,
   setIsPaused,
-  ante
+  ante,
+  socketConnected = false,
+  socketPauseTimer,
+  socketResumeTimer,
 }) => {
   const [currentOutIndex, setCurrentOutIndex] = useState(0);
 
@@ -60,7 +65,16 @@ const GameTimer: React.FC<GameTimerProps> = ({
     if (navigator.vibrate) {
       navigator.vibrate(50);
     }
-    setIsPaused(!isPaused);
+
+    if (socketConnected) {
+      if (isPaused) {
+        socketResumeTimer?.();
+      } else {
+        socketPauseTimer?.();
+      }
+    } else {
+      setIsPaused(!isPaused);
+    }
   };
 
   return (

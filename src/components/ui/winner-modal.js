@@ -2,20 +2,18 @@ import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { useState, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "../../lib/utils";
-import { calculateGains, calculatePlayerCost } from "../../utils/gainsCalculator";
+import { calculateGains, calculatePlayerCost, getPayingPositions } from "../../utils/gainsCalculator";
 import api from "../../api";
 const WinnerModal = ({ isOpen, onClose, winner, games, pot, initialPlayerCount, selectedPlayers, partyId }) => {
     const [countdown, setCountdown] = useState(30);
     const [partyStats, setPartyStats] = useState([]);
     const currentPartyId = partyId ?? games[0]?.partyId ?? null;
     const totalPlayers = useMemo(() => initialPlayerCount || partyStats.length || games.length || selectedPlayers.length, [initialPlayerCount, partyStats.length, games.length, selectedPlayers.length]);
-    const payingPositions = useMemo(() => {
-        if (totalPlayers <= 6)
-            return [1, 2];
-        if (totalPlayers === 7)
-            return [1, 2, 3];
-        return [1, 2, 3, 4];
-    }, [totalPlayers]);
+    const totalRebuys = useMemo(() => {
+        const sourceGames = partyStats.length > 0 ? partyStats : games;
+        return sourceGames.reduce((sum, game) => sum + (game.rebuys || 0), 0);
+    }, [partyStats, games]);
+    const payingPositions = useMemo(() => getPayingPositions(totalPlayers, totalRebuys), [totalPlayers, totalRebuys]);
     const getPlayerName = (playerId) => {
         if (!playerId)
             return "";
@@ -35,7 +33,7 @@ const WinnerModal = ({ isOpen, onClose, winner, games, pot, initialPlayerCount, 
                 || sourceGames.find(g => g.playerId === winner?.id && !g.position && position === 1);
             if (!gameEntry && position === 1 && winner) {
                 const cost = calculatePlayerCost(0);
-                const net = calculateGains(position, totalPlayers, pot, cost);
+                const net = calculateGains(position, totalPlayers, pot, cost, totalRebuys);
                 const payout = net + cost;
                 return {
                     position,
@@ -49,7 +47,7 @@ const WinnerModal = ({ isOpen, onClose, winner, games, pot, initialPlayerCount, 
             const name = getPlayerName(gameEntry.playerId) || (position === 1 ? winner?.name : "") || "";
             const rebuys = gameEntry.rebuys || 0;
             const cost = calculatePlayerCost(rebuys);
-            const net = calculateGains(position, totalPlayers, pot, cost);
+            const net = calculateGains(position, totalPlayers, pot, cost, totalRebuys);
             const payout = net + cost;
             return {
                 position,
@@ -58,7 +56,7 @@ const WinnerModal = ({ isOpen, onClose, winner, games, pot, initialPlayerCount, 
                 net
             };
         }).filter(Boolean);
-    }, [payingPositions, games, partyStats, winner, totalPlayers, pot, selectedPlayers]);
+    }, [payingPositions, games, partyStats, winner, totalPlayers, pot, selectedPlayers, totalRebuys]);
     useEffect(() => {
         if (isOpen) {
             setCountdown(30);

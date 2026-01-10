@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "../../lib/utils";
 import { Player, PlayerStats } from "../interfaces";
-import { calculateGains, calculatePlayerCost } from "../../utils/gainsCalculator";
+import { calculateGains, calculatePlayerCost, getPayingPositions } from "../../utils/gainsCalculator";
 import api from "../../api";
 
 interface WinnerModalProps {
@@ -35,11 +35,15 @@ const WinnerModal: React.FC<WinnerModalProps> = ({
         [initialPlayerCount, partyStats.length, games.length, selectedPlayers.length]
     );
 
-    const payingPositions = useMemo(() => {
-        if (totalPlayers <= 6) return [1, 2];
-        if (totalPlayers === 7) return [1, 2, 3];
-        return [1, 2, 3, 4];
-    }, [totalPlayers]);
+    const totalRebuys = useMemo(() => {
+        const sourceGames = partyStats.length > 0 ? partyStats : games;
+        return sourceGames.reduce((sum, game) => sum + (game.rebuys || 0), 0);
+    }, [partyStats, games]);
+
+    const payingPositions = useMemo(
+        () => getPayingPositions(totalPlayers, totalRebuys),
+        [totalPlayers, totalRebuys]
+    );
 
     const getPlayerName = (playerId: number | undefined | null) => {
         if (!playerId) return "";
@@ -60,7 +64,7 @@ const WinnerModal: React.FC<WinnerModalProps> = ({
 
             if (!gameEntry && position === 1 && winner) {
                 const cost = calculatePlayerCost(0);
-                const net = calculateGains(position, totalPlayers, pot, cost);
+                const net = calculateGains(position, totalPlayers, pot, cost, totalRebuys);
                 const payout = net + cost;
                 return {
                     position,
@@ -75,7 +79,7 @@ const WinnerModal: React.FC<WinnerModalProps> = ({
             const name = getPlayerName(gameEntry.playerId) || (position === 1 ? winner?.name : "") || "";
             const rebuys = gameEntry.rebuys || 0;
             const cost = calculatePlayerCost(rebuys);
-            const net = calculateGains(position, totalPlayers, pot, cost);
+            const net = calculateGains(position, totalPlayers, pot, cost, totalRebuys);
             const payout = net + cost;
 
             return {
@@ -85,7 +89,7 @@ const WinnerModal: React.FC<WinnerModalProps> = ({
                 net
             };
         }).filter(Boolean) as { position: number; name: string; payout: number; net: number; }[];
-    }, [payingPositions, games, partyStats, winner, totalPlayers, pot, selectedPlayers]);
+    }, [payingPositions, games, partyStats, winner, totalPlayers, pot, selectedPlayers, totalRebuys]);
 
     useEffect(() => {
         if (isOpen) {

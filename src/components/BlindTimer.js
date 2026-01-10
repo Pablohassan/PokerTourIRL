@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { toast } from 'react-hot-toast';
 import nextBlindVideo from '../assets/pinup.mp4';
 import { motion, AnimatePresence } from "framer-motion";
-import { Dialog, DialogContent, } from "./ui/dialog";
+import { Dialog, DialogContent, DialogTitle, } from "./ui/dialog";
 const FADE = 0.5; // 500 ms
 const TOTAL = 6; // durée totale du splash (fade‑in + lecture + fade‑out)
 const NextBlindSplash = ({ show, onClose, blinds, outPlayers, showOutPlayers, videoSrc, }) => {
@@ -31,7 +31,7 @@ const NextBlindSplash = ({ show, onClose, blinds, outPlayers, showOutPlayers, vi
             console.warn('Impossible de lancer la vidéo avec le son :', err);
         });
     }, [show]);
-    return (_jsx(AnimatePresence, { children: show && (_jsx(Dialog, { open: show, onOpenChange: onClose, children: _jsxs(DialogContent, { className: "max-w-full sm:max-w-[800px] p-0 overflow-hidden bg-transparent border-none shadow-none sm:top-8 sm:translate-y-0", children: [_jsx(motion.video, { src: videoSrc, autoPlay: true, playsInline: true, ref: videoRef, initial: { opacity: 0, scale: 1.05 }, animate: { opacity: 1, scale: 1 }, exit: { opacity: 0, scale: 0.95 }, transition: { duration: FADE, ease: "easeOut" }, 
+    return (_jsx(AnimatePresence, { children: show && (_jsx(Dialog, { open: show, onOpenChange: onClose, children: _jsxs(DialogContent, { className: "max-w-full sm:max-w-[800px] p-0 overflow-hidden bg-transparent border-none shadow-none sm:top-8 sm:translate-y-0", children: [_jsx(DialogTitle, { className: "sr-only", children: "Niveau de Blind Suivant" }), _jsx(motion.video, { src: videoSrc, autoPlay: true, playsInline: true, ref: videoRef, initial: { opacity: 0, scale: 1.05 }, animate: { opacity: 1, scale: 1 }, exit: { opacity: 0, scale: 0.95 }, transition: { duration: FADE, ease: "easeOut" }, 
                         /* ↓↓↓  ancre la vidéo en haut du cadre */
                         className: "border-2 border-amber-400/70 w-full h-full object-cover object-top" }, "arcade-video"), _jsx(motion.div, { "aria-live": "polite", initial: { opacity: 0 }, animate: { opacity: 1 }, exit: { opacity: 0 }, transition: { delay: FADE / 2, duration: FADE / 2 }, className: "absolute inset-0 flex flex-col items-center justify-center gap-4 pointer-events-none", children: [
                             { label: "Small Blind", value: blinds.small, delay: 0.3 },
@@ -39,7 +39,7 @@ const NextBlindSplash = ({ show, onClose, blinds, outPlayers, showOutPlayers, vi
                             { label: "Ante", value: blinds.ante, delay: 0.5 },
                         ].map(({ label, value, delay }) => (_jsxs(motion.div, { initial: { y: 20, opacity: 0 }, animate: { y: 0, opacity: 1 }, exit: { y: -20, opacity: 0 }, transition: { delay: delay + FADE, duration: 0.4 }, className: "relative flex w-full max-w-xs justify-between font-ds-digital text-amber-300 drop-shadow-[0_0_6px_#f59e0b] tracking-wider text-3xl sm:text-4xl", children: [_jsx("span", { className: "font-bold", style: { transform: "translateX(-100px)" }, children: label }), _jsx("span", { className: "font-bold", style: { transform: "translateX(80px)" }, children: value }), label === "Ante" && showOutPlayers && outPlayers.length > 0 && (_jsx(motion.div, { initial: { opacity: 0, y: 10 }, animate: { opacity: 1, y: 0 }, exit: { opacity: 0, y: -10 }, className: "absolute top-full right-0 mt-2 w-48 bg-zinc-900/90 rounded-lg shadow-xl border border-amber-500/20", children: _jsxs("div", { className: "p-2 max-h-40 overflow-y-auto", children: [_jsx("h4", { className: "font-ds-digital text-amber-400 text-sm mb-1", children: "Eliminated Players:" }), outPlayers.map((p) => (_jsx("div", { className: "text-amber-400/80 font-ds-digital text-xs py-1 border-b border-amber-500/10", children: p.name }, p.id)))] }) }))] }, label))) })] }) })) }));
 };
-const BlindTimer = ({ gameStarted, isPaused, onBlindChange, onTimeChange, blindIndex, setBlindIndex, initialTimeLeft, outPlayers }) => {
+const BlindTimer = ({ gameStarted, isPaused, onBlindChange, onTimeChange, blindIndex, setBlindIndex, initialTimeLeft, outPlayers, socketConnected = false, serverNextBlind = null, }) => {
     // @ts-ignore - Local state needed for immediate updates while staying in sync with parent
     const [timeLeft, setTimeLeft] = useState(initialTimeLeft);
     const [showModal, setShowModal] = useState(false);
@@ -175,6 +175,11 @@ const BlindTimer = ({ gameStarted, isPaused, onBlindChange, onTimeChange, blindI
                 console.log('Timer already running');
                 return;
             }
+            // Skip local countdown if WebSocket is handling the timer
+            if (socketConnected) {
+                console.log('WebSocket is connected, skipping local countdown interval');
+                return;
+            }
             timerId = setInterval(() => {
                 setTimeLeft(prevTime => {
                     console.log('Current time:', prevTime);
@@ -205,7 +210,19 @@ const BlindTimer = ({ gameStarted, isPaused, onBlindChange, onTimeChange, blindI
         return () => {
             stopTimer();
         };
-    }, [gameStarted, isPaused, initialTimeLeft]);
+    }, [gameStarted, isPaused, initialTimeLeft, socketConnected]);
+    // Effect to trigger splash screen when server advances blind level
+    useEffect(() => {
+        if (socketConnected && gameStarted && !isInitialMount.current) {
+            // If blindIndex increased, it means the server advanced the level
+            if (blindIndex > 0) {
+                setShowModal(true);
+                setTimeout(() => {
+                    setShowModal(false);
+                }, 9000);
+            }
+        }
+    }, [blindIndex, socketConnected, gameStarted]);
     // Effect to handle sound and modal on game state restoration
     useEffect(() => {
         // Skip on initial mount
@@ -218,14 +235,16 @@ const BlindTimer = ({ gameStarted, isPaused, onBlindChange, onTimeChange, blindI
             setShowModal(true);
         }
     }, [gameStarted, timeLeft]);
-    // Notify parent of time changes
+    // Notify parent of time changes - DEBOUNCED or REMOVED to prevent loop
+    // The parent likely tracks time via useGameState, so this might be redundant or causing the loop.
+    // We'll remove the immediate callback.
+    /*
     useEffect(() => {
-        if (typeof timeLeft === 'number' && !isNaN(timeLeft)) {
-            onTimeChange(timeLeft);
-        }
+      if (typeof timeLeft === 'number' && !isNaN(timeLeft)) {
+        onTimeChange(timeLeft);
+      }
     }, [timeLeft, onTimeChange]);
-    // Get the current blinds to display
-    const displayBlinds = blinds[nextBlindIndexRef.current] || blinds[blindIndex];
+    */
     // Add this useEffect for the automated dropdown
     useEffect(() => {
         if (showModal) {
@@ -238,6 +257,9 @@ const BlindTimer = ({ gameStarted, isPaused, onBlindChange, onTimeChange, blindI
                 clearInterval(intervalRef.current);
         };
     }, [showModal]);
+    // Get the current blinds to display
+    // Favors server data if available, otherwise falls back to local array
+    const displayBlinds = serverNextBlind || blinds[nextBlindIndexRef.current] || blinds[blindIndex];
     return (_jsxs(_Fragment, { children: [" ", _jsx(NextBlindSplash, { show: showModal, onClose: () => setShowModal(false), blinds: displayBlinds, outPlayers: outPlayers, showOutPlayers: showOutPlayers, videoSrc: nextBlindVideo })] }));
 };
 export default BlindTimer;

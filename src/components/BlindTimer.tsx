@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Dialog,
   DialogContent,
+  DialogTitle,
 
 } from "./ui/dialog";
 import { Player } from "./interfaces";
@@ -67,6 +68,7 @@ const NextBlindSplash: React.FC<NextBlindSplashProps> = ({
           <DialogContent
             className="max-w-full sm:max-w-[800px] p-0 overflow-hidden bg-transparent border-none shadow-none sm:top-8 sm:translate-y-0"
           >
+            <DialogTitle className="sr-only">Niveau de Blind Suivant</DialogTitle>
             {/* Vidéo rétro */}
             <motion.video
               key="arcade-video"
@@ -150,6 +152,8 @@ interface BlindTimerProps {
   setBlindIndex: React.Dispatch<React.SetStateAction<number>>;
   initialTimeLeft: number;
   outPlayers: Player[];
+  socketConnected?: boolean;
+  serverNextBlind?: { small: number; big: number; ante: number } | null;
 }
 
 const BlindTimer: React.FC<BlindTimerProps> = ({
@@ -160,7 +164,9 @@ const BlindTimer: React.FC<BlindTimerProps> = ({
   blindIndex,
   setBlindIndex,
   initialTimeLeft,
-  outPlayers
+  outPlayers,
+  socketConnected = false,
+  serverNextBlind = null,
 }) => {
   // @ts-ignore - Local state needed for immediate updates while staying in sync with parent
   const [timeLeft, setTimeLeft] = useState<number>(initialTimeLeft);
@@ -313,6 +319,12 @@ const BlindTimer: React.FC<BlindTimerProps> = ({
         return;
       }
 
+      // Skip local countdown if WebSocket is handling the timer
+      if (socketConnected) {
+        console.log('WebSocket is connected, skipping local countdown interval');
+        return;
+      }
+
       timerId = setInterval(() => {
         setTimeLeft(prevTime => {
           console.log('Current time:', prevTime);
@@ -345,7 +357,20 @@ const BlindTimer: React.FC<BlindTimerProps> = ({
     return () => {
       stopTimer();
     };
-  }, [gameStarted, isPaused, initialTimeLeft]);
+  }, [gameStarted, isPaused, initialTimeLeft, socketConnected]);
+
+  // Effect to trigger splash screen when server advances blind level
+  useEffect(() => {
+    if (socketConnected && gameStarted && !isInitialMount.current) {
+      // If blindIndex increased, it means the server advanced the level
+      if (blindIndex > 0) {
+        setShowModal(true);
+        setTimeout(() => {
+          setShowModal(false);
+        }, 9000);
+      }
+    }
+  }, [blindIndex, socketConnected, gameStarted]);
 
   // Effect to handle sound and modal on game state restoration
   useEffect(() => {
@@ -361,15 +386,17 @@ const BlindTimer: React.FC<BlindTimerProps> = ({
     }
   }, [gameStarted, timeLeft]);
 
-  // Notify parent of time changes
+  // Notify parent of time changes - DEBOUNCED or REMOVED to prevent loop
+  // The parent likely tracks time via useGameState, so this might be redundant or causing the loop.
+  // We'll remove the immediate callback.
+  /*
   useEffect(() => {
     if (typeof timeLeft === 'number' && !isNaN(timeLeft)) {
       onTimeChange(timeLeft);
     }
   }, [timeLeft, onTimeChange]);
+  */
 
-  // Get the current blinds to display
-  const displayBlinds = blinds[nextBlindIndexRef.current] || blinds[blindIndex];
 
   // Add this useEffect for the automated dropdown
   useEffect(() => {
@@ -383,6 +410,10 @@ const BlindTimer: React.FC<BlindTimerProps> = ({
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
   }, [showModal]);
+
+  // Get the current blinds to display
+  // Favors server data if available, otherwise falls back to local array
+  const displayBlinds = serverNextBlind || blinds[nextBlindIndexRef.current] || blinds[blindIndex];
 
   return (
     <> <NextBlindSplash

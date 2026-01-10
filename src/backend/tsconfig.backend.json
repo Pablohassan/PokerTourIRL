@@ -1,17 +1,25 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "typeRoots" : ["./node_modules/@types"],
+    "typeRoots": [
+      "./node_modules/@types"
+    ],
     "target": "ES2020",
     "module": "ESNext",
-    "outDir": "./build",
+    "outDir": "./dist",
     "esModuleInterop": true,
     "strict": false,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "moduleResolution": "node",
-    "types": ["node"]
+    "types": [
+      "node"
+    ]
   },
-  "include": ["./src/**/*.ts"],
-  "exclude": ["node_modules"]
+  "include": [
+    "./src/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }

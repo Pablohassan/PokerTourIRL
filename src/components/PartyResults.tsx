@@ -1,12 +1,18 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import PlayerTable from "./PlayerTable";
 import { PlayerStats, PlayerTableProps, PartyResultsProps } from "./interfaces.js";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { cn } from "../lib/utils";
 import { useRecentTournamentYears } from "../hooks/useRecentTournamentYears";
+import {
+  calculateGains,
+  calculatePlayerCost,
+  calculateTotalPot,
+  getBubblePosition,
+} from "../utils/gainsCalculator";
 
-function calculateGains(playerStats: PlayerStats[]): number {
+function calculateTotalGains(playerStats: PlayerStats[]): number {
   // Group stats by party
   const statsByParty: { [partyId: string]: PlayerStats[] } = {};
 
@@ -24,44 +30,24 @@ function calculateGains(playerStats: PlayerStats[]): number {
   Object.values(statsByParty).forEach(partyStats => {
     // Calculate total pot for this party
     const playerCount = partyStats.length;
-    const totalBuyins = playerCount * 5; // Initial buy-in is 5€ per player
-    const totalRebuys = partyStats.reduce((sum, player) => sum + player.rebuys, 0) * 4; // Each rebuy adds 4€
-    const totalPot = totalBuyins + totalRebuys;
+    const totalRebuys = partyStats.reduce((sum, player) => sum + player.rebuys, 0);
+    const totalPot = calculateTotalPot(playerCount, totalRebuys);
 
     // Find this player's stats
     const playerStat = partyStats.find(stat => stat.playerId === playerStats[0].playerId);
     if (!playerStat) return;
 
     // Calculate player's cost
-    const playerCost = 5 + (playerStat.rebuys * 4); // Initial buy-in (5€) + rebuys (4€ each)
+    const playerCost = calculatePlayerCost(playerStat.rebuys);
+    const gains = calculateGains(
+      playerStat.position,
+      playerCount,
+      totalPot,
+      playerCost,
+      totalRebuys
+    );
 
-    // Calculate gain based on position and player count
-    let percentage = 0;
-    const position = playerStat.position;
-
-    if (!position || position > 4) {
-      // Player didn't finish in money - just subtract their costs
-      totalGains -= playerCost;
-      return;
-    }
-
-    if (playerCount <= 6) {
-      // 6 players or less: 1st (65%), 2nd (35%)
-      const percentages = [0.65, 0.35, 0, 0];
-      percentage = percentages[position - 1];
-    } else if (playerCount === 7) {
-      // 7 players: 1st (55%), 2nd (30%), 3rd (15%)
-      const percentages = [0.55, 0.30, 0.15, 0];
-      percentage = percentages[position - 1];
-    } else {
-      // 8 or more players: 1st (50%), 2nd (28%), 3rd (15%), 4th (7%)
-      const percentages = [0.50, 0.28, 0.15, 0.07];
-      percentage = percentages[position - 1];
-    }
-
-    // Calculate prize money
-    const prize = totalPot * percentage;
-    totalGains += prize - playerCost;
+    totalGains += gains;
   });
 
   return Math.round(totalGains * 100) / 100; // Round to 2 decimal places
@@ -73,6 +59,30 @@ const PartyResults: React.FC<PartyResultsProps> = ({ players }) => {
   const [selectedYear, setSelectedYear] = useState<number | null>(null);
   const activeYear = selectedYear ?? defaultYear;
   const categories = ["Points", "Gains", "Recave", "Moneydown", "Killer", "Bule"];
+
+  const partyTotals = useMemo(() => {
+    const partyPlayers = new Map<number, { playerIds: Set<number>; totalRebuys: number }>();
+
+    players.forEach(player => {
+      player.stats?.forEach(stat => {
+        if (stat.partyId == null) return;
+        const existing = partyPlayers.get(stat.partyId) ?? { playerIds: new Set<number>(), totalRebuys: 0 };
+        existing.playerIds.add(stat.playerId);
+        existing.totalRebuys += stat.rebuys || 0;
+        partyPlayers.set(stat.partyId, existing);
+      });
+    });
+
+    const totals = new Map<number, { playerCount: number; totalRebuys: number }>();
+    partyPlayers.forEach((partyData, partyId) => {
+      totals.set(partyId, {
+        playerCount: partyData.playerIds.size,
+        totalRebuys: partyData.totalRebuys,
+      });
+    });
+
+    return totals;
+  }, [players]);
 
   useEffect(() => {
     if (defaultYear && selectedYear === null) {
@@ -90,15 +100,22 @@ const PartyResults: React.FC<PartyResultsProps> = ({ players }) => {
           case "Points":
             return filteredStats.some(game => game.points > 1);
           case "Gains":
-            return calculateGains(filteredStats) > 0;
+            return calculateTotalGains(filteredStats) > 0;
           case "Recave":
-            return filteredStats.some(stat => stat.rebuys > 1);
+            return filteredStats.some(stat => stat.rebuys > 0);
           case "Moneydown":
             return filteredStats.some(stat => stat.totalCost > 5);
           case "Killer":
-            return filteredStats.some(stat => stat.kills > 2);
+            return filteredStats.some(stat => stat.kills > 0);
           case "Bule":
-            return filteredStats.some(stat => stat.position === 4);
+            return filteredStats.some(stat => {
+              const partyTotal = partyTotals.get(stat.partyId ?? -1);
+              const bubblePosition = getBubblePosition(
+                partyTotal?.playerCount ?? 0,
+                partyTotal?.totalRebuys ?? 0
+              );
+              return bubblePosition !== null && stat.position === bubblePosition;
+            });
           default:
             return false;
         }
@@ -110,7 +127,7 @@ const PartyResults: React.FC<PartyResultsProps> = ({ players }) => {
           case "Points":
             return filteredStats.reduce((total, game) => total + game.points, 0);
           case "Gains":
-            return calculateGains(filteredStats);
+            return calculateTotalGains(filteredStats);
           case "Recave":
             return filteredStats.reduce((total, stat) => total + stat.rebuys, 0);
           case "Moneydown":
@@ -118,7 +135,14 @@ const PartyResults: React.FC<PartyResultsProps> = ({ players }) => {
           case "Killer":
             return filteredStats.reduce((total, stat) => total + stat.kills, 0);
           case "Bule":
-            return filteredStats.reduce((total, stat) => total + stat.position, 0);
+            return filteredStats.reduce((total, stat) => {
+              const partyTotal = partyTotals.get(stat.partyId ?? -1);
+              const bubblePosition = getBubblePosition(
+                partyTotal?.playerCount ?? 0,
+                partyTotal?.totalRebuys ?? 0
+              );
+              return bubblePosition !== null && stat.position === bubblePosition ? total + 1 : total;
+            }, 0);
           default:
             return 0;
         }

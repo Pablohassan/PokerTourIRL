@@ -1,12 +1,16 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import api from "../api";
-import { API_ENDPOINTS } from '../config';
+import { API_ENDPOINTS, API_BASE_URL } from '../config';
+import { io } from "socket.io-client";
 const useGameState = (gameStarted, setGameStarted, selectedPlayers, setSelectedPlayers, blindIndex, setBlindIndex, configBlindDuration) => {
+    const socketRef = useRef(null);
+    const [socketConnected, setSocketConnected] = useState(false);
     const [timeLeft, setTimeLeft] = useState(configBlindDuration * 60);
     const [smallBlind, setSmallBlind] = useState(10);
     const [currentBlindDuration, setCurrentBlindDuration] = useState(configBlindDuration);
     const [bigBlind, setBigBlind] = useState(20);
     const [ante, setAnte] = useState(0);
+    const [nextBlind, setNextBlind] = useState(null);
     const [games, setGames] = useState([]);
     const [pot, setPot] = useState(0);
     const [middleStack, setMiddleStack] = useState(5350);
@@ -24,6 +28,66 @@ const useGameState = (gameStarted, setGameStarted, selectedPlayers, setSelectedP
     const [initialPlayerCount, setInitialPlayerCount] = useState(selectedPlayers.length);
     const [lastSaveTime, setLastSaveTime] = useState(0);
     const [gameEnded, setGameEnded] = useState(false);
+    const [isPaused, setIsPaused] = useState(false);
+    const [blindLevelStartedAt, setBlindLevelStartedAt] = useState(null);
+    const [pausedTimeRemaining, setPausedTimeRemaining] = useState(null);
+    // WebSocket connection and event listeners
+    useEffect(() => {
+        if (!gameStarted || gameEnded) {
+            if (socketRef.current) {
+                socketRef.current.disconnect();
+                socketRef.current = null;
+                setSocketConnected(false);
+            }
+            return;
+        }
+        if (!socketRef.current) {
+            const socket = io(API_BASE_URL.replace('/api', ''), {
+                withCredentials: true,
+                transports: ['websocket', 'polling'], // Try websocket first
+            });
+            socket.on('connect', () => {
+                console.log('WebSocket connected');
+                setSocketConnected(true);
+                // Request initial state
+                socket.emit('timer:get');
+            });
+            socket.on('disconnect', () => {
+                console.log('WebSocket disconnected');
+                setSocketConnected(false);
+            });
+            socket.on('timer:update', (data) => {
+                // Sync everything from server
+                // Using batching by setting states together if possible, though React handles this
+                setTimeLeft(data.timeLeft);
+                setBlindIndex(data.blindIndex);
+                setSmallBlind(data.small);
+                setBigBlind(data.big);
+                setAnte(data.ante);
+                setNextBlind(data.nextBlind);
+                setIsPaused(data.isPaused);
+                setBlindLevelStartedAt(data.blindLevelStartedAt);
+                setPausedTimeRemaining(data.pausedTimeRemaining);
+                console.log('[FrontendDebug] WebSocket Update:', { timeLeft: data.timeLeft, isPaused: data.isPaused, startedAt: data.blindLevelStartedAt });
+            });
+            socket.on('timer:blindAdvance', (data) => {
+                console.log('Blind level advanced:', data.message);
+                // We could trigger a toast or sound here if not already handled by BlindTimer
+            });
+            socketRef.current = socket;
+        }
+        return () => {
+            // Don't disconnect here on every re-render, only when dependencies change or unmount
+        };
+    }, [gameStarted, gameEnded]);
+    // Separate effect for cleanup on unmount
+    useEffect(() => {
+        return () => {
+            if (socketRef.current) {
+                socketRef.current.disconnect();
+            }
+        };
+    }, []);
     const resetGameState = (newBlindDuration) => {
         const finalDuration = typeof newBlindDuration === "number"
             ? newBlindDuration
@@ -49,16 +113,38 @@ const useGameState = (gameStarted, setGameStarted, selectedPlayers, setSelectedP
         setLastSaveTime(0);
         setGameEnded(false);
     };
-    const saveGameState = async (currentTimeLeft = timeLeft) => {
+    // Retry configuration
+    const MAX_RETRIES = 3;
+    const RETRY_DELAYS = [1000, 2000, 4000]; // Exponential backoff in ms
+    // Sync status for UI feedback
+    const [syncStatus, setSyncStatus] = useState('synced');
+    const [pendingSave, setPendingSave] = useState(false);
+    // WebSocket control functions
+    const socketPauseTimer = () => {
+        if (socketRef.current && socketConnected) {
+            socketRef.current.emit('timer:pause');
+        }
+    };
+    const socketResumeTimer = () => {
+        if (socketRef.current && socketConnected) {
+            socketRef.current.emit('timer:resume');
+        }
+    };
+    const saveGameState = async (currentTimeLeft = timeLeft, forceSave = false) => {
         if (!initialGameStatePosted || gameEnded) {
             // Don't save if game has ended
             return;
         }
         const now = Date.now();
-        if (now - lastSaveTime < 2000) {
+        // Allow forceSave to bypass throttle (for critical actions like eliminations)
+        if (!forceSave && now - lastSaveTime < 2000) {
+            // Queue a pending save if we're skipping due to throttle
+            setPendingSave(true);
             return;
         }
         setLastSaveTime(now);
+        setPendingSave(false);
+        setSyncStatus('syncing');
         const gameState = {
             timeLeft: currentTimeLeft,
             smallBlind,
@@ -75,23 +161,49 @@ const useGameState = (gameStarted, setGameStarted, selectedPlayers, setSelectedP
             positions,
             outPlayers,
             lastUsedPosition,
-            lastSavedTime: now,
             initialPlayerCount,
             currentBlindDuration,
             gameEnded,
+            blindLevelStartedAt,
+            pausedTimeRemaining,
+            // lastSavedTime is purely for legacy fallback now, we use explicitly set timestamps
+            lastSavedTime: now,
         };
-        try {
-            const response = await api.post(API_ENDPOINTS.GAME_STATE, { state: gameState });
-            if (response.status === 404) {
-                setLoading(false);
-                return;
+        let lastError = null;
+        for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+            try {
+                await api.post(API_ENDPOINTS.GAME_STATE, { state: gameState });
+                setSyncStatus('synced');
+                setError(null); // Clear previous errors on success
+                return; // Success, exit
+            }
+            catch (err) {
+                lastError = err;
+                console.warn(`Save attempt ${attempt + 1}/${MAX_RETRIES} failed:`, err);
+                // Check if it's an auth error - don't retry those
+                if (err?.response?.status === 401) {
+                    console.error('Auth error - not retrying');
+                    break;
+                }
+                if (attempt < MAX_RETRIES - 1) {
+                    await new Promise(r => setTimeout(r, RETRY_DELAYS[attempt]));
+                }
             }
         }
-        catch (error) {
-            console.error('Error saving game state:', error);
-            setError('Failed to save game state');
-        }
+        // All retries failed
+        console.error('All save attempts failed:', lastError);
+        setSyncStatus('error');
+        setError('Échec de synchronisation - vérifiez votre connexion');
     };
+    // Process pending saves after throttle window
+    useEffect(() => {
+        if (pendingSave && gameStarted && !gameEnded) {
+            const timer = setTimeout(() => {
+                saveGameState(timeLeft);
+            }, 2100); // Just after throttle window
+            return () => clearTimeout(timer);
+        }
+    }, [pendingSave, gameStarted, gameEnded]);
     const postInitialGameState = async () => {
         try {
             setLoading(true);
@@ -178,6 +290,8 @@ const useGameState = (gameStarted, setGameStarted, selectedPlayers, setSelectedP
             setGameStarted(true);
             setInitialGameStatePosted(true);
             setInitialPlayerCount(state.initialPlayerCount);
+            setBlindLevelStartedAt(state.blindLevelStartedAt);
+            setPausedTimeRemaining(state.pausedTimeRemaining);
             setStateRestored(true);
         }
         catch (error) {
@@ -222,15 +336,19 @@ const useGameState = (gameStarted, setGameStarted, selectedPlayers, setSelectedP
             setSavedTotalStack(totalStack);
         }
     }, [totalStack, selectedPlayers.length]);
-    // Save game state periodically (but not if game has ended)
+    // Local countdown for smooth UI (interpolating between WebSocket updates)
     useEffect(() => {
-        if (gameStarted && !gameEnded) {
+        if (gameStarted && !gameEnded && !isPaused && timeLeft > 0) {
             const interval = setInterval(() => {
-                saveGameState(timeLeft);
+                setTimeLeft(prev => {
+                    const next = prev - 1;
+                    // console.log('[FrontendDebug] Local Tick:', { prev, next });
+                    return next < 0 ? 0 : next;
+                });
             }, 1000);
             return () => clearInterval(interval);
         }
-    }, [gameStarted, gameEnded, timeLeft]);
+    }, [gameStarted, gameEnded, isPaused]); // Removed timeLeft dependency to avoid recreating interval every second
     return {
         timeLeft,
         setTimeLeft,
@@ -273,6 +391,15 @@ const useGameState = (gameStarted, setGameStarted, selectedPlayers, setSelectedP
         setInitialGameStatePosted,
         gameEnded,
         setGameEnded,
+        syncStatus, // Sync status for UI feedback
+        socketConnected,
+        socketPauseTimer,
+        socketResumeTimer,
+        nextBlind,
+        isPaused,
+        setIsPaused,
+        setBlindLevelStartedAt,
+        setPausedTimeRemaining,
     };
 };
 export default useGameState;

@@ -1,42 +1,68 @@
 /**
  * Calculates player gains based on position and total number of players.
  *
- * Prize distribution rules:
- * - 6 players or less: 1st (65%), 2nd (35%)
- * - 7 players: 1st (55%), 2nd (30%), 3rd (15%)
- * - 8+ players: 1st (50%), 2nd (28%), 3rd (15%), 4th (7%)
+ * Prize distribution rules (based on paid positions):
+ * - 2 paid: 1st (65%), 2nd (35%)
+ * - 3 paid: 1st (55%), 2nd (30%), 3rd (15%)
+ * - 4 paid: 1st (50%), 2nd (28%), 3rd (15%), 4th (7%)
  *
  * @param position Player's position (1 = winner)
  * @param totalPlayers Total number of players in the game
  * @param totalPot Total pot amount (initial buyin + rebuys)
+ * @param playerCost Total cost for the player (buy-in + rebuys)
+ * @param totalRebuys Total rebuys across the party (used for paid positions)
  * @returns The gain amount for the player (can be negative if player spent more than won)
  */
-export function calculateGains(position, totalPlayers, totalPot, playerCost) {
-    if (!position || position > 4) {
-        // Players who didn't finish in top positions lose their buy-in amount
+export function calculateGains(position, totalPlayers, totalPot, playerCost, totalRebuys = 0) {
+    const payingPositions = getPayingPositions(totalPlayers, totalRebuys);
+    const paidCount = payingPositions.length;
+    if (!position || position > paidCount) {
         return -playerCost;
     }
-    // Calculate percentage based on position and total players
-    let percentage = 0;
-    if (totalPlayers <= 6) {
-        // 6 players or less: 1st (65%), 2nd (35%)
-        const percentages = [0.65, 0.35, 0, 0];
-        percentage = percentages[position - 1];
-    }
-    else if (totalPlayers === 7) {
-        // 7 players: 1st (55%), 2nd (30%), 3rd (15%)
-        const percentages = [0.55, 0.3, 0.15, 0];
-        percentage = percentages[position - 1];
-    }
-    else {
-        // 8 or more players: 1st (50%), 2nd (28%), 3rd (15%), 4th (7%)
-        const percentages = [0.5, 0.28, 0.15, 0.07];
-        percentage = percentages[position - 1];
-    }
+    const percentagesByPaidCount = {
+        2: [0.65, 0.35],
+        3: [0.55, 0.3, 0.15],
+        4: [0.5, 0.28, 0.15, 0.07],
+    };
+    const percentages = percentagesByPaidCount[paidCount] || [];
+    const percentage = percentages[position - 1] ?? 0;
     // Calculate gain (prize money minus player's cost)
     const prize = totalPot * percentage;
     const gains = prize - playerCost;
     return Math.round(gains * 100) / 100; // Round to 2 decimal places
+}
+export function getPayingPositions(totalPlayers, totalRebuys = 0) {
+    if (totalPlayers <= 0)
+        return [];
+    let paidCount = 0;
+    if (totalPlayers <= 6) {
+        paidCount = 2;
+    }
+    else if (totalPlayers === 7) {
+        paidCount = 3;
+    }
+    else if (totalPlayers === 8) {
+        paidCount = 3;
+    }
+    else {
+        paidCount = 4;
+    }
+    if ((totalPlayers === 6 || totalPlayers === 8) && totalRebuys >= totalPlayers) {
+        paidCount += 1;
+    }
+    paidCount = Math.min(paidCount, totalPlayers);
+    const positions = [];
+    for (let i = 1; i <= paidCount; i += 1) {
+        positions.push(i);
+    }
+    return positions;
+}
+export function getPaidCount(totalPlayers, totalRebuys = 0) {
+    return getPayingPositions(totalPlayers, totalRebuys).length;
+}
+export function getBubblePosition(totalPlayers, totalRebuys = 0) {
+    const paidCount = getPaidCount(totalPlayers, totalRebuys);
+    return paidCount > 0 ? paidCount + 1 : null;
 }
 /**
  * Calculates the total pot based on player count and rebuys
@@ -99,30 +125,5 @@ export function calculatePartyGains(partyStats, playerId) {
     const playerCost = 5 + (playerStats.rebuys || 0) * 4;
     // Get the player's position
     const position = playerStats.position;
-    // If player didn't finish in the money, they lose their buy-in
-    if (!position || position > 4) {
-        return -playerCost;
-    }
-    // Calculate percentage based on position and player count
-    let percentage = 0;
-    if (playerCount <= 6) {
-        // 6 players or less: 1st (65%), 2nd (35%)
-        const percentages = [0.65, 0.35, 0, 0];
-        percentage = percentages[position - 1];
-    }
-    else if (playerCount === 7) {
-        // 7 players: 1st (55%), 2nd (30%), 3rd (15%)
-        const percentages = [0.55, 0.3, 0.15, 0];
-        percentage = percentages[position - 1];
-    }
-    else {
-        // 8 or more players: 1st (50%), 2nd (28%), 3rd (15%), 4th (7%)
-        const percentages = [0.5, 0.28, 0.15, 0.07];
-        percentage = percentages[position - 1];
-    }
-    // Calculate prize money
-    const prize = totalPot * percentage;
-    // Calculate gains (prize minus player's cost)
-    const gains = prize - playerCost;
-    return Math.round(gains * 100) / 100; // Round to 2 decimal places
+    return calculateGains(position, playerCount, totalPot, playerCost, totalRebuys);
 }

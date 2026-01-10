@@ -27,6 +27,10 @@ interface GameControlsProps {
   setBlindIndex: React.Dispatch<React.SetStateAction<number>>;
   initialTimeLeft: number;
   style?: React.CSSProperties;
+  socketConnected?: boolean;
+  serverNextBlind?: { small: number; big: number; ante: number } | null;
+  socketPauseTimer?: () => void;
+  socketResumeTimer?: () => void;
 }
 
 const GameControls: React.FC<GameControlsProps> = ({
@@ -49,6 +53,10 @@ const GameControls: React.FC<GameControlsProps> = ({
   blindIndex,
   setBlindIndex,
   initialTimeLeft,
+  socketConnected = false,
+  serverNextBlind = null,
+  socketPauseTimer,
+  socketResumeTimer,
 }) => {
   const isUpdatingRef = useRef(false);
 
@@ -93,6 +101,8 @@ const GameControls: React.FC<GameControlsProps> = ({
           // @ts-ignore timeLeft is not used in BlindTimer
           timeLeft={timeLeft}
           setTimeLeft={setTimeLeft}
+          socketConnected={socketConnected}
+          serverNextBlind={serverNextBlind}
         />
         <GameTimer
           timeLeft={timeLeft}
@@ -107,6 +117,9 @@ const GameControls: React.FC<GameControlsProps> = ({
           totalRebuys={totalRebuys}
           outPlayers={outPlayers}
           formatTime={formatTime}
+          socketConnected={socketConnected}
+          socketPauseTimer={socketPauseTimer}
+          socketResumeTimer={socketResumeTimer}
         />
       </div>
     </div>

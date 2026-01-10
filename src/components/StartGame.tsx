@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import { Loader2, Clover, Diamond } from "lucide-react";
 import api from "../api";
 import GameConfiguration from './GameConfiguration';
 import ReviewSelectedPlayers from "../components/ReviewSelectedPlayers";
@@ -27,6 +29,7 @@ interface StartGameProps {
   championnat: Tournaments[];
   blindIndex: number;
   setBlindIndex: React.Dispatch<React.SetStateAction<number>>;
+  isLoading?: boolean;
 }
 
 const StartGame: React.FC<StartGameProps> = ({
@@ -36,13 +39,13 @@ const StartGame: React.FC<StartGameProps> = ({
   players,
   updateAfterGameEnd,
   blindIndex,
-  setBlindIndex
+  setBlindIndex,
+  isLoading = false
 }) => {
   const navigate = useNavigate();
   const [gameStarted, setGameStarted] = useState(false);
   const [showReview, setShowReview] = useState(false);
   const [showConfig, setShowConfig] = useState(true);
-  const [isPaused, setIsPaused] = useState(false);
   const [selectedTournament, setSelectedTournament] = useState<Tournaments | null>(null);
   const [blindDuration, setBlindDuration] = useState<number>(20);
   const [playerOutGame, setPlayerOutGame] = useState<number | null>(null);
@@ -137,6 +140,14 @@ const StartGame: React.FC<StartGameProps> = ({
     postInitialGameState,
     gameEnded,
     setGameEnded,
+    socketConnected,
+    socketPauseTimer,
+    socketResumeTimer,
+    nextBlind,
+    isPaused,
+    setIsPaused,
+    setBlindLevelStartedAt,
+    setPausedTimeRemaining,
   } = useGameState(
     gameStarted,
     setGameStarted,
@@ -428,7 +439,7 @@ const StartGame: React.FC<StartGameProps> = ({
       setTotalStack(initialTotalStack);
       setPot(initialPot);
 
-      const gameState = {
+      const gameState: any = {
         timeLeft: blindDuration * 60,
         smallBlind: 10,
         bigBlind: 20,
@@ -442,12 +453,20 @@ const StartGame: React.FC<StartGameProps> = ({
         killer: false,
         blindIndex: 0,
         positions: {},
-        outPlayers: [],
+        lastUsedPosition: 0,
+        blindLevelStartedAt: Date.now(),
         lastSavedTime: Date.now(),
         initialPlayerCount: selectedPlayers.length,
         partyId: newPartyId,
         currentBlindDuration: blindDuration,
       };
+
+      const now = Date.now();
+      gameState.blindLevelStartedAt = now;
+      gameState.lastSavedTime = now;
+
+      setBlindLevelStartedAt(now);
+      setPausedTimeRemaining(null);
 
       await api.post(API_ENDPOINTS.GAME_STATE, {
         state: gameState,
@@ -486,11 +505,6 @@ const StartGame: React.FC<StartGameProps> = ({
     }
   };
 
-  useEffect(() => {
-    if (gameStarted && !isEnding && !gameEnded && timeLeft % 10 === 0) {
-      saveGameState(timeLeft);
-    }
-  }, [gameStarted, timeLeft, isEnding, gameEnded]);
 
   const confirmAndStartGame = async () => {
     setShowReview(false);
@@ -627,7 +641,7 @@ const StartGame: React.FC<StartGameProps> = ({
               [playerOutGame]: position
             }));
 
-            await saveGameState(timeLeft);
+            await saveGameState(timeLeft, true); // Force save after elimination
 
             toast.success(`Player eliminated and killer's stats updated!`);
           } catch (error) {
@@ -642,7 +656,7 @@ const StartGame: React.FC<StartGameProps> = ({
           )
         );
         queueKillSound();
-        await saveGameState(timeLeft);
+        await saveGameState(timeLeft, true); // Force save after kill
       }
 
       setKiller(false);
@@ -678,16 +692,37 @@ const StartGame: React.FC<StartGameProps> = ({
         // Stop the game first
         setGameStarted(false);
 
-        // Delete game state before posting results to prevent race conditions
-        await api.delete(API_ENDPOINTS.GAME_STATE);
+        // CRITICAL: Save results FIRST before any cleanup
+        // This ensures data is never lost even if cleanup fails
+        let resultsSaved = false;
+        for (let attempt = 0; attempt < 3; attempt++) {
+          try {
+            const saveResponse = await api.post("/gameResults", updatedGames);
+            if (saveResponse.data) {
+              resultsSaved = true;
+              break;
+            }
+          } catch (saveError) {
+            console.warn(`Save results attempt ${attempt + 1} failed:`, saveError);
+            if (attempt < 2) {
+              await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
+            }
+          }
+        }
 
-        // Wait a bit to ensure state deletion is processed
-        await new Promise(resolve => setTimeout(resolve, 500));
+        if (!resultsSaved) {
+          throw new Error("Failed to save game results after 3 attempts");
+        }
 
-        // Then post game results
-        await api.post("/gameResults", updatedGames);
+        // Results saved successfully, now cleanup state (non-blocking)
+        try {
+          await api.delete(API_ENDPOINTS.GAME_STATE);
+        } catch (deleteError) {
+          // Log but don't fail - results are already saved
+          console.warn("State cleanup failed (non-critical):", deleteError);
+        }
+
         updateAfterGameEnd(updatedGames);
-
         toast.success("Game ended successfully!");
 
         // Reset all state
@@ -704,17 +739,18 @@ const StartGame: React.FC<StartGameProps> = ({
         navigate("/results");
 
       } catch (error) {
-        console.error("Error:", error);
-        toast.error("Failed to end the game properly. Please try again.");
-        // Reset gameEnded flag on error to allow retry
+        console.error("Error ending game:", error);
+        toast.error("Échec de sauvegarde des résultats. Vérifiez votre connexion et réessayez.");
+        // Reset flags to allow retry
         setGameEnded(false);
         setGameStarted(true);
+      } finally {
+        setIsEnding(false);
       }
     } else {
       toast.error("The game cannot be ended yet as more than one player is still playing.");
+      setIsEnding(false);
     }
-
-    setIsEnding(false);
   };
 
   const handleUpdateGameState = async (updatedGames: PlayerStats[]) => {
@@ -802,6 +838,71 @@ const StartGame: React.FC<StartGameProps> = ({
         height: '100vh'
       }}>
         <div style={{ fontSize: '1.25rem', color: '#ef4444' }}>Error: {error}</div>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-slate-950/95 backdrop-blur-sm">
+        <div className="relative flex flex-col items-center gap-8">
+          {/* Main animated loader */}
+          <div className="relative">
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+              className="relative z-10 p-8 rounded-full border-2 border-amber-500/20 bg-slate-900 shadow-[0_0_50px_-12px_rgba(245,158,11,0.5)]"
+            >
+              <Loader2 className="w-20 h-20 text-amber-500 animate-spin-slow opacity-80" />
+            </motion.div>
+
+            {/* Pulsing glow background */}
+            <motion.div
+              animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
+              transition={{ duration: 2, repeat: Infinity }}
+              className="absolute inset-0 bg-amber-500/20 blur-[60px] rounded-full"
+            />
+          </div>
+
+          <div className="flex flex-col items-center gap-3">
+            <motion.h2
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="font-['DS-DIGI'] text-4xl text-amber-500 tracking-widest drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]"
+            >
+              PREPARING THE TABLE
+            </motion.h2>
+
+            <div className="flex gap-4">
+              <motion.div
+                animate={{ y: [0, -5, 0] }}
+                transition={{ duration: 1.5, repeat: Infinity, delay: 0 }}
+              >
+                <Clover className="w-6 h-6 text-green-600/80" />
+              </motion.div>
+              <motion.div
+                animate={{ y: [0, -5, 0] }}
+                transition={{ duration: 1.5, repeat: Infinity, delay: 0.5 }}
+              >
+                <Diamond className="w-6 h-6 text-red-600/80" />
+              </motion.div>
+              <motion.div
+                animate={{ y: [0, -5, 0] }}
+                transition={{ duration: 1.5, repeat: Infinity, delay: 1 }}
+              >
+                <Clover className="w-6 h-6 text-green-600/80 transform rotate-180" />
+              </motion.div>
+            </div>
+          </div>
+
+          <motion.p
+            animate={{ opacity: [0.4, 1, 0.4] }}
+            transition={{ duration: 2, repeat: Infinity }}
+            className="text-amber-200/50 text-sm font-medium tracking-widest"
+          >
+            LOADING TOURNAMENT DATA...
+          </motion.p>
+        </div>
       </div>
     );
   }
@@ -1111,6 +1212,10 @@ const StartGame: React.FC<StartGameProps> = ({
               blindIndex={blindIndex}
               setBlindIndex={setBlindIndex}
               initialTimeLeft={timeLeft || currentBlindDuration * 60}
+              socketConnected={socketConnected}
+              serverNextBlind={nextBlind}
+              socketPauseTimer={socketPauseTimer}
+              socketResumeTimer={socketResumeTimer}
               style={{
                 width: '100%',
                 maxWidth: '100%',

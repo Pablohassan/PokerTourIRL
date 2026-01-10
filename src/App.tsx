@@ -217,16 +217,12 @@ export default function App() {
           setSelectedPLayers={setSelectedPlayers}
           blindIndex={blindIndex}
           setBlindIndex={setBlindIndex}
-
-
+          isLoading={isLoading}
         />
       ),
     },
   ]);
 
-  if (isLoading) {
-    return <div className={cn("flex items-center justify-center min-h-screen")}>Loading...</div>;
-  }
 
   return (
     <div className={cn("min-h-screen bg-background")}>
